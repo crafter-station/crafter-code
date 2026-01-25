@@ -1,0 +1,82 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#262626" stroke-width="0.5" opacity="0.3"/>
+    </pattern>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#141414"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#grad)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Decorative accent line -->
+  <rect x="80" y="180" width="4" height="120" fill="#f97316" rx="2"/>
+
+  <!-- Logo icon -->
+  <g transform="translate(100, 400)">
+    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#fafafa" stroke-width="1.5">
+      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+      <path d="M2 17l10 5 10-5" />
+      <path d="M2 12l10 5 10-5" />
+    </svg>
+  </g>
+
+  <!-- Brand name -->
+  <text x="160" y="440" font-family="monospace" font-size="24" fill="#fafafa" font-weight="500">
+    crafter/code
+  </text>
+
+  <!-- Headline - Serif italic style -->
+  <text x="100" y="220" font-family="Georgia, serif" font-size="72" fill="#f5f0e6" font-style="italic">
+    Engineered
+  </text>
+  <text x="100" y="300" font-family="Georgia, serif" font-size="72" fill="#fafafa">
+    For Agents.
+  </text>
+
+  <!-- Tagline -->
+  <text x="100" y="360" font-family="system-ui, sans-serif" font-size="24" fill="#737373">
+    The agent-first IDE for 10-person $100B companies.
+  </text>
+
+  <!-- URL badge -->
+  <g transform="translate(100, 520)">
+    <rect width="200" height="36" rx="18" fill="#262626"/>
+    <text x="100" y="24" text-anchor="middle" font-family="monospace" font-size="14" fill="#fafafa">
+      code.crafter.run
+    </text>
+  </g>
+
+  <!-- Terminal window decoration -->
+  <g transform="translate(700, 140)">
+    <rect width="420" height="350" rx="12" fill="#141414" stroke="#262626" stroke-width="1"/>
+    <!-- Window header -->
+    <rect width="420" height="40" rx="12" fill="#1a1a1a"/>
+    <rect y="28" width="420" height="12" fill="#1a1a1a"/>
+    <!-- Traffic lights -->
+    <circle cx="24" cy="20" r="6" fill="#ff5f57"/>
+    <circle cx="44" cy="20" r="6" fill="#febc2e"/>
+    <circle cx="64" cy="20" r="6" fill="#28c840"/>
+    <!-- Terminal content -->
+    <text x="24" y="80" font-family="monospace" font-size="14" fill="#f97316">$</text>
+    <text x="44" y="80" font-family="monospace" font-size="14" fill="#737373">bun add -g</text>
+    <text x="160" y="80" font-family="monospace" font-size="14" fill="#fafafa">crafter-code</text>
+
+    <text x="24" y="120" font-family="monospace" font-size="14" fill="#2dd4bf">✓</text>
+    <text x="44" y="120" font-family="monospace" font-size="14" fill="#737373">Starting agent session...</text>
+
+    <text x="24" y="160" font-family="monospace" font-size="14" fill="#737373">│</text>
+    <text x="44" y="160" font-family="monospace" font-size="13" fill="#fbbf24">Analyzing codebase structure...</text>
+
+    <text x="24" y="200" font-family="monospace" font-size="14" fill="#737373">│</text>
+    <text x="44" y="200" font-family="monospace" font-size="13" fill="#fbbf24">Running 3 parallel agents</text>
+
+    <text x="24" y="260" font-family="monospace" font-size="14" fill="#2dd4bf">✓</text>
+    <text x="44" y="260" font-family="monospace" font-size="14" fill="#2dd4bf">Thinking</text>
+    <text x="120" y="260" font-family="monospace" font-size="14" fill="#2dd4bf">▶</text>
+  </g>
+</svg>

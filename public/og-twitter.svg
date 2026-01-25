@@ -1,0 +1,43 @@
+<svg width="1200" height="600" viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid2" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#262626" stroke-width="0.5" opacity="0.2"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="600" fill="#0a0a0a"/>
+  <rect width="1200" height="600" fill="url(#grid2)"/>
+
+  <!-- Center content -->
+  <g transform="translate(600, 300)">
+    <!-- Logo -->
+    <g transform="translate(-24, -180)">
+      <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#f97316" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+        <path d="M2 17l10 5 10-5" />
+        <path d="M2 12l10 5 10-5" />
+      </svg>
+    </g>
+
+    <!-- Brand name -->
+    <text x="0" y="-100" text-anchor="middle" font-family="monospace" font-size="28" fill="#fafafa" font-weight="600">
+      crafter/code
+    </text>
+
+    <!-- Headline -->
+    <text x="0" y="-20" text-anchor="middle" font-family="Georgia, serif" font-size="64" fill="#f5f0e6" font-style="italic">
+      Agent-first IDE
+    </text>
+
+    <!-- Tagline -->
+    <text x="0" y="60" text-anchor="middle" font-family="system-ui, sans-serif" font-size="24" fill="#737373">
+      Multi-agent orchestration • Skills marketplace • Ralph loops
+    </text>
+
+    <!-- URL -->
+    <text x="0" y="140" text-anchor="middle" font-family="monospace" font-size="18" fill="#f97316">
+      code.crafter.run
+    </text>
+  </g>
+</svg>
