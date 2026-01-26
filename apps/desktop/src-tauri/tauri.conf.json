@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "run.crafter.code",
   "build": {
-    "beforeDevCommand": "cd .. && bun run dev",
-    "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "cd .. && bun run build",
+    "beforeDevCommand": "bun run dev",
+    "devUrl": "http://localhost:3002",
+    "beforeBuildCommand": "bun run build",
     "frontendDist": "../out"
   },
   "app": {
@@ -22,7 +22,9 @@
         "fullscreen": false,
         "decorations": true,
         "transparent": false,
-        "center": true
+        "center": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {
@@ -45,8 +47,7 @@
   },
   "plugins": {
     "shell": {
-      "open": true,
-      "scope": []
+      "open": true
     }
   }
 }

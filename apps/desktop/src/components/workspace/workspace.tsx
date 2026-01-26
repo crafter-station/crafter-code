@@ -11,27 +11,41 @@ import {
   GitBranch,
   AlertCircle,
   CheckCircle2,
+  X,
+  FileCode,
+  Users,
+  Terminal as TerminalIcon,
+  Plus,
+  Clock,
+  DollarSign,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Terminal } from "@/components/terminal/terminal";
 import { FileTree } from "@/components/file-tree/file-tree";
-import { SessionPanel } from "@/components/session/session-panel";
-import { NewSessionDialog } from "@/components/session/new-session-dialog";
+import { OrchestratorDashboard } from "@/components/orchestrator";
 import { useAgentStore } from "@/stores/agent-store";
-import { getProjectInfo, type ProjectInfo } from "@/lib/ipc/commands";
+import { useOrchestratorStore } from "@/stores/orchestrator-store";
+import { getProjectInfo, readFileContent, type ProjectInfo } from "@/lib/ipc/commands";
+
+type ViewMode = "fleet" | "terminal";
 
 export function Workspace() {
   const { projectPath, setProjectPath } = useAgentStore();
+  const {
+    sessions: fleets,
+    activeSessionId,
+    setActiveSession,
+    getTotalCost
+  } = useOrchestratorStore();
   const [projectInfo, setProjectInfo] = useState<ProjectInfo | null>(null);
-  const [showNewSession, setShowNewSession] = useState(false);
   const [terminalId, setTerminalId] = useState<string | null>(null);
+  const [openFile, setOpenFile] = useState<{ path: string; content: string } | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("fleet");
 
-  // Load project info when path changes
   useEffect(() => {
     if (!projectPath) {
-      // Default to home directory
-      const home = process.env.HOME || "/Users";
+      const home = "/Users";
       setProjectPath(home);
       return;
     }
@@ -41,32 +55,38 @@ export function Workspace() {
       .catch((err) => console.error("Failed to load project info:", err));
   }, [projectPath, setProjectPath]);
 
-  const handleFileSelect = useCallback((path: string) => {
-    console.log("File selected:", path);
-    // TODO: Open file in editor or preview
+  const handleFileSelect = useCallback(async (path: string) => {
+    try {
+      const content = await readFileContent(path);
+      setOpenFile({ path, content });
+    } catch (err) {
+      console.error("Failed to read file:", err);
+    }
   }, []);
 
   const handleTerminalReady = useCallback((id: string) => {
     setTerminalId(id);
   }, []);
 
-  const handleSessionCreated = useCallback(
-    (sessionId: string) => {
-      // TODO: Start the agent in the terminal
-      console.log("Session created:", sessionId);
-    },
-    []
-  );
+  const handleCloseFile = useCallback(() => {
+    setOpenFile(null);
+  }, []);
+
+  const fileName = openFile?.path.split("/").pop() || "";
+  const activeFleet = fleets.find(f => f.id === activeSessionId);
 
   return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Title Bar */}
-      <header className="h-10 flex items-center justify-between px-4 border-b border-border bg-sidebar shrink-0">
-        <div className="flex items-center gap-3">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
+      {/* macOS Titlebar */}
+      <header
+        className="h-9 flex items-center px-3 border-b border-border/50 bg-card shrink-0"
+        data-tauri-drag-region
+      >
+        <div className="flex items-center gap-2" style={{ paddingLeft: '70px' }} data-tauri-drag-region>
           <svg
             viewBox="0 0 24 24"
             fill="none"
-            className="size-5"
+            className="size-3.5 text-accent-orange"
             stroke="currentColor"
             strokeWidth="1.5"
           >
@@ -74,111 +94,230 @@ export function Workspace() {
             <path d="M2 17l10 5 10-5" />
             <path d="M2 12l10 5 10-5" />
           </svg>
-          <span className="font-mono text-sm font-medium">crafter/code</span>
+          <span className="font-mono text-[11px] font-medium text-muted-foreground/80">crafter/code</span>
         </div>
 
-        {projectInfo && (
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <FolderOpen className="size-3.5" />
-              <span>{projectInfo.name}</span>
-            </div>
-            {projectInfo.git_branch && (
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 text-[11px] text-muted-foreground" data-tauri-drag-region>
+          {projectInfo && (
+            <>
               <div className="flex items-center gap-1.5">
-                <GitBranch className="size-3.5" />
-                <span>{projectInfo.git_branch}</span>
-                {projectInfo.git_status === "clean" ? (
-                  <CheckCircle2 className="size-3 text-green-500" />
-                ) : (
-                  <AlertCircle className="size-3 text-yellow-500" />
-                )}
+                <FolderOpen className="size-3" />
+                <span>{projectInfo.name}</span>
               </div>
-            )}
-          </div>
-        )}
-
-        <div className="w-[120px]" /> {/* Spacer for symmetry */}
+              {projectInfo.git_branch && (
+                <div className="flex items-center gap-1">
+                  <GitBranch className="size-3" />
+                  <span>{projectInfo.git_branch}</span>
+                  {projectInfo.git_status === "clean" ? (
+                    <CheckCircle2 className="size-2.5 text-green-500" />
+                  ) : (
+                    <AlertCircle className="size-2.5 text-yellow-500" />
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </header>
 
       {/* Main Content */}
-      <ResizablePanelGroup orientation="horizontal" className="flex-1">
-        {/* Sidebar - File Tree */}
-        <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
-          <div className="h-full flex flex-col bg-sidebar">
-            <div className="px-4 py-3 border-b border-sidebar-border">
-              <h2 className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+      <ResizablePanelGroup orientation="horizontal" className="flex-1 min-h-0 overflow-hidden">
+        {/* Left Sidebar - File Tree */}
+        <ResizablePanel defaultSize={20} minSize={12} maxSize={30}>
+          <div className="h-full w-full flex flex-col bg-card overflow-hidden">
+            <div className="px-3 py-1.5 flex items-center justify-between">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 Explorer
-              </h2>
+              </span>
             </div>
-            {projectPath && (
-              <FileTree
-                rootPath={projectPath}
-                className="flex-1"
-                onFileSelect={handleFileSelect}
-              />
-            )}
+            <div className="flex-1 overflow-auto p-1">
+              {projectPath && (
+                <FileTree
+                  rootPath={projectPath}
+                  onFileSelect={handleFileSelect}
+                />
+              )}
+            </div>
           </div>
         </ResizablePanel>
 
         <ResizableHandle withHandle />
 
-        {/* Main Area */}
-        <ResizablePanel defaultSize={55}>
-          <ResizablePanelGroup orientation="vertical">
-            {/* Terminal */}
-            <ResizablePanel defaultSize={100}>
-              <div className="h-full flex flex-col">
-                <div className="px-4 py-2 border-b border-border bg-card flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="size-3 rounded-full bg-accent-orange" />
-                    <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-                      Terminal
-                    </span>
+        {/* Center - Fleet/Terminal */}
+        <ResizablePanel defaultSize={58} minSize={30} maxSize={70}>
+          <div className="h-full w-full flex flex-col overflow-hidden">
+            {/* Tabs */}
+            <div className="h-9 flex items-center px-2 border-b border-border bg-card shrink-0">
+              <div className="flex items-center gap-1">
+                {openFile && (
+                  <div className="flex items-center gap-2 px-3 py-1 rounded-t bg-background text-sm">
+                    <FileCode className="size-3.5 text-muted-foreground" />
+                    <span className="text-xs">{fileName}</span>
+                    <button
+                      type="button"
+                      onClick={handleCloseFile}
+                      className="ml-1 p-0.5 rounded hover:bg-muted"
+                    >
+                      <X className="size-3" />
+                    </button>
                   </div>
-                  {terminalId && (
-                    <span className="text-xs text-muted-foreground font-mono">
-                      {terminalId.slice(0, 8)}
-                    </span>
-                  )}
+                )}
+                {!openFile && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("fleet")}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors",
+                        viewMode === "fleet" ? "bg-background text-foreground" : "text-muted-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <Users className="size-3.5" />
+                      <span className="text-xs font-medium">Fleet</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("terminal")}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors",
+                        viewMode === "terminal" ? "bg-background text-foreground" : "text-muted-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <TerminalIcon className="size-3.5" />
+                      <span className="text-xs font-medium">Terminal</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="relative flex-1 min-h-0 overflow-hidden">
+              {openFile && (
+                <div className="absolute inset-0 overflow-auto bg-background p-4 font-mono text-sm">
+                  <pre className="whitespace-pre-wrap break-all text-xs leading-relaxed">
+                    {openFile.content}
+                  </pre>
                 </div>
-                <div className="flex-1 p-1">
+              )}
+
+              {!openFile && viewMode === "terminal" && (
+                <div className="terminal-container">
                   <Terminal
                     cwd={projectPath || undefined}
                     onReady={handleTerminalReady}
                   />
                 </div>
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
+              )}
+
+              {!openFile && viewMode === "fleet" && (
+                <div className="absolute inset-0">
+                  <OrchestratorDashboard />
+                </div>
+              )}
+            </div>
+          </div>
         </ResizablePanel>
 
         <ResizableHandle withHandle />
 
-        {/* Right Sidebar - Sessions */}
-        <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
-          <SessionPanel
-            className="h-full"
-            onNewSession={() => setShowNewSession(true)}
-          />
+        {/* Right Sidebar - Fleet History */}
+        <ResizablePanel defaultSize={22} minSize={15} maxSize={35}>
+          <div className="h-full w-full flex flex-col bg-card overflow-hidden">
+            <div className="px-3 py-1.5 flex items-center justify-between border-b border-border">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Fleet History
+              </span>
+            </div>
+
+            <div className="flex-1 overflow-auto">
+              {fleets.length === 0 ? (
+                <div className="p-4 text-center text-sm text-muted-foreground">
+                  <Users className="size-8 mx-auto mb-2 opacity-30" />
+                  <p>No fleets yet</p>
+                  <p className="text-xs mt-1">Launch a fleet to see it here</p>
+                </div>
+              ) : (
+                <div className="p-2 space-y-1">
+                  {fleets.map((fleet) => (
+                    <button
+                      key={fleet.id}
+                      type="button"
+                      onClick={() => setActiveSession(fleet.id)}
+                      className={cn(
+                        "w-full text-left p-3 rounded-lg transition-colors",
+                        fleet.id === activeSessionId
+                          ? "bg-accent-orange/10 border border-accent-orange/30"
+                          : "hover:bg-muted/50"
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <StatusDot status={fleet.status} />
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {fleet.workers.length} workers
+                        </span>
+                      </div>
+                      <p className="text-sm truncate mb-2">{fleet.prompt}</p>
+                      <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="size-3" />
+                          {formatTime(fleet.createdAt)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <DollarSign className="size-3" />
+                          ${fleet.totalCost.toFixed(4)}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Total Cost Footer */}
+            <div className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <span>Total spent</span>
+                <span className="font-mono text-green-500">${getTotalCost().toFixed(4)}</span>
+              </div>
+            </div>
+          </div>
         </ResizablePanel>
       </ResizablePanelGroup>
 
       {/* Status Bar */}
-      <footer className="h-6 flex items-center justify-between px-4 border-t border-border bg-sidebar text-xs text-muted-foreground shrink-0">
-        <div className="flex items-center gap-4">
-          <span>Ready</span>
+      <footer className="h-5 flex items-center justify-between px-3 border-t border-border bg-card text-[10px] text-muted-foreground shrink-0">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1">
+            <span className="size-1.5 rounded-full bg-green-500" />
+            Ready
+          </span>
+          {activeFleet && (
+            <span className="flex items-center gap-1 text-accent-orange">
+              <Users className="size-3" />
+              {activeFleet.workers.filter(w => w.status === "running").length} running
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-4">
-          <span>v0.1.0</span>
-        </div>
+        <span className="font-mono">v0.1.0</span>
       </footer>
-
-      {/* New Session Dialog */}
-      <NewSessionDialog
-        open={showNewSession}
-        onOpenChange={setShowNewSession}
-        onSessionCreated={handleSessionCreated}
-      />
     </div>
   );
+}
+
+function StatusDot({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    planning: "bg-blue-500 animate-pulse",
+    running: "bg-accent-orange animate-pulse",
+    completed: "bg-green-500",
+    failed: "bg-destructive",
+    cancelled: "bg-muted-foreground",
+  };
+
+  return <span className={cn("size-2 rounded-full", colors[status] || "bg-muted-foreground")} />;
+}
+
+function formatTime(timestamp: number): string {
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }

@@ -99,14 +99,43 @@
   }
 }
 
-/* xterm.js styles */
+/* macOS titlebar drag region */
+[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+}
+
+[data-tauri-drag-region] button,
+[data-tauri-drag-region] a,
+[data-tauri-drag-region] input {
+  -webkit-app-region: no-drag;
+}
+
+/* xterm.js styles - constrain to parent */
 .xterm {
-  height: 100%;
-  width: 100%;
+  height: 100% !important;
+  width: 100% !important;
+  max-height: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.xterm-screen {
+  height: 100% !important;
+  width: 100% !important;
+  max-height: 100% !important;
+  max-width: 100% !important;
 }
 
 .xterm-viewport {
   overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Terminal container - MUST not expand */
+.terminal-container {
+  position: absolute !important;
+  inset: 0 !important;
+  overflow: hidden !important;
 }
 
 .xterm-viewport::-webkit-scrollbar {
@@ -124,6 +153,23 @@
 
 .xterm-viewport::-webkit-scrollbar-thumb:hover {
   background: #525252;
+}
+
+/* Force resizable panel group to contain children */
+[data-slot="resizable-panel-group"] {
+  contain: strict !important;
+}
+
+/* Force resizable panel content constraints */
+[data-slot="resizable-panel"] {
+  overflow: hidden !important;
+  contain: strict !important;
+}
+
+[data-slot="resizable-panel"] > * {
+  max-height: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
 }
 
 /* Resizable panels */
@@ -147,4 +193,38 @@
 [data-panel-group-direction="vertical"] > [data-resize-handle]:hover,
 [data-panel-group-direction="vertical"] > [data-resize-handle][data-resize-handle-active] {
   background: var(--accent);
+}
+
+/* Radix UI Portals - ensure they render above Tauri layers */
+[data-radix-portal] {
+  z-index: 9998 !important;
+}
+
+[data-slot="dialog-overlay"] {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9998 !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+}
+
+[data-slot="dialog-content"] {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 9999 !important;
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 0.5rem !important;
+  padding: 1.5rem !important;
+  max-width: 500px !important;
+  width: calc(100% - 2rem) !important;
+}
+
+[data-radix-popper-content-wrapper] {
+  z-index: 10000 !important;
+}
+
+[data-slot="select-content"] {
+  z-index: 10000 !important;
 }
