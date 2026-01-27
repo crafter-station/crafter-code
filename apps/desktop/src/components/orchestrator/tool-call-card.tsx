@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   CheckCircle2,
   ChevronDown,
@@ -14,6 +14,8 @@ import {
   Brain,
   Globe,
   Trash2,
+  Copy,
+  Check,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -50,10 +52,41 @@ const KIND_COLORS: Record<ToolCallKind, string> = {
   other: "text-muted-foreground",
 };
 
+// Extract heredoc content from bash command
+function extractHeredocContent(command: string): { filePath: string; content: string } | null {
+  // Match: cat > /path/file << 'EOF' or cat > /path/file << EOF
+  const heredocMatch = command.match(/cat\s*>\s*([^\s<]+)\s*<<\s*'?(\w+)'?\s*\n([\s\S]*?)\n\2$/);
+  if (heredocMatch) {
+    return {
+      filePath: heredocMatch[1],
+      content: heredocMatch[3],
+    };
+  }
+  return null;
+}
+
+// Extract simple command from backtick-wrapped title
+function extractCommand(title: string): string {
+  // Remove backticks from start and end
+  if (title.startsWith("`") && title.endsWith("`")) {
+    return title.slice(1, -1);
+  }
+  return title;
+}
+
 export function ToolCallCard({ toolCall, className }: ToolCallCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const KindIcon = KIND_ICONS[toolCall.kind] || Terminal;
   const kindColor = KIND_COLORS[toolCall.kind] || KIND_COLORS.other;
+
+  // For execute/terminal tools, try to extract heredoc content from title
+  const heredocInfo = useMemo(() => {
+    if (toolCall.kind === "execute" && toolCall.title) {
+      const command = extractCommand(toolCall.title);
+      return extractHeredocContent(command);
+    }
+    return null;
+  }, [toolCall.kind, toolCall.title]);
 
   // Check if there's any meaningful content to display
   const hasContent = toolCall.content?.some((c) => {
@@ -63,7 +96,7 @@ export function ToolCallCard({ toolCall, className }: ToolCallCardProps) {
     if (c.type === "diff" && (c.path || c.new_text)) return true;
     if (c.type === "terminal" && (c.output || c.terminal_id)) return true;
     return false;
-  });
+  }) || heredocInfo !== null; // Also has content if we extracted heredoc
 
   // Get status icon
   const StatusIcon = getStatusIcon(toolCall.status);
@@ -122,7 +155,12 @@ export function ToolCallCard({ toolCall, className }: ToolCallCardProps) {
         )}
         <StatusIcon className={cn("size-2.5 shrink-0", statusColor)} />
         <KindIcon className={cn("size-2.5 shrink-0", kindColor)} />
-        <span className="text-foreground/80 truncate flex-1">{toolCall.title}</span>
+        <span className="text-foreground/80 truncate flex-1">
+          {/* For heredoc commands, show a nicer title */}
+          {heredocInfo
+            ? `Create ${heredocInfo.filePath.split("/").pop()}`
+            : toolCall.title}
+        </span>
         {!isExpanded && toolCall.content && toolCall.content.length > 0 && (
           <span className="text-muted-foreground/50 shrink-0">
             {toolCall.content.length} item{toolCall.content.length > 1 ? "s" : ""}
@@ -131,13 +169,218 @@ export function ToolCallCard({ toolCall, className }: ToolCallCardProps) {
       </button>
 
       {/* Content - expanded */}
-      {isExpanded && toolCall.content && (
+      {isExpanded && (
         <div className="mt-1 ml-5 space-y-1 border-l border-border/50 pl-2">
-          {toolCall.content.map((c, i) => (
+          {/* Show heredoc content for bash commands */}
+          {heredocInfo && (
+            <HeredocContent filePath={heredocInfo.filePath} content={heredocInfo.content} />
+          )}
+          {/* Show regular content */}
+          {toolCall.content?.map((c, i) => (
             <ContentItem key={i} content={c} />
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// Diff view with git-style + / - highlighting
+function DiffView({
+  fileName,
+  filePath,
+  oldText,
+  newText,
+}: {
+  fileName: string;
+  filePath: string;
+  oldText?: string;
+  newText?: string;
+}) {
+  const [showFull, setShowFull] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Generate diff lines
+  const diffLines = useMemo(() => {
+    const lines: Array<{ type: "add" | "remove" | "context"; text: string }> = [];
+
+    if (oldText && newText) {
+      // Simple line-by-line diff
+      const oldLines = oldText.split("\n");
+      const newLines = newText.split("\n");
+
+      // Find removed lines (in old but not in new)
+      for (const line of oldLines) {
+        if (!newLines.includes(line)) {
+          lines.push({ type: "remove", text: line });
+        }
+      }
+
+      // Find added lines (in new but not in old)
+      for (const line of newLines) {
+        if (!oldLines.includes(line)) {
+          lines.push({ type: "add", text: line });
+        }
+      }
+    } else if (newText && !oldText) {
+      // New file - all lines are additions
+      for (const line of newText.split("\n")) {
+        lines.push({ type: "add", text: line });
+      }
+    } else if (oldText && !newText) {
+      // Deleted file - all lines are removals
+      for (const line of oldText.split("\n")) {
+        lines.push({ type: "remove", text: line });
+      }
+    }
+
+    return lines;
+  }, [oldText, newText]);
+
+  const visibleLines = showFull ? diffLines : diffLines.slice(0, 15);
+  const hasMore = diffLines.length > 15;
+  const addedCount = diffLines.filter((l) => l.type === "add").length;
+  const removedCount = diffLines.filter((l) => l.type === "remove").length;
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(newText || oldText || "");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="space-y-0.5">
+      {/* Header */}
+      <div className="flex items-center gap-1.5">
+        <Pencil className="size-2.5 text-amber-400/80" />
+        <span className="font-mono text-amber-400/80">{fileName}</span>
+        <span className="text-muted-foreground/50 truncate text-[9px] flex-1">
+          {filePath}
+        </span>
+        {addedCount > 0 && (
+          <span className="text-[9px] text-green-400">+{addedCount}</span>
+        )}
+        {removedCount > 0 && (
+          <span className="text-[9px] text-red-400">-{removedCount}</span>
+        )}
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="p-0.5 rounded hover:bg-muted transition-colors"
+          title="Copy content"
+        >
+          {copied ? (
+            <Check className="size-2.5 text-green-400" />
+          ) : (
+            <Copy className="size-2.5 text-muted-foreground" />
+          )}
+        </button>
+      </div>
+
+      {/* Diff content */}
+      <div className="bg-zinc-900/80 rounded overflow-hidden font-mono text-[9px]">
+        {visibleLines.map((line, i) => (
+          <div
+            key={i}
+            className={cn(
+              "px-1.5 py-px flex",
+              line.type === "add" && "bg-green-500/10",
+              line.type === "remove" && "bg-red-500/10"
+            )}
+          >
+            <span
+              className={cn(
+                "w-3 shrink-0 select-none",
+                line.type === "add" && "text-green-400",
+                line.type === "remove" && "text-red-400"
+              )}
+            >
+              {line.type === "add" ? "+" : line.type === "remove" ? "-" : " "}
+            </span>
+            <span
+              className={cn(
+                "flex-1 whitespace-pre-wrap break-all",
+                line.type === "add" && "text-green-300/90",
+                line.type === "remove" && "text-red-300/90",
+                line.type === "context" && "text-foreground/60"
+              )}
+            >
+              {line.text}
+            </span>
+          </div>
+        ))}
+        {hasMore && !showFull && (
+          <div className="px-1.5 py-1 text-muted-foreground/50 border-t border-border/30">
+            ... {diffLines.length - 15} more lines
+          </div>
+        )}
+      </div>
+
+      {/* Show more button */}
+      {hasMore && (
+        <button
+          type="button"
+          onClick={() => setShowFull(!showFull)}
+          className="text-[9px] text-accent-orange hover:underline"
+        >
+          {showFull ? "Show less" : `Show all ${diffLines.length} lines`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Heredoc content display (for bash cat > file << EOF commands)
+function HeredocContent({ filePath, content }: { filePath: string; content: string }) {
+  const [showFull, setShowFull] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const fileName = filePath.split("/").pop() || "file";
+  const preview = content.slice(0, 300);
+  const hasMore = content.length > 300;
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="space-y-0.5">
+      <div className="flex items-center gap-1 text-green-400/80">
+        <Terminal className="size-2.5" />
+        <span className="font-mono text-[9px]">cat &gt;</span>
+        <span className="font-mono text-amber-400/80">{fileName}</span>
+        <span className="text-muted-foreground/50 truncate text-[9px] flex-1">
+          {filePath}
+        </span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="p-0.5 rounded hover:bg-muted transition-colors"
+          title="Copy content"
+        >
+          {copied ? (
+            <Check className="size-2.5 text-green-400" />
+          ) : (
+            <Copy className="size-2.5 text-muted-foreground" />
+          )}
+        </button>
+      </div>
+      <div className="bg-muted/30 rounded p-1.5 font-mono text-[9px] text-foreground/70 overflow-hidden">
+        <pre className="whitespace-pre-wrap break-all">
+          {showFull ? content : preview}
+          {hasMore && !showFull && "..."}
+        </pre>
+        {hasMore && (
+          <button
+            type="button"
+            onClick={() => setShowFull(!showFull)}
+            className="text-accent-orange hover:underline mt-1"
+          >
+            {showFull ? "Show less" : `Show more (${content.length} chars)`}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -148,38 +391,14 @@ function ContentItem({ content }: { content: ToolCallContent }) {
 
   if (content.type === "diff") {
     const fileName = content.path?.split("/").pop() || "file";
-    const preview = content.new_text?.slice(0, 200) || "";
-    const hasMore = (content.new_text?.length || 0) > 200;
 
     return (
-      <div className="space-y-0.5">
-        <div className="flex items-center gap-1 text-amber-400/80">
-          <Pencil className="size-2.5" />
-          <span className="font-mono">{fileName}</span>
-          {content.path && (
-            <span className="text-muted-foreground/50 truncate text-[9px]">
-              {content.path}
-            </span>
-          )}
-        </div>
-        {content.new_text && (
-          <div className="bg-muted/30 rounded p-1.5 font-mono text-[9px] text-foreground/70 overflow-hidden">
-            <pre className="whitespace-pre-wrap break-all">
-              {showFull ? content.new_text : preview}
-              {hasMore && !showFull && "..."}
-            </pre>
-            {hasMore && (
-              <button
-                type="button"
-                onClick={() => setShowFull(!showFull)}
-                className="text-accent-orange hover:underline mt-1"
-              >
-                {showFull ? "Show less" : "Show more"}
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      <DiffView
+        fileName={fileName}
+        filePath={content.path || ""}
+        oldText={content.old_text}
+        newText={content.new_text}
+      />
     );
   }
 
