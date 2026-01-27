@@ -1,10 +1,12 @@
-import { Button } from "@crafter-code/ui";
 import Link from "next/link";
+
+import { Button } from "@crafter-code/ui";
+
 import { TerminalBlock } from "./terminal-block";
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen overflow-hidden pt-32 pb-20">
+    <section className="relative flex min-h-[calc(100svh-4rem)] flex-col justify-center overflow-hidden py-16">
       {/* Background pattern */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-900 via-background to-background" />
@@ -29,12 +31,12 @@ export function Hero() {
               <span className="text-foreground">For Agents.</span>
             </h1>
             <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
-              Crafter Code is the agent-first IDE that lets you orchestrate
-              multiple AI sessions with full visibility. Track what they build.
-              Ship while you sleep.
+              Crafter Code is a desktop app for running multiple AI agents side
+              by side. Works with Claude, Gemini, and any ACP-compatible CLI.
+              Multi-turn conversations, real-time streaming.
             </p>
             <p className="mt-4 text-sm text-muted-foreground/70">
-              Free tier available. No credit card required.
+              Open source. Built with Tauri + React.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Button

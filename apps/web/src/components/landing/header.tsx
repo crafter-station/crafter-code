@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { useState } from "react";
+
 import { Button } from "@crafter-code/ui";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
   { label: "Features", href: "#features" },
-  { label: "Skills", href: "#skills" },
+  { label: "Agents", href: "#agents" },
   { label: "Pricing", href: "#pricing" },
-  { label: "Docs", href: "/docs" },
+  { label: "GitHub", href: "https://github.com/crafter-station/crafter-code" },
 ];
 
 export function Header() {

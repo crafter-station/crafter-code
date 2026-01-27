@@ -5,25 +5,19 @@ const footerLinks = {
     { label: "Download", href: "/download" },
     { label: "Features", href: "#features" },
     { label: "Pricing", href: "#pricing" },
-    { label: "Skills", href: "#skills" },
-  ],
-  Resources: [
-    { label: "Documentation", href: "/docs" },
-    { label: "Quickstart", href: "/docs/quickstart" },
-    { label: "Skills Marketplace", href: "/skills" },
     { label: "Changelog", href: "/changelog" },
   ],
-  Company: [
-    { label: "About", href: "/about" },
-    { label: "Blog", href: "/blog" },
-    { label: "Careers", href: "/careers" },
-    { label: "Contact", href: "/contact" },
+  Resources: [
+    {
+      label: "GitHub",
+      href: "https://github.com/crafter-station/crafter-code",
+    },
+    { label: "Documentation", href: "/docs" },
+    { label: "Quickstart", href: "/docs/quickstart" },
   ],
-  Community: [
-    { label: "GitHub", href: "https://github.com/crafter-station/crafter-code" },
-    { label: "Discord", href: "https://discord.gg/crafterstation" },
+  Company: [
+    { label: "Crafter Station", href: "https://crafterstation.com" },
     { label: "X (Twitter)", href: "https://x.com/crafterstation" },
-    { label: "YouTube", href: "https://youtube.com/@crafterstation" },
   ],
 };
 
@@ -31,7 +25,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-card">
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-6">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5">
           {/* Logo and status */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2">
@@ -50,12 +44,10 @@ export function Footer() {
                 crafter/code
               </span>
             </Link>
-            <div className="mt-4 flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full bg-accent-teal" />
-              <span className="text-sm text-muted-foreground">
-                All Systems Operational
-              </span>
-            </div>
+            <p className="mt-4 max-w-xs text-sm text-muted-foreground">
+              A desktop app for running multiple AI agents side by side. Open
+              source, built with Tauri.
+            </p>
             <p className="mt-4 text-sm text-muted-foreground">
               Built by{" "}
               <Link
@@ -89,20 +81,14 @@ export function Footer() {
 
         <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 md:flex-row">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Crafter Station. All rights reserved.
+            © {new Date().getFullYear()} Crafter Station. MIT License.
           </p>
           <div className="flex items-center gap-6">
             <Link
-              href="/privacy"
+              href="https://github.com/crafter-station/crafter-code"
               className="text-sm text-muted-foreground hover:text-foreground"
             >
-              Privacy Policy
-            </Link>
-            <Link
-              href="/terms"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              Terms of Service
+              GitHub
             </Link>
           </div>
         </div>
