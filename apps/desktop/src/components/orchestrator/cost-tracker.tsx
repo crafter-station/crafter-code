@@ -1,6 +1,7 @@
 "use client";
 
 import { DollarSign, TrendingUp } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 interface CostTrackerProps {
@@ -16,13 +17,14 @@ export function CostTracker({
   totalWorkers,
   className,
 }: CostTrackerProps) {
-  const progress = totalWorkers > 0 ? (completedWorkers / totalWorkers) * 100 : 0;
+  const progress =
+    totalWorkers > 0 ? (completedWorkers / totalWorkers) * 100 : 0;
 
   return (
     <div
       className={cn(
         "flex items-center justify-between px-4 py-3 bg-sidebar border-b border-sidebar-border",
-        className
+        className,
       )}
     >
       <div className="flex items-center gap-6">

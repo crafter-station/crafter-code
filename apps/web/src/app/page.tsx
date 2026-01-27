@@ -1,12 +1,11 @@
 import {
+  CTA,
+  Features,
+  Footer,
   Header,
   Hero,
-  Features,
-  SkillsSection,
-  Testimonials,
   Pricing,
-  CTA,
-  Footer,
+  SkillsSection,
 } from "@/components/landing";
 
 export default function Home() {
@@ -17,7 +16,6 @@ export default function Home() {
         <Hero />
         <Features />
         <SkillsSection />
-        <Testimonials />
         <Pricing />
         <CTA />
       </main>

@@ -1,24 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
+import { Button, ScrollArea } from "@crafter-code/ui";
 import { Plus } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { Button, ScrollArea } from "@crafter-code/ui";
 import {
-  useOrchestratorStore,
-  type FileConflict,
-} from "@/stores/orchestrator-store";
-import {
-  onWorkerStream,
-  onWorkerStatusChange,
   cancelWorker,
-  retryWorker,
   getSessionConflicts,
+  onWorkerStatusChange,
+  onWorkerStream,
+  retryWorker,
 } from "@/lib/ipc/orchestrator";
+import { cn } from "@/lib/utils";
+
+import {
+  type FileConflict,
+  useOrchestratorStore,
+} from "@/stores/orchestrator-store";
 import { AgentCard } from "./agent-card";
-import { CostTracker } from "./cost-tracker";
 import { ConflictAlert } from "./conflict-alert";
+import { CostTracker } from "./cost-tracker";
 import { NewOrchestrationDialog } from "./new-orchestration-dialog";
 
 interface OrchestratorDashboardProps {
@@ -49,7 +51,12 @@ export function OrchestratorDashboard({
   useEffect(() => {
     const unsubscribe = onWorkerStatusChange((event) => {
       updateWorker(event.session_id, event.worker_id, {
-        status: event.status as "pending" | "running" | "completed" | "failed" | "cancelled",
+        status: event.status as
+          | "pending"
+          | "running"
+          | "completed"
+          | "failed"
+          | "cancelled",
         costUsd: event.cost,
         errorMessage: event.error,
       });
@@ -91,7 +98,12 @@ export function OrchestratorDashboard({
         unsub.then((fn) => fn());
       }
     };
-  }, [activeSession?.id, activeSession?.workers, appendWorkerOutput, updateWorker]);
+  }, [
+    activeSession?.id,
+    activeSession?.workers,
+    appendWorkerOutput,
+    updateWorker,
+  ]);
 
   // Check for conflicts periodically
   useEffect(() => {
@@ -180,9 +192,10 @@ export function OrchestratorDashboard({
                   <span
                     className={cn(
                       "font-mono uppercase",
-                      activeSession.status === "running" && "text-accent-orange",
+                      activeSession.status === "running" &&
+                        "text-accent-orange",
                       activeSession.status === "completed" && "text-green-500",
-                      activeSession.status === "failed" && "text-destructive"
+                      activeSession.status === "failed" && "text-destructive",
                     )}
                   >
                     {activeSession.status}
@@ -240,7 +253,7 @@ export function OrchestratorDashboard({
                   "px-2 py-1 text-xs rounded transition-colors shrink-0",
                   session.id === activeSessionId
                     ? "bg-accent-orange/20 text-accent-orange"
-                    : "bg-muted hover:bg-muted/80"
+                    : "bg-muted hover:bg-muted/80",
                 )}
               >
                 {session.prompt.slice(0, 20)}...

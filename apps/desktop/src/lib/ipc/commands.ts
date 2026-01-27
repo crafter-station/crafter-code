@@ -23,7 +23,7 @@ export interface ProjectInfo {
 export async function spawnTerminal(
   cols: number,
   rows: number,
-  cwd?: string
+  cwd?: string,
 ): Promise<string> {
   return invoke<string>("spawn_terminal", { cols, rows, cwd });
 }
@@ -35,7 +35,7 @@ export async function writeTerminal(id: string, data: string): Promise<void> {
 export async function resizeTerminal(
   id: string,
   cols: number,
-  rows: number
+  rows: number,
 ): Promise<void> {
   return invoke<void>("resize_terminal", { id, cols, rows });
 }
@@ -47,7 +47,7 @@ export async function killTerminal(id: string): Promise<void> {
 // Terminal output listener
 export function onTerminalOutput(
   terminalId: string,
-  callback: (data: string) => void
+  callback: (data: string) => void,
 ): Promise<UnlistenFn> {
   return listen<string>(`pty-output-${terminalId}`, (event) => {
     callback(event.payload);
@@ -61,4 +61,8 @@ export async function readDirectory(path: string): Promise<FileEntry[]> {
 
 export async function getProjectInfo(path: string): Promise<ProjectInfo> {
   return invoke<ProjectInfo>("get_project_info", { path });
+}
+
+export async function readFileContent(path: string): Promise<string> {
+  return invoke<string>("read_file_content", { path });
 }

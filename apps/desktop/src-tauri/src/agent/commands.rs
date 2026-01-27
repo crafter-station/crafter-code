@@ -82,6 +82,21 @@ pub fn read_directory(path: String) -> Result<Vec<FileEntry>, String> {
 }
 
 #[tauri::command]
+pub fn read_file_content(path: String) -> Result<String, String> {
+    let file_path = Path::new(&path);
+
+    if !file_path.exists() {
+        return Err(format!("File does not exist: {}", path));
+    }
+
+    if !file_path.is_file() {
+        return Err(format!("Path is not a file: {}", path));
+    }
+
+    fs::read_to_string(file_path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn get_project_info(path: String) -> Result<ProjectInfo, String> {
     let dir_path = Path::new(&path);
 

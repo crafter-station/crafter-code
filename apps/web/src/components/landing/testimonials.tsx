@@ -43,7 +43,9 @@ export function Testimonials() {
           <h2 className="font-serif text-4xl italic text-cream sm:text-5xl">
             Loved by
             <br />
-            <span className="not-italic text-foreground">high-agency builders.</span>
+            <span className="not-italic text-foreground">
+              high-agency builders.
+            </span>
           </h2>
         </div>
 

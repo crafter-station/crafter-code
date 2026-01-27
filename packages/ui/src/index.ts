@@ -1,8 +1,4 @@
 // Utility functions
-export { cn } from "./utils";
-
-// Hooks
-export { useIsMobile } from "./use-mobile";
 
 // UI Components
 export * from "./accordion";
@@ -58,3 +54,6 @@ export * from "./textarea";
 export * from "./toggle";
 export * from "./toggle-group";
 export * from "./tooltip";
+// Hooks
+export { useIsMobile } from "./use-mobile";
+export { cn } from "./utils";

@@ -1,29 +1,36 @@
+mod acp;
 mod agent;
 mod claude;
 mod orchestrator;
 mod pty;
 
+use acp::commands::WorkerHandle;
 use agent::manager::AgentManager;
 use orchestrator::OrchestratorManager;
 use parking_lot::Mutex;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::Manager;
 
 pub struct AppState {
     pub agent_manager: Arc<Mutex<AgentManager>>,
     pub orchestrator_manager: Arc<Mutex<OrchestratorManager>>,
+    /// Handles to communicate with persistent worker threads by session_id
+    pub worker_handles: Arc<Mutex<HashMap<String, WorkerHandle>>>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let agent_manager = Arc::new(Mutex::new(AgentManager::new()));
     let orchestrator_manager = Arc::new(Mutex::new(OrchestratorManager::new()));
+    let worker_handles = Arc::new(Mutex::new(HashMap::new()));
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .manage(AppState {
             agent_manager: agent_manager.clone(),
             orchestrator_manager: orchestrator_manager.clone(),
+            worker_handles: worker_handles.clone(),
         })
         .invoke_handler(tauri::generate_handler![
             // PTY commands
@@ -43,6 +50,11 @@ pub fn run() {
             orchestrator::commands::retry_worker,
             orchestrator::commands::get_session_conflicts,
             orchestrator::commands::get_session_cost,
+            // ACP commands
+            acp::commands::list_available_agents,
+            acp::commands::create_acp_session,
+            acp::commands::send_acp_prompt,
+            acp::commands::respond_to_permission,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

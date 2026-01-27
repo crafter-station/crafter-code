@@ -1,18 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import {
-  RefreshCw,
-  Square,
+  Button,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@crafter-code/ui";
+import {
   AlertCircle,
   CheckCircle2,
-  Loader2,
   Clock,
   DollarSign,
   FileText,
+  Loader2,
+  RefreshCw,
+  Square,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
-import { Button, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@crafter-code/ui";
+
 import type { WorkerSession, WorkerStatus } from "@/stores/orchestrator-store";
 
 interface AgentCardProps {
@@ -38,7 +47,7 @@ export function AgentCard({ worker, onCancel, onRetry }: AgentCardProps) {
         "flex flex-col rounded-lg border bg-card p-4 h-full min-h-[200px]",
         worker.status === "running" && "border-accent-orange/50",
         worker.status === "completed" && "border-green-500/50",
-        worker.status === "failed" && "border-destructive/50"
+        worker.status === "failed" && "border-destructive/50",
       )}
     >
       {/* Header */}
@@ -121,7 +130,9 @@ export function AgentCard({ worker, onCancel, onRetry }: AgentCardProps) {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
             <Clock className="size-3" />
-            <span>{formatTokens(worker.inputTokens + worker.outputTokens)}</span>
+            <span>
+              {formatTokens(worker.inputTokens + worker.outputTokens)}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <DollarSign className="size-3" />

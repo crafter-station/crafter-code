@@ -1,6 +1,8 @@
 import { useCallback, useRef, useState } from "react";
-import { useAgentStore, type SessionStatus } from "@/stores/agent-store";
+
 import { writeTerminal } from "@/lib/ipc/commands";
+
+import { type SessionStatus, useAgentStore } from "@/stores/agent-store";
 
 interface OrchestratorOptions {
   terminalId: string;
@@ -51,25 +53,28 @@ export function useOrchestrator() {
   /**
    * Analyze output to detect stop events
    */
-  const analyzeOutput = useCallback((output: string): StopHookEventType | null => {
-    const outputLower = output.toLowerCase();
+  const analyzeOutput = useCallback(
+    (output: string): StopHookEventType | null => {
+      const outputLower = output.toLowerCase();
 
-    // Check for completion patterns first
-    for (const pattern of COMPLETION_PATTERNS) {
-      if (outputLower.includes(pattern)) {
-        return "completion_promise";
+      // Check for completion patterns first
+      for (const pattern of COMPLETION_PATTERNS) {
+        if (outputLower.includes(pattern)) {
+          return "completion_promise";
+        }
       }
-    }
 
-    // Check for exit patterns
-    for (const pattern of EXIT_PATTERNS) {
-      if (outputLower.includes(pattern)) {
-        return "exit_attempt";
+      // Check for exit patterns
+      for (const pattern of EXIT_PATTERNS) {
+        if (outputLower.includes(pattern)) {
+          return "exit_attempt";
+        }
       }
-    }
 
-    return null;
-  }, []);
+      return null;
+    },
+    [],
+  );
 
   /**
    * Create a re-prompt message for exit attempts
@@ -80,7 +85,7 @@ export function useOrchestrator() {
 
 This is iteration ${iteration + 1}. Do not ask for confirmation or clarification. Complete the task and report when done with a completion statement like 'Task completed' or 'Implementation complete'.`;
     },
-    []
+    [],
   );
 
   /**
@@ -130,7 +135,7 @@ This is iteration ${iteration + 1}. Do not ask for confirmation or clarification
         outputBufferRef.current = outputBufferRef.current.slice(-5000);
       }
     },
-    [analyzeOutput, createReprompt, getActiveSession, updateSession]
+    [analyzeOutput, createReprompt, getActiveSession, updateSession],
   );
 
   /**
@@ -153,7 +158,7 @@ This is iteration ${iteration + 1}. Do not ask for confirmation or clarification
       const command = `claude "${session.prompt}"\n`;
       await writeTerminal(options.terminalId, command);
     },
-    [getActiveSession, updateSession]
+    [getActiveSession, updateSession],
   );
 
   /**
@@ -165,7 +170,7 @@ This is iteration ${iteration + 1}. Do not ask for confirmation or clarification
       setIsRunning(false);
       outputBufferRef.current = "";
     },
-    [updateSession]
+    [updateSession],
   );
 
   /**
@@ -176,7 +181,7 @@ This is iteration ${iteration + 1}. Do not ask for confirmation or clarification
       updateSession(sessionId, { status: "paused" });
       setIsRunning(false);
     },
-    [updateSession]
+    [updateSession],
   );
 
   /**
@@ -194,7 +199,7 @@ This is iteration ${iteration + 1}. Do not ask for confirmation or clarification
       const continuePrompt = `Continue with the task: ${session.prompt}\n`;
       await writeTerminal(options.terminalId, continuePrompt);
     },
-    [getActiveSession, updateSession]
+    [getActiveSession, updateSession],
   );
 
   return {

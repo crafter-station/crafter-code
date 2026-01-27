@@ -5,8 +5,9 @@
  * Run: bun scripts/generate-assets.ts
  */
 
-import { writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
 import { Resvg } from "@resvg/resvg-js";
 import sharp from "sharp";
 
@@ -188,7 +189,11 @@ function generateIcoFromSvg(): Buffer {
   return Buffer.from(svgContent);
 }
 
-async function svgToPng(svg: string, width: number, height: number): Promise<Buffer> {
+async function svgToPng(
+  svg: string,
+  width: number,
+  height: number,
+): Promise<Buffer> {
   const resvg = new Resvg(svg, {
     fitTo: { mode: "width", value: width },
   });
@@ -247,9 +252,7 @@ async function main() {
   writeFileSync(join(publicDir, "favicon.png"), faviconPng);
 
   // Generate ICO (using sharp to create proper ICO)
-  await sharp(faviconPng)
-    .resize(32, 32)
-    .toFile(join(publicDir, "favicon.ico"));
+  await sharp(faviconPng).resize(32, 32).toFile(join(publicDir, "favicon.ico"));
   console.log("✓ Generated /public/favicon.ico (32×32)");
 
   // Generate apple-touch-icon (180x180)

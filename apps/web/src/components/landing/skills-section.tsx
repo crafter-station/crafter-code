@@ -1,77 +1,99 @@
 import { Badge } from "@crafter-code/ui";
 
-const topSkills = [
-  { name: "vercel-react-best-practices", author: "vercel-labs", installs: "46.2K" },
-  { name: "web-design-guidelines", author: "vercel-labs", installs: "35.2K" },
-  { name: "remotion-best-practices", author: "remotion-dev", installs: "30.1K" },
-  { name: "frontend-design", author: "anthropics", installs: "13.0K" },
-  { name: "supabase-postgres", author: "supabase", installs: "3.6K" },
-  { name: "better-auth", author: "better-auth", installs: "3.4K" },
-  { name: "expo-deployment", author: "expo", installs: "2.3K" },
-  { name: "stripe-best-practices", author: "stripe", installs: "352" },
+const supportedAgents = [
+  {
+    name: "Claude Code",
+    command: "claude",
+    status: "Supported",
+    description: "Anthropic's CLI",
+  },
+  {
+    name: "Gemini CLI",
+    command: "gemini",
+    status: "Supported",
+    description: "Google's CLI",
+  },
+  {
+    name: "Codex CLI",
+    command: "codex",
+    status: "Coming Soon",
+    description: "OpenAI's CLI",
+  },
+  {
+    name: "Custom Agent",
+    command: "your-cli",
+    status: "ACP Compatible",
+    description: "Any ACP agent",
+  },
 ];
 
 export function SkillsSection() {
   return (
-    <section id="skills" className="border-t border-border bg-card/50 py-24">
+    <section id="agents" className="border-t border-border bg-card/50 py-24">
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid gap-12 lg:grid-cols-2">
           {/* Left: Copy */}
           <div>
             <p className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-accent-orange">
               <span className="inline-block h-2 w-2 rounded-full bg-accent-orange" />
-              Skills Ecosystem
+              Supported Agents
             </p>
             <h2 className="font-serif text-4xl italic text-cream sm:text-5xl">
-              One command.
+              Your CLI.
               <br />
-              <span className="not-italic text-foreground">Infinite capabilities.</span>
+              <span className="not-italic text-foreground">Our interface.</span>
             </h2>
             <p className="mt-6 max-w-lg text-lg text-muted-foreground">
-              Skills are reusable capabilities for AI agents. Install them to enhance
-              your agents with access to procedural knowledge from top companies.
+              Crafter Code auto-detects CLI agents on your system. Just have
+              them installed and we'll handle the rest via the Agent Client
+              Protocol.
             </p>
             <div className="mt-8 rounded-lg border border-border bg-background p-4">
               <code className="font-mono text-sm">
                 <span className="text-accent-orange">$</span>{" "}
-                <span className="text-muted-foreground">npx skills add</span>{" "}
-                <span className="text-foreground">vercel-labs/agent-skills</span>
+                <span className="text-muted-foreground">brew install</span>{" "}
+                <span className="text-foreground">claude gemini</span>
               </code>
             </div>
           </div>
 
-          {/* Right: Skills list */}
+          {/* Right: Agents list */}
           <div className="rounded-lg border border-border bg-background p-6">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                Top Skills
+                Available Agents
               </h3>
               <Badge variant="secondary" className="font-mono text-xs">
-                24,298 total
+                ACP v1
               </Badge>
             </div>
             <div className="space-y-3">
-              {topSkills.map((skill, index) => (
+              {supportedAgents.map((agent) => (
                 <div
-                  key={skill.name}
+                  key={agent.name}
                   className="flex items-center justify-between rounded-md border border-border/50 bg-card/50 px-4 py-3 transition-colors hover:border-border"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {index + 1}
-                    </span>
+                    <code className="rounded bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">
+                      {agent.command}
+                    </code>
                     <div>
                       <p className="font-mono text-sm text-foreground">
-                        {skill.name}
+                        {agent.name}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {skill.author}
+                        {agent.description}
                       </p>
                     </div>
                   </div>
-                  <span className="font-mono text-sm text-muted-foreground">
-                    {skill.installs}
-                  </span>
+                  <Badge
+                    variant={
+                      agent.status === "Supported" ? "default" : "secondary"
+                    }
+                    className="font-mono text-xs"
+                  >
+                    {agent.status}
+                  </Badge>
                 </div>
               ))}
             </div>

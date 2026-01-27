@@ -1,8 +1,10 @@
 "use client";
 
-import { AlertTriangle, X } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@crafter-code/ui";
+import { AlertTriangle, X } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
 import type { FileConflict } from "@/stores/orchestrator-store";
 
 interface ConflictAlertProps {
@@ -22,7 +24,7 @@ export function ConflictAlert({
     <div
       className={cn(
         "rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-4",
-        className
+        className,
       )}
     >
       <div className="flex items-start justify-between gap-4">

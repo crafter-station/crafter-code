@@ -1,5 +1,6 @@
-import { Button } from "@crafter-code/ui";
 import Link from "next/link";
+
+import { Button } from "@crafter-code/ui";
 
 export function CTA() {
   return (
@@ -8,10 +9,7 @@ export function CTA() {
         <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-12 md:p-16">
           {/* Background pattern */}
           <div className="absolute inset-0 -z-10 opacity-30">
-            <svg
-              className="h-full w-full"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <pattern
                   id="wave-pattern"
@@ -41,8 +39,8 @@ export function CTA() {
               <span className="italic text-cream">software of the future?</span>
             </h2>
             <p className="mt-6 text-lg text-muted-foreground">
-              Join thousands of developers building with AI agents. Start free,
-              scale when you're ready.
+              Open source and free. Download the desktop app and start running
+              multiple AI agents today.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Button

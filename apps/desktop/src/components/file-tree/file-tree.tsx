@@ -1,16 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+
 import {
-  ChevronRight,
   ChevronDown,
+  ChevronRight,
   File,
   Folder,
   FolderOpen,
 } from "lucide-react";
 
+import { type FileEntry, readDirectory } from "@/lib/ipc/commands";
 import { cn } from "@/lib/utils";
-import { readDirectory, type FileEntry } from "@/lib/ipc/commands";
 
 interface FileTreeProps {
   rootPath: string;
@@ -38,7 +39,9 @@ export function FileTree({ rootPath, className, onFileSelect }: FileTreeProps) {
         const entries = await readDirectory(rootPath);
         setTree(entries.map((e) => ({ ...e, isExpanded: false })));
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load directory");
+        setError(
+          err instanceof Error ? err.message : "Failed to load directory",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -63,16 +66,19 @@ export function FileTree({ rootPath, className, onFileSelect }: FileTreeProps) {
                 .then((children) => {
                   setTree((t) =>
                     updateNodeInTree(t, path, {
-                      children: children.map((c) => ({ ...c, isExpanded: false })),
+                      children: children.map((c) => ({
+                        ...c,
+                        isExpanded: false,
+                      })),
                       isLoading: false,
                       isExpanded: true,
-                    })
+                    }),
                   );
                 })
                 .catch((err) => {
                   console.error("Failed to load directory:", err);
                   setTree((t) =>
-                    updateNodeInTree(t, path, { isLoading: false })
+                    updateNodeInTree(t, path, { isLoading: false }),
                   );
                 });
               return { ...node, isLoading: true };
@@ -94,14 +100,17 @@ export function FileTree({ rootPath, className, onFileSelect }: FileTreeProps) {
   const updateNodeInTree = (
     nodes: TreeNode[],
     path: string,
-    updates: Partial<TreeNode>
+    updates: Partial<TreeNode>,
   ): TreeNode[] => {
     return nodes.map((node) => {
       if (node.path === path) {
         return { ...node, ...updates };
       }
       if (node.children) {
-        return { ...node, children: updateNodeInTree(node.children, path, updates) };
+        return {
+          ...node,
+          children: updateNodeInTree(node.children, path, updates),
+        };
       }
       return node;
     });
@@ -142,7 +151,12 @@ interface TreeNodeListProps {
   onFileSelect?: (path: string) => void;
 }
 
-function TreeNodeList({ nodes, depth, onToggle, onFileSelect }: TreeNodeListProps) {
+function TreeNodeList({
+  nodes,
+  depth,
+  onToggle,
+  onFileSelect,
+}: TreeNodeListProps) {
   return (
     <ul className="list-none">
       {nodes.map((node) => (
@@ -165,7 +179,12 @@ interface TreeNodeItemProps {
   onFileSelect?: (path: string) => void;
 }
 
-function TreeNodeItem({ node, depth, onToggle, onFileSelect }: TreeNodeItemProps) {
+function TreeNodeItem({
+  node,
+  depth,
+  onToggle,
+  onFileSelect,
+}: TreeNodeItemProps) {
   const handleClick = () => {
     if (node.is_dir) {
       onToggle(node.path);
@@ -174,11 +193,7 @@ function TreeNodeItem({ node, depth, onToggle, onFileSelect }: TreeNodeItemProps
     }
   };
 
-  const Icon = node.is_dir
-    ? node.isExpanded
-      ? FolderOpen
-      : Folder
-    : File;
+  const Icon = node.is_dir ? (node.isExpanded ? FolderOpen : Folder) : File;
 
   const ChevronIcon = node.isExpanded ? ChevronDown : ChevronRight;
 
@@ -189,7 +204,7 @@ function TreeNodeItem({ node, depth, onToggle, onFileSelect }: TreeNodeItemProps
         onClick={handleClick}
         className={cn(
           "flex w-full items-center gap-1 px-2 py-1 text-left hover:bg-accent/50 rounded-sm transition-colors",
-          node.is_hidden && "text-muted-foreground"
+          node.is_hidden && "text-muted-foreground",
         )}
         style={{ paddingLeft: `${depth * 12 + 8}px` }}
       >
@@ -201,7 +216,7 @@ function TreeNodeItem({ node, depth, onToggle, onFileSelect }: TreeNodeItemProps
         <Icon
           className={cn(
             "size-4 shrink-0",
-            node.is_dir ? "text-accent-orange" : "text-muted-foreground"
+            node.is_dir ? "text-accent-orange" : "text-muted-foreground",
           )}
         />
         <span className="truncate">{node.name}</span>

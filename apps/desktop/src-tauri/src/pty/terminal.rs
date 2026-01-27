@@ -10,7 +10,9 @@ use uuid::Uuid;
 pub struct PtyTerminal {
     pub id: String,
     master: Box<dyn MasterPty + Send>,
+    writer: Arc<Mutex<Box<dyn Write + Send>>>,
     child: Box<dyn Child + Send + Sync>,
+    #[allow(dead_code)]
     reader_handle: Option<thread::JoinHandle<()>>,
 }
 
@@ -53,6 +55,10 @@ impl PtyTerminal {
         let id = Uuid::new_v4().to_string();
         let master = pair.master;
 
+        // Take writer once and store it
+        let writer = master.take_writer().map_err(|e| e.to_string())?;
+        let writer = Arc::new(Mutex::new(writer));
+
         // Create reader for streaming output
         let mut reader = master.try_clone_reader().map_err(|e| e.to_string())?;
         let id_clone = id.clone();
@@ -74,14 +80,16 @@ impl PtyTerminal {
         Ok(Self {
             id,
             master,
+            writer,
             child,
             reader_handle: Some(reader_handle),
         })
     }
 
-    pub fn write(&mut self, data: &str) -> Result<(), String> {
-        let mut writer = self.master.take_writer().map_err(|e| e.to_string())?;
+    pub fn write(&self, data: &str) -> Result<(), String> {
+        let mut writer = self.writer.lock();
         writer.write_all(data.as_bytes()).map_err(|e| e.to_string())?;
+        writer.flush().map_err(|e| e.to_string())?;
         Ok(())
     }
 
@@ -125,10 +133,10 @@ impl TerminalManager {
         Ok(id)
     }
 
-    pub fn write(&mut self, id: &str, data: &str) -> Result<(), String> {
+    pub fn write(&self, id: &str, data: &str) -> Result<(), String> {
         let terminal = self
             .terminals
-            .get_mut(id)
+            .get(id)
             .ok_or_else(|| format!("Terminal not found: {}", id))?;
         terminal.write(data)
     }

@@ -1,29 +1,29 @@
-import { Zap, Layers, Package, Eye } from "lucide-react";
+import { Layers, MessageSquare, Terminal, Zap } from "lucide-react";
 
 const features = [
   {
     icon: Layers,
-    title: "Multi-Agent Orchestration",
+    title: "Multi-Agent Sessions",
     description:
-      "Run multiple AI agent sessions in parallel. See all their activity in one unified view.",
-  },
-  {
-    icon: Eye,
-    title: "Real-time Visibility",
-    description:
-      "Watch diffs appear live as agents modify your codebase. Full Git timeline of every change.",
-  },
-  {
-    icon: Package,
-    title: "Skills Marketplace",
-    description:
-      "Install skills with one command. Browse 200+ community skills for any framework or task.",
+      "Run Claude, Gemini, or any ACP-compatible agent side by side. See all activity in one view.",
   },
   {
     icon: Zap,
-    title: "Ralph Wiggum Method",
+    title: "Real-time Streaming",
     description:
-      "Built-in iterative loops. Set a goal, let agents iterate until completion. Ship overnight.",
+      "Watch responses stream in real-time. Tool calls, diffs, and completions as they happen.",
+  },
+  {
+    icon: MessageSquare,
+    title: "Multi-turn Conversations",
+    description:
+      "Keep CLI agents alive between prompts. Follow-up naturally like a real conversation.",
+  },
+  {
+    icon: Terminal,
+    title: "ACP Protocol",
+    description:
+      "Built on the Agent Client Protocol. Works with any ACP-compatible CLI out of the box.",
   },
 ];
 

@@ -11,17 +11,33 @@ use agent_client_protocol::{
     RequestPermissionResponse, SelectedPermissionOutcome, SessionNotification, SessionUpdate,
     StopReason, TerminalExitStatus, TerminalOutputRequest, TerminalOutputResponse,
     TextContent, WaitForTerminalExitRequest, WaitForTerminalExitResponse, WriteTextFileRequest,
-    WriteTextFileResponse,
+    WriteTextFileResponse, PermissionOptionId,
 };
 use futures::io::BufReader;
+use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::process::Child;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
 use tokio::process::Command;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, oneshot};
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
+
+/// Global registry for permission response channels
+/// Maps worker_id -> oneshot sender for the response
+static PERMISSION_CHANNELS: Lazy<Mutex<HashMap<String, oneshot::Sender<String>>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
+
+/// Send a permission response from the frontend
+pub fn send_permission_response(worker_id: &str, option_id: String) -> Result<(), String> {
+    let mut channels = PERMISSION_CHANNELS.lock();
+    if let Some(sender) = channels.remove(worker_id) {
+        sender.send(option_id).map_err(|_| "Channel closed".to_string())
+    } else {
+        Err(format!("No pending permission for worker {}", worker_id))
+    }
+}
 
 /// Our implementation of the ACP Client trait
 pub struct CrafterClient {
@@ -67,24 +83,92 @@ impl Client for CrafterClient {
         &self,
         args: RequestPermissionRequest,
     ) -> agent_client_protocol::Result<RequestPermissionResponse> {
-        // Auto-approve - find an "allow" option
-        let option_id = args
+        // Log the permission request details
+        let title = args.tool_call.fields.title.as_deref().unwrap_or("Permission Request");
+        eprintln!("[ACP] Permission request: title={}", title);
+        for opt in &args.options {
+            eprintln!(
+                "[ACP]   Option: id={}, name={:?}, kind={:?}",
+                opt.option_id, opt.name, opt.kind
+            );
+        }
+
+        // Create a channel to wait for the user's response
+        let (tx, rx) = oneshot::channel::<String>();
+
+        // Register the channel
+        {
+            let mut channels = PERMISSION_CHANNELS.lock();
+            channels.insert(self.worker_id.clone(), tx);
+        }
+
+        // Emit permission request event to frontend
+        let event_name = format!("worker-permission-{}", self.worker_id);
+        let options: Vec<serde_json::Value> = args
             .options
             .iter()
-            .find(|opt| {
-                matches!(
-                    opt.kind,
-                    agent_client_protocol::PermissionOptionKind::AllowOnce
-                        | agent_client_protocol::PermissionOptionKind::AllowAlways
-                )
+            .map(|opt| {
+                serde_json::json!({
+                    "id": opt.option_id.to_string(),
+                    "name": opt.name,
+                    "kind": format!("{:?}", opt.kind).to_lowercase()
+                })
             })
-            .map(|opt| opt.option_id.clone())
-            .unwrap_or_else(|| agent_client_protocol::PermissionOptionId::new("allow_once"));
+            .collect();
 
-        eprintln!(
-            "[ACP] Auto-approving permission request with option: {}",
-            option_id
+        let _ = self.app_handle.emit(
+            &event_name,
+            serde_json::json!({
+                "worker_id": self.worker_id,
+                "title": title,
+                "tool_call_id": args.tool_call.tool_call_id.to_string(),
+                "options": options
+            }),
         );
+
+        eprintln!("[ACP] Waiting for user permission response...");
+
+        // Wait for user response with timeout
+        let option_id = match tokio::time::timeout(std::time::Duration::from_secs(300), rx).await {
+            Ok(Ok(id)) => {
+                eprintln!("[ACP] User selected option: {}", id);
+                PermissionOptionId::new(id)
+            }
+            Ok(Err(_)) => {
+                eprintln!("[ACP] Permission channel closed, auto-approving");
+                // Channel closed, find default allow option
+                args.options
+                    .iter()
+                    .find(|opt| {
+                        matches!(
+                            opt.kind,
+                            agent_client_protocol::PermissionOptionKind::AllowOnce
+                                | agent_client_protocol::PermissionOptionKind::AllowAlways
+                        )
+                    })
+                    .map(|opt| opt.option_id.clone())
+                    .unwrap_or_else(|| PermissionOptionId::new("allow_once"))
+            }
+            Err(_) => {
+                eprintln!("[ACP] Permission timeout, auto-approving");
+                // Timeout - cleanup and auto-approve
+                {
+                    let mut channels = PERMISSION_CHANNELS.lock();
+                    channels.remove(&self.worker_id);
+                }
+                args.options
+                    .iter()
+                    .find(|opt| {
+                        matches!(
+                            opt.kind,
+                            agent_client_protocol::PermissionOptionKind::AllowOnce
+                                | agent_client_protocol::PermissionOptionKind::AllowAlways
+                        )
+                    })
+                    .map(|opt| opt.option_id.clone())
+                    .unwrap_or_else(|| PermissionOptionId::new("allow_once"))
+            }
+        };
 
         Ok(RequestPermissionResponse::new(
             RequestPermissionOutcome::Selected(SelectedPermissionOutcome::new(option_id)),
@@ -133,14 +217,66 @@ impl Client for CrafterClient {
             }
             SessionUpdate::ToolCallUpdate(update) => {
                 let event_name = format!("worker-tool-{}", self.worker_id);
-                // ToolCallUpdate has nested fields
+                // ToolCallUpdate has nested fields - flatten content for frontend
+                let content: Vec<serde_json::Value> = update
+                    .fields
+                    .content
+                    .as_ref()
+                    .map(|contents| {
+                        contents
+                            .iter()
+                            .map(|c| {
+                                // Extract text from nested Content structure
+                                match c {
+                                    agent_client_protocol::ToolCallContent::Content(content) => {
+                                        if let ContentBlock::Text(text_content) = &content.content {
+                                            serde_json::json!({
+                                                "type": "text",
+                                                "text": text_content.text
+                                            })
+                                        } else {
+                                            serde_json::json!({
+                                                "type": "content",
+                                                "text": format!("{:?}", content.content)
+                                            })
+                                        }
+                                    }
+                                    agent_client_protocol::ToolCallContent::Diff(diff) => {
+                                        serde_json::json!({
+                                            "type": "diff",
+                                            "path": diff.path,
+                                            "old_text": diff.old_text,
+                                            "new_text": diff.new_text
+                                        })
+                                    }
+                                    agent_client_protocol::ToolCallContent::Terminal(term) => {
+                                        serde_json::json!({
+                                            "type": "terminal",
+                                            "text": term.terminal_id.to_string()
+                                        })
+                                    }
+                                    _ => {
+                                        // Handle any future variants
+                                        serde_json::json!({
+                                            "type": "unknown",
+                                            "text": format!("{:?}", c)
+                                        })
+                                    }
+                                }
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default();
+
                 let _ = self.app_handle.emit(
                     &event_name,
                     serde_json::json!({
                         "worker_id": self.worker_id,
                         "tool_call_id": update.tool_call_id.to_string(),
                         "status": format!("{:?}", update.fields.status).to_lowercase(),
-                        "content": update.fields.content
+                        "title": update.fields.title,
+                        "kind": update.fields.kind.as_ref().map(|k| format!("{:?}", k).to_lowercase()),
+                        "content": content
                     }),
                 );
             }
@@ -246,8 +382,17 @@ impl Client for CrafterClient {
             args.command, args.args, args.cwd
         );
 
-        let mut cmd = std::process::Command::new(&args.command);
-        cmd.args(&args.args);
+        // Build the full command string
+        let full_command = if args.args.is_empty() {
+            args.command.clone()
+        } else {
+            format!("{} {}", args.command, args.args.join(" "))
+        };
+
+        // Use shell to execute the command (handles commands like "ls -la" properly)
+        let mut cmd = std::process::Command::new("/bin/sh");
+        cmd.args(["-c", &full_command]);
+
         if let Some(cwd) = &args.cwd {
             cmd.current_dir(cwd);
         }
@@ -364,6 +509,7 @@ impl Client for CrafterClient {
 // ============================================================================
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum AcpError {
     SpawnFailed(String),
     InitializeFailed(String),
@@ -565,6 +711,7 @@ impl AcpClient {
     }
 
     /// Check if process is still running
+    #[allow(dead_code)]
     pub fn is_running(&mut self) -> bool {
         match self.process.try_wait() {
             Ok(Some(_)) => false,

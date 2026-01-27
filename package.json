@@ -2,7 +2,10 @@
   "name": "crafter-code",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter=@crafter-code/web",

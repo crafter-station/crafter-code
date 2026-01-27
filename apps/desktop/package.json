@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack --port 3002",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
@@ -11,12 +11,14 @@
     "tauri:build": "tauri build"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "^0.13.1",
     "@crafter-code/ui": "workspace:*",
+    "@streamdown/code": "^1.0.1",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-shell": "^2",
-    "@xterm/xterm": "^5",
     "@xterm/addon-fit": "^0.10",
     "@xterm/addon-web-links": "^0.11",
+    "@xterm/xterm": "^5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.563.0",
@@ -24,6 +26,7 @@
     "next-themes": "^0.4.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "streamdown": "^2.1.0",
     "tailwind-merge": "^3.4.0",
     "zustand": "^5"
   },

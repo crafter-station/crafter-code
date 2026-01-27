@@ -1,26 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { Users } from "lucide-react";
 
 import {
+  Button,
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-  Button,
+  DialogHeader,
+  DialogTitle,
   Label,
-  Textarea,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Textarea,
 } from "@crafter-code/ui";
-import { useOrchestratorStore } from "@/stores/orchestrator-store";
+import { Users } from "lucide-react";
+
 import { createOrchestratorSession } from "@/lib/ipc/orchestrator";
+
+import { useOrchestratorStore } from "@/stores/orchestrator-store";
 
 interface NewOrchestrationDialogProps {
   open: boolean;

@@ -14,7 +14,7 @@ pub fn spawn_terminal(
 
 #[tauri::command]
 pub fn write_terminal(id: String, data: String) -> Result<(), String> {
-    let mut manager = TERMINAL_MANAGER.lock();
+    let manager = TERMINAL_MANAGER.lock();
     manager.write(&id, &data)
 }
 

@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 /// 1. Agent exit attempts (should re-prompt)
 /// 2. Completion promises (should stop the loop)
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StopHookEvent {
     pub event_type: StopHookEventType,
@@ -15,6 +16,7 @@ pub struct StopHookEvent {
     pub timestamp: i64,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum StopHookEventType {
@@ -30,6 +32,7 @@ pub enum StopHookEventType {
     UserCancelled,
 }
 
+#[allow(dead_code)]
 /// Patterns that indicate a completion promise
 const COMPLETION_PATTERNS: &[&str] = &[
     "task complete",
@@ -45,6 +48,7 @@ const COMPLETION_PATTERNS: &[&str] = &[
     "build successful",
 ];
 
+#[allow(dead_code)]
 /// Patterns that indicate an exit attempt without completion
 const EXIT_PATTERNS: &[&str] = &[
     "let me know if",
@@ -57,8 +61,10 @@ const EXIT_PATTERNS: &[&str] = &[
     "how can i assist",
 ];
 
+#[allow(dead_code)]
 pub struct StopHookHandler;
 
+#[allow(dead_code)]
 impl StopHookHandler {
     /// Analyze output to detect stop events
     pub fn analyze_output(session_id: &str, output: &str) -> Option<StopHookEvent> {
@@ -104,6 +110,7 @@ impl StopHookHandler {
     }
 }
 
+#[allow(dead_code)]
 fn chrono_timestamp() -> i64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

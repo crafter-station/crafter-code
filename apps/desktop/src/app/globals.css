@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@source "../node_modules/streamdown/dist/*.js";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -155,21 +157,9 @@
   background: #525252;
 }
 
-/* Force resizable panel group to contain children */
-[data-slot="resizable-panel-group"] {
-  contain: strict !important;
-}
-
-/* Force resizable panel content constraints */
+/* Resizable panel basic constraints (no strict containment) */
 [data-slot="resizable-panel"] {
-  overflow: hidden !important;
-  contain: strict !important;
-}
-
-[data-slot="resizable-panel"] > * {
-  max-height: 100% !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
+  overflow: hidden;
 }
 
 /* Resizable panels */
@@ -195,36 +185,301 @@
   background: var(--accent);
 }
 
-/* Radix UI Portals - ensure they render above Tauri layers */
+/* Radix UI Portals - basic z-index for dropdowns/popovers */
 [data-radix-portal] {
-  z-index: 9998 !important;
-}
-
-[data-slot="dialog-overlay"] {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 9998 !important;
-  background: rgba(0, 0, 0, 0.8) !important;
-}
-
-[data-slot="dialog-content"] {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 9999 !important;
-  background: var(--card) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 0.5rem !important;
-  padding: 1.5rem !important;
-  max-width: 500px !important;
-  width: calc(100% - 2rem) !important;
+  z-index: 50;
 }
 
 [data-radix-popper-content-wrapper] {
-  z-index: 10000 !important;
+  z-index: 50;
 }
 
-[data-slot="select-content"] {
-  z-index: 10000 !important;
+/* Streamdown compact styles for session cards */
+.streamdown-compact {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Override Streamdown's default spacing */
+.streamdown-compact .my-4,
+.streamdown-compact [class*="my-"] {
+  margin-top: 0.25em !important;
+  margin-bottom: 0.25em !important;
+}
+
+.streamdown-compact .space-y-2 > * + * {
+  margin-top: 0.25em !important;
+}
+
+.streamdown-compact > div:first-child {
+  margin-top: 0 !important;
+}
+
+.streamdown-compact > *:first-child {
+  margin-top: 0 !important;
+}
+
+.streamdown-compact > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+.streamdown-compact p {
+  margin: 0;
+}
+
+.streamdown-compact p + p {
+  margin-top: 0.5em;
+}
+
+.streamdown-compact h1,
+.streamdown-compact h2,
+.streamdown-compact h3,
+.streamdown-compact h4 {
+  font-size: 11px;
+  font-weight: 600;
+  margin: 0.5em 0 0.25em;
+}
+
+.streamdown-compact ul {
+  margin: 0.25em 0;
+  padding-left: 1.25em;
+  list-style-type: disc;
+}
+
+.streamdown-compact ol {
+  margin: 0.25em 0;
+  padding-left: 1.25em;
+  list-style-type: decimal;
+}
+
+.streamdown-compact li {
+  margin: 0.125em 0;
+  display: list-item;
+}
+
+.streamdown-compact li::marker {
+  color: #737373;
+}
+
+.streamdown-compact code:not(pre code) {
+  font-size: 10px;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.streamdown-compact pre {
+  font-size: 10px;
+  margin: 0.5em 0;
+  padding: 0.5em;
+  border-radius: 4px;
+  background: #1a1a1a !important;
+  overflow-x: auto;
+}
+
+.streamdown-compact pre code {
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.streamdown-compact a {
+  color: #f97316;
+  text-decoration: none;
+}
+
+.streamdown-compact a:hover {
+  text-decoration: underline;
+}
+
+.streamdown-compact blockquote {
+  margin: 0.5em 0;
+  padding-left: 0.75em;
+  border-left: 2px solid #404040;
+  color: #737373;
+}
+
+.streamdown-compact table {
+  font-size: 10px;
+  border-collapse: collapse;
+  margin-top: 0.5em !important;
+  margin-bottom: 0.5em !important;
+  width: 100%;
+}
+
+.streamdown-compact th,
+.streamdown-compact td {
+  padding: 0.2em 0.4em;
+  border: 1px solid #262626;
+  font-size: 10px;
+}
+
+.streamdown-compact th {
+  background: #1a1a1a;
+  font-weight: 600;
+}
+
+/* Streamdown code block controls - compact */
+.streamdown-compact [data-streamdown-code-actions],
+.streamdown-compact .streamdown-code-actions {
+  position: absolute;
+  top: 0.25em;
+  right: 0.25em;
+  display: flex;
+  gap: 0.25em;
+}
+
+.streamdown-compact [data-streamdown-code-actions] button,
+.streamdown-compact .streamdown-code-actions button,
+.streamdown-compact pre button {
+  padding: 0.2em;
+  border-radius: 3px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.streamdown-compact [data-streamdown-code-actions] button:hover,
+.streamdown-compact .streamdown-code-actions button:hover,
+.streamdown-compact pre button:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.streamdown-compact [data-streamdown-code-actions] svg,
+.streamdown-compact .streamdown-code-actions svg,
+.streamdown-compact pre button svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Code block header with controls */
+.streamdown-compact [data-streamdown-code-header],
+.streamdown-compact .streamdown-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25em 0.5em;
+  background: #0d0d0d;
+  border-radius: 4px 4px 0 0;
+  font-size: 9px;
+  color: #737373;
+}
+
+.streamdown-compact [data-streamdown-code-header] + pre,
+.streamdown-compact .streamdown-code-header + pre {
+  border-radius: 0 0 4px 4px;
+  margin-top: 0;
+}
+
+/* Hide default streamdown code buttons, use our compact styling */
+.streamdown-compact figure {
+  margin: 0.5em 0;
+  position: relative;
+}
+
+.streamdown-compact figure figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25em 0.5em;
+  background: #0d0d0d;
+  border-radius: 4px 4px 0 0;
+  font-size: 9px;
+  color: #737373;
+}
+
+.streamdown-compact figure figcaption button {
+  padding: 0.15em;
+  border-radius: 2px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.streamdown-compact figure figcaption button:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.streamdown-compact figure figcaption button svg {
+  width: 10px;
+  height: 10px;
+}
+
+.streamdown-compact figure pre {
+  margin-top: 0;
+  border-radius: 0 0 4px 4px;
+}
+
+/* Streamdown thinking styles - dimmed italic */
+.streamdown-thinking {
+  font-size: 10px;
+  line-height: 1.5;
+  color: rgba(115, 115, 115, 0.8);
+  font-style: italic;
+}
+
+.streamdown-thinking p {
+  margin: 0;
+}
+
+.streamdown-thinking p + p {
+  margin-top: 0.25em;
+}
+
+.streamdown-thinking strong {
+  color: rgba(167, 139, 250, 0.7);
+  font-weight: 600;
+}
+
+.streamdown-thinking em {
+  font-style: italic;
+}
+
+.streamdown-thinking code:not(pre code) {
+  font-size: 9px;
+  padding: 0.1em 0.25em;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(167, 139, 250, 0.6);
+}
+
+.streamdown-thinking pre {
+  font-size: 9px;
+  margin: 0.25em 0;
+  padding: 0.4em;
+  border-radius: 3px;
+  background: rgba(26, 26, 26, 0.6) !important;
+}
+
+.streamdown-thinking a {
+  color: rgba(167, 139, 250, 0.7);
+}
+
+.streamdown-thinking ul {
+  margin: 0.25em 0;
+  padding-left: 1em;
+  list-style-type: disc;
+}
+
+.streamdown-thinking ol {
+  margin: 0.25em 0;
+  padding-left: 1em;
+  list-style-type: decimal;
+}
+
+.streamdown-thinking li {
+  margin: 0.1em 0;
+  display: list-item;
+}
+
+.streamdown-thinking li::marker {
+  color: rgba(167, 139, 250, 0.4);
 }

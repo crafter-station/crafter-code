@@ -68,7 +68,7 @@ export const useAgentStore = create<AgentState>()(
       updateSession: (id, updates) => {
         set((state) => ({
           sessions: state.sessions.map((s) =>
-            s.id === id ? { ...s, ...updates, updatedAt: Date.now() } : s
+            s.id === id ? { ...s, ...updates, updatedAt: Date.now() } : s,
           ),
         }));
       },
@@ -96,6 +96,6 @@ export const useAgentStore = create<AgentState>()(
         sessions: state.sessions,
         projectPath: state.projectPath,
       }),
-    }
-  )
+    },
+  ),
 );
