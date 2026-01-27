@@ -396,11 +396,19 @@ export const useOrchestratorStore = create<OrchestratorState>()(
                 );
                 const updatedToolCalls =
                   existingIndex >= 0
-                    ? worker.toolCalls.map((tc, i) =>
-                        i === existingIndex
-                          ? { ...toolCall, timestamp: tc.timestamp } // Preserve original timestamp
-                          : tc,
-                      )
+                    ? worker.toolCalls.map((tc, i) => {
+                        if (i !== existingIndex) return tc;
+                        // MERGE updates instead of replacing - preserve existing values
+                        return {
+                          ...tc, // Keep existing values
+                          // Only update fields that are provided and non-empty
+                          ...(toolCall.title && { title: toolCall.title }),
+                          ...(toolCall.kind && { kind: toolCall.kind }),
+                          ...(toolCall.status && { status: toolCall.status }),
+                          // Only update content if new content is provided and non-empty
+                          ...(toolCall.content && toolCall.content.length > 0 && { content: toolCall.content }),
+                        };
+                      })
                     : [...(worker.toolCalls || []), toolCall];
                 return {
                   ...worker,

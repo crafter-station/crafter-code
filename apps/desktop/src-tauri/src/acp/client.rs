@@ -313,17 +313,21 @@ impl Client for CrafterClient {
                     })
                     .unwrap_or_default();
 
-                let _ = self.app_handle.emit(
-                    &event_name,
-                    serde_json::json!({
-                        "worker_id": self.worker_id,
-                        "tool_call_id": update.tool_call_id.to_string(),
-                        "status": format!("{:?}", update.fields.status).to_lowercase(),
-                        "title": update.fields.title,
-                        "kind": update.fields.kind.as_ref().map(|k| format!("{:?}", k).to_lowercase()),
-                        "content": content
-                    }),
-                );
+                // Build payload, only include content if not empty
+                let mut payload = serde_json::json!({
+                    "worker_id": self.worker_id,
+                    "tool_call_id": update.tool_call_id.to_string(),
+                    "status": format!("{:?}", update.fields.status).to_lowercase(),
+                    "title": update.fields.title,
+                    "kind": update.fields.kind.as_ref().map(|k| format!("{:?}", k).to_lowercase())
+                });
+
+                // Only include content if not empty (to avoid overwriting existing content)
+                if !content.is_empty() {
+                    payload["content"] = serde_json::json!(content);
+                }
+
+                let _ = self.app_handle.emit(&event_name, payload);
             }
             SessionUpdate::Plan(plan) => {
                 // Plan has entries: Vec<PlanEntry>, not title/content
