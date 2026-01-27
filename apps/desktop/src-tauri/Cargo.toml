@@ -34,6 +34,12 @@ futures-util = "0.3"
 thiserror = "1"
 async-stream = "0.3"
 
+# ACP (Agent Client Protocol) SDK
+agent-client-protocol = "0.9"
+async-trait = "0.1"
+tokio-util = { version = "0.7", features = ["compat"] }
+futures = "0.3"
+
 [profile.release]
 panic = "abort"
 codegen-units = 1
