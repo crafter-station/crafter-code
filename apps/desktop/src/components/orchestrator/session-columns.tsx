@@ -109,7 +109,7 @@ export function SessionColumns({ className }: SessionColumnsProps) {
       {/* Left fade indicator */}
       <div
         className={cn(
-          "absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none transition-opacity duration-200",
+          "absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-background/60 to-transparent z-10 pointer-events-none transition-opacity duration-200",
           canScrollLeft ? "opacity-100" : "opacity-0"
         )}
       />
@@ -135,7 +135,7 @@ export function SessionColumns({ className }: SessionColumnsProps) {
       {/* Right fade indicator */}
       <div
         className={cn(
-          "absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none transition-opacity duration-200",
+          "absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background/60 to-transparent z-10 pointer-events-none transition-opacity duration-200",
           canScrollRight ? "opacity-100" : "opacity-0"
         )}
       />
