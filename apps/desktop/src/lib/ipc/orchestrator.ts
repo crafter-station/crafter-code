@@ -110,6 +110,14 @@ interface WorkerToolCallEvent {
     code?: string;
     language?: string;
     message?: string;
+    // Diff-specific fields
+    path?: string;
+    old_text?: string;
+    new_text?: string;
+    // Terminal-specific fields
+    terminal_id?: string;
+    output?: string;
+    exit_code?: number;
   }>;
 }
 
@@ -287,6 +295,14 @@ export function onWorkerToolCall(
         code: c.code,
         language: c.language,
         message: c.message,
+        // Diff-specific fields
+        path: c.path,
+        old_text: c.old_text,
+        new_text: c.new_text,
+        // Terminal-specific fields
+        terminal_id: c.terminal_id,
+        output: c.output,
+        exit_code: c.exit_code,
       })),
       timestamp: Date.now(),
     });

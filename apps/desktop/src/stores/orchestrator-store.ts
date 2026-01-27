@@ -74,6 +74,10 @@ export interface ToolCallContent {
   path?: string;
   old_text?: string;
   new_text?: string;
+  // Terminal-specific fields
+  terminal_id?: string;
+  output?: string;
+  exit_code?: number;
 }
 
 export type MessageRole = "user" | "assistant";

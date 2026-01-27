@@ -204,6 +204,50 @@ impl Client for CrafterClient {
             }
             SessionUpdate::ToolCall(tool_call) => {
                 let event_name = format!("worker-tool-{}", self.worker_id);
+
+                // Convert content from ToolCall
+                let content: Vec<serde_json::Value> = tool_call
+                    .content
+                    .iter()
+                    .map(|c| {
+                        match c {
+                            agent_client_protocol::ToolCallContent::Content(content) => {
+                                if let ContentBlock::Text(text_content) = &content.content {
+                                    serde_json::json!({
+                                        "type": "text",
+                                        "text": text_content.text
+                                    })
+                                } else {
+                                    serde_json::json!({
+                                        "type": "content",
+                                        "text": format!("{:?}", content.content)
+                                    })
+                                }
+                            }
+                            agent_client_protocol::ToolCallContent::Diff(diff) => {
+                                serde_json::json!({
+                                    "type": "diff",
+                                    "path": diff.path,
+                                    "old_text": diff.old_text,
+                                    "new_text": diff.new_text
+                                })
+                            }
+                            agent_client_protocol::ToolCallContent::Terminal(term) => {
+                                serde_json::json!({
+                                    "type": "terminal",
+                                    "terminal_id": term.terminal_id.to_string()
+                                })
+                            }
+                            _ => {
+                                serde_json::json!({
+                                    "type": "unknown",
+                                    "text": format!("{:?}", c)
+                                })
+                            }
+                        }
+                    })
+                    .collect();
+
                 let _ = self.app_handle.emit(
                     &event_name,
                     serde_json::json!({
@@ -211,7 +255,8 @@ impl Client for CrafterClient {
                         "tool_call_id": tool_call.tool_call_id.to_string(),
                         "title": tool_call.title,
                         "kind": format!("{:?}", tool_call.kind).to_lowercase(),
-                        "status": format!("{:?}", tool_call.status).to_lowercase()
+                        "status": format!("{:?}", tool_call.status).to_lowercase(),
+                        "content": content
                     }),
                 );
             }
