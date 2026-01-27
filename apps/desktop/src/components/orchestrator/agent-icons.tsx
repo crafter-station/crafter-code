@@ -64,6 +64,24 @@ export function OpenAIIcon({ className }: AgentIconProps) {
   );
 }
 
+export function OpenCodeIcon({ className }: AgentIconProps) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn("size-4", className)}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M13 14H3V2H13V14ZM10.5 4.4H5.5V11.6H10.5V4.4Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 // Map agent IDs to their icons
 export const AGENT_ICONS: Record<
   string,
@@ -72,6 +90,7 @@ export const AGENT_ICONS: Record<
   claude: ClaudeIcon,
   gemini: GeminiIcon,
   codex: OpenAIIcon,
+  opencode: OpenCodeIcon,
 };
 
 export function AgentIcon({

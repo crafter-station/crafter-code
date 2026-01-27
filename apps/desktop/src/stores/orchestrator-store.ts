@@ -9,6 +9,10 @@ import type {
   ToolKind as AcpToolKind,
   PermissionOption as AcpPermissionOption,
   PermissionOptionKind as AcpPermissionOptionKind,
+  Plan as AcpPlan,
+  PlanEntry as AcpPlanEntry,
+  PlanEntryPriority as AcpPlanEntryPriority,
+  PlanEntryStatus as AcpPlanEntryStatus,
 } from "@agentclientprotocol/sdk";
 
 export type {
@@ -18,6 +22,10 @@ export type {
   AcpToolKind,
   AcpPermissionOption,
   AcpPermissionOptionKind,
+  AcpPlan,
+  AcpPlanEntry,
+  AcpPlanEntryPriority,
+  AcpPlanEntryStatus,
 };
 
 // App-specific types (extend ACP where needed)
@@ -52,6 +60,7 @@ export interface ToolCall {
   kind: ToolCallKind;
   status: ToolCallStatus;
   content?: ToolCallContent[];
+  timestamp: number;
 }
 
 // Simplified content for UI display
@@ -92,6 +101,8 @@ export interface WorkerSession {
   outputBuffer: string;
   messages: Message[];
   toolCalls: ToolCall[];
+  plan?: AcpPlan;
+  planTimestamp?: number;
   filesTouched: string[];
   errorMessage?: string;
   createdAt: number;
@@ -171,6 +182,13 @@ interface OrchestratorState {
     sessionId: string,
     workerId: string,
     toolCall: ToolCall,
+  ) => void;
+
+  // Plan actions
+  updateWorkerPlan: (
+    sessionId: string,
+    workerId: string,
+    plan: AcpPlan,
   ) => void;
 
   // Permission actions
@@ -375,12 +393,35 @@ export const useOrchestratorStore = create<OrchestratorState>()(
                 const updatedToolCalls =
                   existingIndex >= 0
                     ? worker.toolCalls.map((tc, i) =>
-                        i === existingIndex ? toolCall : tc,
+                        i === existingIndex
+                          ? { ...toolCall, timestamp: tc.timestamp } // Preserve original timestamp
+                          : tc,
                       )
                     : [...(worker.toolCalls || []), toolCall];
                 return {
                   ...worker,
                   toolCalls: updatedToolCalls,
+                  updatedAt: Date.now(),
+                };
+              }),
+              updatedAt: Date.now(),
+            };
+          }),
+        }));
+      },
+
+      updateWorkerPlan: (sessionId, workerId, plan) => {
+        set((state) => ({
+          sessions: state.sessions.map((session) => {
+            if (session.id !== sessionId) return session;
+            return {
+              ...session,
+              workers: session.workers.map((worker) => {
+                if (worker.id !== workerId) return worker;
+                return {
+                  ...worker,
+                  plan,
+                  planTimestamp: worker.planTimestamp ?? Date.now(), // Preserve original timestamp
                   updatedAt: Date.now(),
                 };
               }),

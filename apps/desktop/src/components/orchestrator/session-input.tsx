@@ -1,6 +1,6 @@
 "use client";
 
-import { type KeyboardEvent, useCallback, useState } from "react";
+import { type KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { ArrowUp, Loader2 } from "lucide-react";
 
@@ -11,6 +11,7 @@ interface SessionInputProps {
   disabled?: boolean;
   isLoading?: boolean;
   placeholder?: string;
+  autoFocus?: boolean;
   className?: string;
 }
 
@@ -19,9 +20,18 @@ export function SessionInput({
   disabled,
   isLoading,
   placeholder = "Follow-up...",
+  autoFocus,
   className,
 }: SessionInputProps) {
   const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus when autoFocus prop changes to true
+  useEffect(() => {
+    if (autoFocus && inputRef.current && !disabled) {
+      inputRef.current.focus();
+    }
+  }, [autoFocus, disabled]);
 
   const handleSubmit = useCallback(() => {
     if (!value.trim() || disabled || isLoading) return;
@@ -42,6 +52,7 @@ export function SessionInput({
   return (
     <div className={cn("relative", className)}>
       <textarea
+        ref={inputRef}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}

@@ -26,6 +26,7 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
     appendWorkerOutput,
     addWorkerMessage,
     updateWorkerToolCall,
+    updateWorkerPlan,
     addPermissionRequest,
     getActiveSession,
   } = useOrchestratorStore();
@@ -66,12 +67,12 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
   const subscribedWorkersRef = useRef<Map<string, () => void>>(new Map());
   const toolCallSubscribedRef = useRef<Map<string, () => void>>(new Map());
   const permissionSubscribedRef = useRef<Map<string, () => void>>(new Map());
-  const storeActionsRef = useRef({ appendWorkerOutput, updateWorker, addWorkerMessage, updateWorkerToolCall, addPermissionRequest });
+  const storeActionsRef = useRef({ appendWorkerOutput, updateWorker, addWorkerMessage, updateWorkerToolCall, updateWorkerPlan, addPermissionRequest });
 
   // Keep store actions ref up to date
   useEffect(() => {
-    storeActionsRef.current = { appendWorkerOutput, updateWorker, addWorkerMessage, updateWorkerToolCall, addPermissionRequest };
-  }, [appendWorkerOutput, updateWorker, addWorkerMessage, updateWorkerToolCall, addPermissionRequest]);
+    storeActionsRef.current = { appendWorkerOutput, updateWorker, addWorkerMessage, updateWorkerToolCall, updateWorkerPlan, addPermissionRequest };
+  }, [appendWorkerOutput, updateWorker, addWorkerMessage, updateWorkerToolCall, updateWorkerPlan, addPermissionRequest]);
 
   // Listen for worker output streams - subscribe only to new workers
   useEffect(() => {
@@ -147,6 +148,9 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
               content: event.message,
               timestamp: Date.now(),
             });
+          } else if (event.type === "plan") {
+            console.log("[Frontend] Received plan:", event.entries);
+            actions.updateWorkerPlan(sessionId, workerId, { entries: event.entries });
           }
         });
 

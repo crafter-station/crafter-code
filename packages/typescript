@@ -1,0 +1,2342 @@
+Script started on Tue Jan 27 03:27:13 2026
+ME.ko.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.no.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+la[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;32m➜  [36mpackages[00m [K[?1h=[?2004hMME.ko.md[?1l>[?2004l
+docs: add Italian README (#10732)
+5 hours ago
+
+README.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.no.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+]2;ME.ko.md]1;ME.ko.mdzsh: command not found: ME.ko.md
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hddocs: add Italian README (#10732)[?1l>[?2004l
+5 hours ago
+
+README.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.no.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 da]2;docs: add Italian README (#10732)]1;docs:zsh: unknown file attribute: #
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h55 hours ago[?1l>[?2004l
+
+README.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.no.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst]2;cd -5 hours ago]1;5cd: too many arguments
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+README.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.no.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.c[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hRREADME.md[?1l>[?2004l
+docs: add Italian README (#10732)
+5 hours ago
+
+README.no.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con]2;README.md]1;README.mdzsh: command not found: README.md
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hddocs: add Italian README (#10732)[?1l>[?2004l
+5 hours ago
+
+README.no.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cn]2;docs: add Italian README (#10732)]1;docs:zsh: unknown file attribute: #
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h55 hours ago[?1l>[?2004l
+
+README.no.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisag]2;cd -5 hours ago]1;5cd: too many arguments
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+README.no.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagos[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hRREADME.no.md[?1l>[?2004l
+docs: add Italian README (#10732)
+5 hours ago
+
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.c]2;README.no.md]1;README.no.mdzsh: command not found: README.no.md
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hddocs: add Italian README (#10732)[?1l>[?2004l
+5 hours ago
+
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.co]2;docs: add Italian README (#10732)]1;docs:zsh: unknown file attribute: #
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h55 hours ago[?1l>[?2004l
+
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.co]2;cd -5 hours ago]1;5cd: too many arguments
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+README.pl.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.conf[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hRREADME.pl.md[?1l>[?2004l
+docs: add Italian README (#10732)
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confi]2;README.pl.md]1;README.pl.mdzsh: command not found: README.pl.md
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hddocs: add Italian README (#10732)[?1l>[?2004l
+5 hours ago
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confis]2;docs: add Italian README (#10732)]1;docs:zsh: unknown file attribute: #
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h55 hours ago[?1l>[?2004l
+
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confis]2;cd -5 hours ago]1;5cd: too many arguments
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+README.ru.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confisse[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hRREADME.ru.md[?1l>[?2004l
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.]2;README.ru.md]1;README.ru.mdzsh: command not found: README.ru.md
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hddocs: add Italian README (#10732)[?1l>[?2004l
+5 hours ago
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstas]2;docs: add Italian README (#10732)]1;docs:zsh: unknown file attribute: #
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h55 hours ago[?1l>[?2004l
+
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh s]2;cd -5 hours ago]1;5cd: too many arguments
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+README.zh.md
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hRREADME.zh.md[?1l>[?2004l
+docs: add Italian README (#10732)
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con:]2;README.zh.md]1;README.zh.mdzsh: command not found: README.zh.md
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hddocs: add Italian README (#10732)[?1l>[?2004l
+5 hours ago
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.c]2;docs: add Italian README (#10732)]1;docs:zsh: unknown file attribute: #
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h55 hours ago[?1l>[?2004l
+
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.c]2;cd -5 hours ago]1;5cd: too many arguments
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+README.zht.md
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.con[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hRREADME.zht.md[?1l>[?2004l
+docs: add Italian README (#10732)
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.]2;README.zht.md]1;README.zht.mdzsh: command not found: README.zht.md
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hddocs: add Italian README (#10732)[?1l>[?2004l
+5 hours ago
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confis]2;docs: add Italian README (#10732)]1;docs:zsh: unknown file attribute: #
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h55 hours ago[?1l>[?2004l
+
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confi]2;cd -5 hours ago]1;5cd: too many arguments
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+SECURITY.md
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confiss[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hSSECURITY.md[?1l>[?2004l
+docs: clarify that malicious config files are not an attack vector
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.co]2;SECURITY.md]1;SECURITY.mdzsh: command not found: SECURITY.md
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hddocs: clarify that malicious config files are not an attack vector[?1l>[?2004l
+last week
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst]2;docs: clarify that malicious config files are not an attack vector]1;docs:zsh: command not found: docs:
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hllast week[?1l>[?2004l
+
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.c]2;last week]1;last
+wtmp begins Thu Oct 16 18:28:56 -03 2025
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;32m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+STATS.md
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.con[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;32m➜  [36mpackages[00m [K[?1h=[?2004hSSTATS.md[?1l>[?2004l
+ignore: update download stats 2026-01-26
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncs]2;STATS.md]1;STATS.mdzsh: command not found: STATS.md
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hiignore: update download stats 2026-01-26[?1l>[?2004l
+18 hours ago
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confi]2;ignore: update download stats 2026-01-26]1;ignore:zsh: command not found: ignore:
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h118 hours ago[?1l>[?2004l
+
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.c]2;18 hours ago]1;18zsh: command not found: 18
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+bun.lock
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.con[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hbbun.lock[?1l>[?2004l
+upgrade opentui to v0.1.75
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con:]2;bun.lock]1;bun.lockzsh: command not found: bun.lock
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004huupgrade opentui to v0.1.75[?1l>[?2004l
+14 hours ago
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.conf]2;upgrade opentui to v0.1.75]1;upgradezsh: command not found: upgrade
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h114 hours ago[?1l>[?2004l
+
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.]2;14 hours ago]1;14zsh: command not found: 14
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+bunfig.toml
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.co[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hbbunfig.toml[?1l>[?2004l
+Permission rework (#6319)
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confop]2;bunfig.toml]1;bunfig.tomlzsh: command not found: bunfig.toml
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hPPermission rework (#6319)[?1l>[?2004l
+last month
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdos]2;Permission rework (#6319)]1;Permissionzsh: unknown file attribute: #
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hllast month[?1l>[?2004l
+
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.c]2;last month]1;last
+wtmp begins Thu Oct 16 18:28:56 -03 2025
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;32m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+flake.lock
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;32m➜  [36mpackages[00m [K[?1h=[?2004hfflake.lock[?1l>[?2004l
+chore: update flake.lock (#9938)
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone s]2;flake.lock]1;flake.lockzsh: command not found: flake.lock
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hcchore: update flake.lock (#9938)[?1l>[?2004l
+5 days ago
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis
+bbbbbbbbbbbb]2;chore: update flake.lock (#9938)]1;chore:zsh: unknown file attribute: #
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h55 days ago[?1l>[?2004l
+
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis
+bbbbbbbbbbbbbbbbbbbbbbbb]2;cd -5 days ago]1;5cd: too many arguments
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+flake.nix
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis
+bbbbbbbbbbbbbbbbbbbbbbbbbb[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hfflake.nix[?1l>[?2004l
+fix: nix ci - swapped dash/underscore (#9352)
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbb]2;flake.nix]1;flake.nixzsh: command not found: flake.nix
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hffix: nix ci - swapped dash/underscore (#9352)[?1l>[?2004l
+last week
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbbbbbb(rbbbbbbbbbbbbbbbbbbbbbbbbbbbb]2;fix: nix ci - swapped dash/underscore (#9352)]1;fix:zsh: unknown file attribute: #
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hllast week[?1l>[?2004l
+
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbbbbbb(rbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbb]2;last week]1;last
+wtmp begins Thu Oct 16 18:28:56 -03 2025
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;32m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+install
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbbbbbb(rbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbb[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;32m➜  [36mpackages[00m [K[?1h=[?2004hiinstall[?1l>[?2004l
+feat(install): respect ZDOTDIR for zsh config detection (#8511)
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbbbbbb(rbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb opbbbb]2;install]1;installusage: install [-bCcpSsUv] [-f flags] [-g group] [-m mode] [-o owner]
+               [-M log] [-D dest] [-h hash] [-T tags]
+               [-B suffix] [-l linkflags] [-N dbdir]
+               file1 file2
+       install [-bCcpSsUv] [-f flags] [-g group] [-m mode] [-o owner]
+               [-M log] [-D dest] [-h hash] [-T tags]
+               [-B suffix] [-l linkflags] [-N dbdir]
+               file1 ... fileN directory
+       install -dU [-vU] [-g group] [-m mode] [-N dbdir] [-o owner]
+               [-M log] [-D dest] [-h hash] [-T tags]
+               directory ...
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hffeat(install): respect ZDOTDIR for zsh config detection (#8511)[?1l>[?2004l
+2 weeks ago
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbbbbbb(rbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb opbbbbbbbb   bbbbbb  bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbb]2;feat(install): respect ZDOTDIR for zsh config detection (#8511)]1;feat(install):zsh: no matches found: feat(install):
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h22 weeks ago[?1l>[?2004l
+
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbbbbbb(rbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb opbbbbbbbb   bbbbbb  bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbbbbbb(rbbbbbb-]2;cd -2 weeks ago]1;2cd: too many arguments
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+package.json
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbbbbbb(rbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb opbbbbbbbb   bbbbbb  bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbbbbbb(rbbbbbb-Sb[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hppackage.json[?1l>[?2004l
+fix(opencode): Allow compatible Bun versions in packageManager field (#…
+last week
+
+sst-env.d.ts
+wip: zen black
+5 days ago
+
+sst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.confisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c�sst.confisDeusst.confissñsst.confisst.con: sst.confisst.ck sst.confis� |sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis
+
+
+st.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confisst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbbbbbb(rbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb opbbbbbbbb   bbbbbb  bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbbbbbb(rbbbbbb-Sbbbbbbbbbbbinbb]2;package.json]1;package.jsonzsh: command not found: package.json
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hffix(opencode): Allow compatible Bun versions in packageManager field (#…[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hllast week[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004h[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hssst-env.d.ts[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hwwip: zen black[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004h55 days ago[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004h[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hssst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagosst.confjssst.confisst.con: sst.confisst.csisst.confis nasst.confissADsst.confisst.con: sst.c [Koonfisst.crisst.confise lsst.confissensst.confisst.con: sst.confisst.cd sst.confisstasst.confissh sst.confisst.con: sst.confisst.c[7m<ffffffff>[27mst.confisDeusst.confi [Ksssñsst.confisst.con:[A[109C[27m?[9P[21Cssñsst.con[9P[10C         [8Dsst.confisst.ck sst.confis[7m<ffffffff>[27m[10D[27m?[27m [27m [27m [27m [27m [27m [27m [27m [27m [8D|sst.confisstуsst.confisst.con: sst.confisst.crssst.confisuêsst.confis[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004h[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004h[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hsst.confisst.con: sst.confisst.con: sst.confisst.cncsst.confisagocost.confistast.confshst.confisst.con: sst.confisst.con: sst.aist.confisst   st.confunst.confi [Kssst.con: sst.confopst.confisst   st.confissdost.confisst.con: sst.cone st.confis   st.confis[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb anbbbbbbbb(rbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbbbbbbbb opbbbbbbbb   bbbbbb  bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbodbbb [Kbbbbbbb anbbbbbbbb(rbbbbbb-Sbbbbbbbbbbbinbbbbbbbbbbb    # Arch Linux[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hmmise use -g opencode               # Any OS[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hnnix run nixpkgs#opencode           # or github:anomalyco/opencode for latest dev branch[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hTTip[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004h[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hRRemove versions older than 0.1.x before installing.[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004h[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hDDesktop App (BETA)[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hOOpenCode is also available as a desktop application. Download directly from the releases page or opencode.ai/download.[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004h[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hPPlatformDownload[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hmmacOS (Apple Silicon)opencode-desktop-darwin-aarch64.dmg[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hmmacOS (Intel)opencode-desktop-darwin-x64.dmg[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hWWindowsopencode-desktop-windows-x64.exe[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hLLinux.deb, .rpm, or AppImage[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004h## macOS (Homebrew)[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hbbrew install --cask opencode-desktop[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004h## Windows (Scoop)[?1l>[?2004l
+[0m[27m[24m[J> [K[?1h=[?2004hsscoop bucket add extras; scoop install extras/opencode-desktop[?1l>[?2004l
+Installation Directory
+The install script respects the following priority order for the installation path:
+
+$OPENCODE_INSTALL_DIR - Custom installation directory
+$XDG_BIN_DIR - XDG Base Directory Specification compliant path
+$HOME/bin - Standard user binary directory (if exists or can be created)
+$HOME/.opencode/bin - Default fallback
+# Examples
+OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOP]2;fix(opencode): Allow compatible Bun versions in packageManager field ; scoop ]1;fix(opencode):zsh: no matches found: fix(opencode):
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hIInstallation Directory[?1l>[?2004l
+The install script respects the following priority order for the installation path:
+
+$OPENCODE_INSTALL_DIR - Custom installation directory
+$XDG_BIN_DIR - XDG Base Directory Specification compliant path
+$HOME/bin - Standard user binary directory (if exists or can be created)
+$HOME/.opencode/bin - Default fallback
+# Examples
+OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPenOPOPOPOPOPOPOPOP]2;Installation Directory]1;Installationzsh: command not found: Installation
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hTThe install script respects the following priority order for the installation path:[?1l>[?2004l
+
+$OPENCODE_INSTALL_DIR - Custom installation directory
+$XDG_BIN_DIR - XDG Base Directory Specification compliant path
+$HOME/bin - Standard user binary directory (if exists or can be created)
+$HOME/.opencode/bin - Default fallback
+# Examples
+OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPenOPOPOPOPOPOPOPOPOPOPOonOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOP]2;The install script respects the following priority order for the installation]1;Thezsh: command not found: The
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h[?1l>[?2004l
+$OPENCODE_INSTALL_DIR - Custom installation directory
+$XDG_BIN_DIR - XDG Base Directory Specification compliant path
+$HOME/bin - Standard user binary directory (if exists or can be created)
+$HOME/.opencode/bin - Default fallback
+# Examples
+OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPenOPOPOPOPOPOPOPOPOPOPOonOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOP[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h$$OPENCODE_INSTALL_DIR - Custom installation directory[?1l>[?2004l
+$XDG_BIN_DIR - XDG Base Directory Specification compliant path
+$HOME/bin - Standard user binary directory (if exists or can be created)
+$HOME/.opencode/bin - Default fallback
+# Examples
+OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPenOPOPOPOPOPOPOPOPOPOPOonOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPed OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOP]2;$OPENCODE_INSTALL_DIR - Custom installation directory]1;$OPENCODE_INSTALL_DIRzsh: command not found: Custom
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h$$XDG_BIN_DIR - XDG Base Directory Specification compliant path[?1l>[?2004l
+$HOME/bin - Standard user binary directory (if exists or can be created)
+$HOME/.opencode/bin - Default fallback
+# Examples
+OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPenOPOPOPOPOPOPOPOPOPOPOonOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPed OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPutOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOP]2;$XDG_BIN_DIR - XDG Base Directory Specification compliant path]1;$XDG_BIN_DIRzsh: command not found: XDG
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h$$HOME/bin - Standard user binary directory (if exists or can be created)[?1l>[?2004l
+$HOME/.opencode/bin - Default fallback
+# Examples
+OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPenOPOPOPOPOPOPOPOPOPOPOonOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPed OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPutOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOodOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPO]2;$HOME/bin - Standard user binary directory (if exists or can be created)]1;$HOME/binzsh: unknown file attribute: i
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h$$HOME/.opencode/bin - Default fallback[?1l>[?2004l
+# Examples
+OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPenOPOPOPOPOPOPOPOPOPOPOonOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPed OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPutOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOodOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOngOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOr]2;$HOME/.opencode/bin - Default fallback]1;$HOME/.opencode/binzsh: permission denied: /Users/raillyhugo/.opencode/bin
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004h## Examples[?1l>[?2004l
+OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPenOPOPOPOPOPOPOPOPOPOPOonOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPed OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPutOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOodOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOngOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOr OPOPOPOPO"o[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [K[?1h=[?2004hOOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOP [KOOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOP [KOOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOP [KOOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOP [KOOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPenOPOPOPOPOPOPOPOPOPOPOonOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPed OPOP [KOOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPutOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOodOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPO [KPPOPOPOPOPOPOPOPOPOPOPOPOngOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOr OPOPOPOPO"o[6A[0m[27m[24m[J[01;31m➜  [36mpackages[00m [01;34mgit:([31mmain[34m) [33m✗[00m OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPenOPOPOPOPOPOPOPOPOPOPOonOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPed OPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPutOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOodOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOngOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOPOr OPOPOPOPO"o[K[?2004l
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [01;34mgit:([31mmain[34m) [33m✗[00m [K[?1h=[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [01;34mgit:([31mmain[34m) [33m✗[00m [K[?1h=[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [01;34mgit:([31mmain[34m) [33m✗[00m [K[?1h=[?2004h[?2004l
+[1m[7m%[27m[1m[0m                                                                                                                                                                ]2;raillyhugo@Raillys-MacBook-Pro:~/Programming/crafter-station/crafter-code/packages]1;..code/packages]7;file://Raillys-MacBook-Pro.local/Users/raillyhugo/Programming/crafter-station/crafter-code/packages\[0m[27m[24m[J[01;31m➜  [36mpackages[00m [01;34mgit:([31mmain[34m) [33m✗[00m [K[?1h=[?2004h

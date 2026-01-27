@@ -4,6 +4,7 @@
 //! - Claude Code (via claude-code-acp adapter)
 //! - Gemini CLI (native ACP support)
 //! - Codex CLI (OpenAI's coding agent)
+//! - OpenCode (open source coding agent)
 
 use serde::{Deserialize, Serialize};
 use std::process::Command;
@@ -30,11 +31,17 @@ impl AgentConfig {
         env_vars: Vec<&str>,
     ) -> Self {
         let available = check_command_exists(command);
+        // Use full path if found in common locations
+        let resolved_command = if available {
+            get_command_path(command)
+        } else {
+            command.to_string()
+        };
         Self {
             id: id.to_string(),
             name: name.to_string(),
             description: description.to_string(),
-            command: command.to_string(),
+            command: resolved_command,
             args: args.into_iter().map(String::from).collect(),
             available,
             env_vars: env_vars.into_iter().map(String::from).collect(),
@@ -42,13 +49,49 @@ impl AgentConfig {
     }
 }
 
-/// Check if a command exists in PATH
+/// Check if a command exists in PATH or common install locations
 fn check_command_exists(command: &str) -> bool {
-    Command::new("which")
+    // First check PATH
+    let in_path = Command::new("which")
         .arg(command)
         .output()
         .map(|output| output.status.success())
-        .unwrap_or(false)
+        .unwrap_or(false);
+
+    if in_path {
+        return true;
+    }
+
+    // Check common install locations
+    let home = std::env::var("HOME").unwrap_or_default();
+    let common_paths = [
+        format!("{}/.opencode/bin/{}", home, command),
+        format!("{}/go/bin/{}", home, command),
+        format!("{}/.local/bin/{}", home, command),
+        format!("{}/.cargo/bin/{}", home, command),
+    ];
+
+    common_paths.iter().any(|path| std::path::Path::new(path).exists())
+}
+
+/// Get the actual command path (checking common locations)
+fn get_command_path(command: &str) -> String {
+    let home = std::env::var("HOME").unwrap_or_default();
+    let common_paths = [
+        (format!("{}/.opencode/bin/{}", home, command), command),
+        (format!("{}/go/bin/{}", home, command), command),
+        (format!("{}/.local/bin/{}", home, command), command),
+        (format!("{}/.cargo/bin/{}", home, command), command),
+    ];
+
+    for (path, _cmd) in common_paths {
+        if std::path::Path::new(&path).exists() {
+            return path;
+        }
+    }
+
+    // Fallback to command name (will use PATH)
+    command.to_string()
 }
 
 /// Get the default list of known ACP-compatible agents
@@ -84,6 +127,17 @@ fn known_agents() -> Vec<AgentConfig> {
             "codex-acp",
             vec![],
             vec!["OPENAI_API_KEY"],
+        ),
+        // OpenCode - open source coding agent
+        // Install: go install github.com/anomaly/opencode@latest
+        // Docs: https://opencode.ai/docs/integrations/acp
+        AgentConfig::new(
+            "opencode",
+            "OpenCode",
+            "Open source coding agent",
+            "opencode",
+            vec!["acp"],
+            vec![],
         ),
     ]
 }

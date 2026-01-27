@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Clock,
   Loader2,
+  MessageSquare,
   Plus,
   Square,
 } from "lucide-react";
@@ -215,11 +216,18 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
                       <SelectItem
                         key={agent.id}
                         value={agent.id}
-                        className="text-xs cursor-pointer pr-3 [&_[data-slot=select-item-indicator]]:!hidden hover:bg-[#262626] data-[state=checked]:bg-accent-orange/20 data-[state=checked]:text-accent-orange"
+                        disabled={!agent.available}
+                        className={cn(
+                          "text-xs cursor-pointer pl-2 pr-3 [&_[data-slot=select-item-indicator]]:!hidden hover:bg-[#262626] data-[state=checked]:bg-accent-orange/20 data-[state=checked]:text-accent-orange",
+                          !agent.available && "opacity-40 cursor-not-allowed"
+                        )}
                       >
                         <span className="flex items-center gap-2">
                           <AgentIcon agentId={agent.id} className="!size-4" />
                           {agent.name}
+                          {!agent.available && (
+                            <span className="text-[9px] text-muted-foreground/50 ml-auto">not installed</span>
+                          )}
                         </span>
                       </SelectItem>
                     ))}
@@ -403,12 +411,26 @@ interface SessionItemProps {
 }
 
 function SessionItem({ session, isActive, onClick }: SessionItemProps) {
+  // Get all messages including worker messages
+  const allMessages = [
+    ...(session.messages || []),
+    ...session.workers.flatMap((w) => w.messages || []),
+  ].sort((a, b) => a.timestamp - b.timestamp);
+
+  const lastMessage = allMessages[allMessages.length - 1];
+  const messageCount = allMessages.length;
+
+  // Truncate last message content
+  const lastMessagePreview = lastMessage?.content
+    ? lastMessage.content.slice(0, 40) + (lastMessage.content.length > 40 ? "..." : "")
+    : "";
+
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full text-left px-2 py-1.5 rounded-sm transition-colors",
+        "w-full text-left px-1.5 py-1 rounded-sm transition-colors",
         isActive
           ? "bg-accent-orange/15 border border-accent-orange/30"
           : "hover:bg-sidebar-accent",
@@ -416,11 +438,17 @@ function SessionItem({ session, isActive, onClick }: SessionItemProps) {
     >
       <div className="flex items-center gap-1.5">
         <AgentIcon agentId={session.agentType} className="size-3 shrink-0" />
-        <span className="text-[11px] truncate flex-1">{session.prompt}</span>
+        <span className="text-[10px] truncate flex-1">{session.prompt}</span>
+        <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground/50 shrink-0">
+          {messageCount}
+          <MessageSquare className="size-2 mb-0.5" />
+        </span>
       </div>
-      <div className="text-[9px] text-muted-foreground mt-0.5">
-        {session.workers.length} worker{session.workers.length !== 1 ? "s" : ""}
-      </div>
+      {lastMessagePreview && (
+        <p className="text-[9px] text-muted-foreground/60 truncate mt-0.5 pl-[18px]">
+          {lastMessagePreview}
+        </p>
+      )}
     </button>
   );
 }
@@ -430,19 +458,36 @@ interface WorkerItemProps {
   worker: WorkerSession & { sessionPrompt: string };
 }
 
-const WORKER_STATUS_ICONS: Record<WorkerStatus, React.ReactNode> = {
-  pending: <Clock className="size-3 text-muted-foreground" />,
-  running: <Loader2 className="size-3 text-accent-orange animate-spin" />,
-  completed: <CheckCircle2 className="size-3 text-green-500" />,
-  failed: <AlertCircle className="size-3 text-destructive" />,
-  cancelled: <Square className="size-3 text-muted-foreground" />,
+const STATUS_DOTS: Record<WorkerStatus, string> = {
+  pending: "bg-muted-foreground/50",
+  running: "bg-accent-orange animate-pulse",
+  completed: "bg-green-500/70",
+  failed: "bg-red-400/70",
+  cancelled: "bg-muted-foreground/30",
+};
+
+const MODEL_COLORS: Record<string, string> = {
+  opus: "text-violet-400",
+  sonnet: "text-blue-400",
+  haiku: "text-emerald-400",
 };
 
 function WorkerItem({ worker }: WorkerItemProps) {
+  const totalTokens = worker.inputTokens + worker.outputTokens;
+  const modelColor = MODEL_COLORS[worker.model] || "text-muted-foreground";
+
   return (
-    <div className="flex items-center gap-1.5 px-2 py-1 rounded-sm hover:bg-sidebar-accent">
-      {WORKER_STATUS_ICONS[worker.status]}
-      <span className="text-[10px] truncate flex-1">{worker.task}</span>
+    <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm hover:bg-sidebar-accent">
+      <span className={cn("size-1.5 rounded-full shrink-0", STATUS_DOTS[worker.status])} />
+      <span className="text-[9px] truncate flex-1">{worker.task}</span>
+      {totalTokens > 0 && (
+        <span className="text-[8px] text-muted-foreground/50 shrink-0">
+          {totalTokens > 1000 ? `${(totalTokens / 1000).toFixed(1)}k` : totalTokens}
+        </span>
+      )}
+      <span className={cn("text-[8px] font-medium shrink-0", modelColor)}>
+        {worker.model.charAt(0).toUpperCase()}
+      </span>
     </div>
   );
 }

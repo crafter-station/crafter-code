@@ -311,11 +311,32 @@ impl Client for CrafterClient {
                     }),
                 );
             }
-            SessionUpdate::CurrentModeUpdate(_) => {
-                // Mode changes - could emit if needed
+            SessionUpdate::CurrentModeUpdate(mode) => {
+                let event_name = format!("worker-mode-{}", self.worker_id);
+                let _ = self.app_handle.emit(
+                    &event_name,
+                    serde_json::json!({
+                        "worker_id": self.worker_id,
+                        "mode_id": mode.current_mode_id.to_string()
+                    }),
+                );
+            }
+            SessionUpdate::UserMessageChunk(chunk) => {
+                // Echo user message chunks back to frontend (for multi-part messages)
+                if let ContentBlock::Text(text_content) = chunk.content {
+                    let event_name = format!("worker-user-message-{}", self.worker_id);
+                    let _ = self.app_handle.emit(
+                        &event_name,
+                        serde_json::json!({
+                            "worker_id": self.worker_id,
+                            "text": text_content.text
+                        }),
+                    );
+                }
             }
             _ => {
                 // Handle any future variants gracefully
+                eprintln!("[ACP] Unhandled session update: {:?}", args.update);
             }
         }
 

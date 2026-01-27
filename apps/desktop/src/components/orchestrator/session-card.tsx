@@ -3,27 +3,33 @@
 import { useCallback, useEffect, useRef, useMemo } from "react";
 
 import { Loader2, X } from "lucide-react";
+import { Streamdown } from "streamdown";
+import { code } from "@streamdown/code";
 
 import { cn } from "@/lib/utils";
 import { respondToPermission } from "@/lib/ipc/orchestrator";
 
-import type { Message, OrchestratorSession, PermissionRequest } from "@/stores/orchestrator-store";
+import type { AcpPlan, Message, OrchestratorSession, PermissionRequest, ToolCall } from "@/stores/orchestrator-store";
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
 import { AgentIcon } from "./agent-icons";
 import { MessageBubble } from "./message-bubble";
+import { PlanCard } from "./plan-card";
 import { SessionInput } from "./session-input";
 import { ToolCallCard } from "./tool-call-card";
 
 // Union type for timeline items
 type TimelineItem =
   | { kind: "message"; data: Message & { source?: string } }
-  | { kind: "permission"; data: PermissionRequest };
+  | { kind: "permission"; data: PermissionRequest }
+  | { kind: "tool_call"; data: ToolCall }
+  | { kind: "plan"; data: AcpPlan & { timestamp: number } };
 
 interface SessionCardProps {
   session: OrchestratorSession;
   isActive?: boolean;
   onClose?: () => void;
   onFollowUp?: (sessionId: string, message: string) => void;
+  onFocus?: () => void;
   className?: string;
 }
 
@@ -32,6 +38,7 @@ export function SessionCard({
   isActive,
   onClose,
   onFollowUp,
+  onFocus,
   className,
 }: SessionCardProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -64,7 +71,7 @@ export function SessionCard({
   // Check if waiting for permission (to enable input)
   const isWaitingForPermission = permissionRequests.length > 0;
 
-  // Create unified timeline with messages and permission requests (chronological)
+  // Create unified timeline with messages, permissions, tool calls, and plans (chronological)
   const timeline: TimelineItem[] = useMemo(() => {
     // Combine session messages with worker messages
     const allMessages: Array<Message & { source?: string }> = [
@@ -77,9 +84,26 @@ export function SessionCard({
       ),
     ];
 
+    // Get tool calls from workers, filter out completed ones with no title
+    const toolCalls = session.workers
+      .flatMap((w) => w.toolCalls || [])
+      .filter((tc) => {
+        // Always show pending/in_progress tool calls
+        if (tc.status === "pending" || tc.status === "in_progress") return true;
+        // For completed/failed, need at least a title
+        return tc.title && tc.title.trim().length > 0;
+      });
+
+    // Get plans from workers (only latest per worker, with timestamp)
+    const plans = session.workers
+      .filter((w) => w.plan && w.plan.entries.length > 0)
+      .map((w) => ({ ...w.plan!, timestamp: w.planTimestamp ?? w.createdAt }));
+
     const items: TimelineItem[] = [
       ...allMessages.map((m) => ({ kind: "message" as const, data: m })),
       ...permissionRequests.map((p) => ({ kind: "permission" as const, data: p })),
+      ...toolCalls.map((tc) => ({ kind: "tool_call" as const, data: tc })),
+      ...plans.map((p) => ({ kind: "plan" as const, data: p })),
     ];
 
     return items.sort((a, b) => a.data.timestamp - b.data.timestamp);
@@ -90,16 +114,6 @@ export function SessionCard({
     .filter((w) => w.outputBuffer)
     .map((w) => w.outputBuffer)
     .join("");
-
-  // Get tool calls from workers, filter out completed ones with no title
-  const toolCalls = session.workers
-    .flatMap((w) => w.toolCalls || [])
-    .filter((tc) => {
-      // Always show pending/in_progress tool calls
-      if (tc.status === "pending" || tc.status === "in_progress") return true;
-      // For completed/failed, need at least a title
-      return tc.title && tc.title.trim().length > 0;
-    });
 
   const handlePermissionResponse = async (workerId: string, toolCallId: string, optionId: string) => {
     try {
@@ -112,9 +126,13 @@ export function SessionCard({
 
   return (
     <div
+      onClick={onFocus}
+      onFocus={onFocus}
       className={cn(
-        "flex flex-col h-full bg-card rounded border",
-        isActive ? "border-accent-orange/50" : "border-border",
+        "flex flex-col h-full bg-card rounded border transition-colors",
+        isActive
+          ? "border-accent-orange/50 ring-1 ring-accent-orange/20"
+          : "border-border hover:border-border/80",
         className,
       )}
     >
@@ -178,8 +196,20 @@ export function SessionCard({
                     />
                   );
                 }
+                if (item.kind === "tool_call") {
+                  const toolCall = item.data;
+                  return (
+                    <div key={toolCall.id} className="px-2 py-0.5">
+                      <ToolCallCard toolCall={toolCall} />
+                    </div>
+                  );
+                }
+                if (item.kind === "plan") {
+                  const plan = item.data;
+                  return <PlanCard key={`plan-${plan.timestamp}`} plan={plan} />;
+                }
                 // Permission request
-                const req = item.data;
+                const req = item.data as PermissionRequest;
                 return (
                   <div
                     key={`${req.workerId}-${req.toolCallId}`}
@@ -215,21 +245,21 @@ export function SessionCard({
                 );
               })}
 
-              {/* Show tool calls with new component */}
-              {toolCalls.length > 0 && (
-                <div className="flex flex-col gap-1 px-2 py-1">
-                  {toolCalls.map((tc) => (
-                    <ToolCallCard key={tc.id} toolCall={tc} />
-                  ))}
-                </div>
-              )}
-
               {/* Show streaming output in real-time */}
               {streamingOutput && (
-                <div className="px-2 py-1">
-                  <p className="text-[11px] text-foreground/90 whitespace-pre-wrap">
-                    {streamingOutput}
-                  </p>
+                <div className="flex items-start gap-1.5 px-2 py-1">
+                  <span className="size-1.5 rounded-full bg-accent-orange/60 mt-1.5 shrink-0 animate-pulse" />
+                  <div className="streamdown-compact flex-1 min-w-0 overflow-hidden">
+                    <Streamdown
+                      plugins={{ code }}
+                      isAnimating={true}
+                      caret="circle"
+                      shikiTheme={["github-dark", "github-dark"]}
+                      controls={false}
+                    >
+                      {streamingOutput}
+                    </Streamdown>
+                  </div>
                 </div>
               )}
               {isRunning && !streamingOutput && !isWaitingForPermission && (
@@ -253,6 +283,7 @@ export function SessionCard({
             session.status === "cancelled"
           }
           isLoading={isRunning && !isWaitingForPermission}
+          autoFocus={isActive}
           placeholder={
             isWaitingForPermission
               ? "Type to cancel or wait..."

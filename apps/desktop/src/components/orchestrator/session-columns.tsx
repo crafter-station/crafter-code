@@ -18,6 +18,7 @@ export function SessionColumns({ className }: SessionColumnsProps) {
   const {
     sessions,
     activeSessionId,
+    setActiveSession,
     removeSession,
     addSessionMessage,
   } = useOrchestratorStore();
@@ -83,6 +84,7 @@ export function SessionColumns({ className }: SessionColumnsProps) {
             isActive={session.id === activeSessionId}
             onClose={() => handleCloseSession(session.id)}
             onFollowUp={handleFollowUp}
+            onFocus={() => setActiveSession(session.id)}
             className="flex-shrink-0 w-[280px] min-w-[240px]"
           />
         ))}

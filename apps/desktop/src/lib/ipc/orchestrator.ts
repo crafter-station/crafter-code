@@ -64,7 +64,15 @@ type WorkerEventType =
       output: string;
       usage: { input_tokens: number; output_tokens: number };
     }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string }
+  | {
+      type: "plan";
+      entries: Array<{
+        content: string;
+        priority: "high" | "medium" | "low";
+        status: "pending" | "in_progress" | "completed";
+      }>;
+    };
 
 interface WorkerStatusChangeEvent {
   session_id: string;
@@ -280,6 +288,7 @@ export function onWorkerToolCall(
         language: c.language,
         message: c.message,
       })),
+      timestamp: Date.now(),
     });
   });
 }

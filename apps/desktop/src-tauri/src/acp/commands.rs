@@ -1,7 +1,7 @@
 //! Tauri commands for ACP-based agent orchestration
 
 use crate::acp::client::{send_permission_response, AcpClient, AcpError};
-use crate::acp::registry::{discover_agents, get_agent, AgentConfig};
+use crate::acp::registry::{get_agent, list_all_agents, AgentConfig};
 use crate::claude::pricing::Model;
 use crate::orchestrator::session::{OrchestratorSession, SessionStatus};
 use crate::orchestrator::worker::{WorkerSession, WorkerStatus};
@@ -39,10 +39,10 @@ pub struct WorkerHandle {
     pub command_tx: mpsc::Sender<WorkerCommand>,
 }
 
-/// List all available CLI agents on the system
+/// List all known CLI agents (available field indicates if installed)
 #[tauri::command]
 pub fn list_available_agents() -> Vec<AgentConfig> {
-    discover_agents()
+    list_all_agents()
 }
 
 /// Create a new ACP-based orchestrator session
