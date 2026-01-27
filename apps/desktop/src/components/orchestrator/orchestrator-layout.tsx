@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { Wifi, X } from "lucide-react";
+import { ChevronRight, Wifi, X } from "lucide-react";
 
 import { onWorkerStatusChange, onWorkerStream, onWorkerToolCall, onWorkerPermission } from "@/lib/ipc/orchestrator";
 import { cn } from "@/lib/utils";
 
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
 import { AgentIcon } from "./agent-icons";
+import { CoordinationPanel } from "./coordination-panel";
 import { OrchestratorSidebar } from "./orchestrator-sidebar";
 import { SessionColumns } from "./session-columns";
 
@@ -17,6 +18,8 @@ interface OrchestratorLayoutProps {
 }
 
 export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
+  const [showCoordinationPanel, setShowCoordinationPanel] = useState(true);
+
   const {
     sessions,
     activeSessionId,
@@ -355,6 +358,25 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
         <main className="flex-1 min-w-0 overflow-hidden bg-background">
           <SessionColumns />
         </main>
+
+        {/* Coordination Panel (Tasks + Inbox) */}
+        {showCoordinationPanel ? (
+          <aside className="w-64 border-l border-border shrink-0">
+            <CoordinationPanel
+              sessionId={activeSessionId}
+              onCollapse={() => setShowCoordinationPanel(false)}
+            />
+          </aside>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowCoordinationPanel(true)}
+            className="flex items-center justify-center w-8 border-l border-border bg-card hover:bg-muted transition-colors shrink-0"
+            title="Show coordination panel"
+          >
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </button>
+        )}
       </div>
 
       {/* Status Bar */}
