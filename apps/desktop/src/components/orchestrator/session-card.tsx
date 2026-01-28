@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
-import { code } from "@streamdown/code";
+import { createCodePlugin } from "@streamdown/code";
+
+// Create code plugin with github-dark theme hardcoded
+const code = createCodePlugin({ themes: ["github-dark", "github-dark"] });
 import { FileText, Loader2, X, Zap } from "lucide-react";
 import { Streamdown } from "streamdown";
 
@@ -324,7 +327,7 @@ export function SessionCard({
                       plugins={{ code }}
                       isAnimating={true}
                       caret="circle"
-                      shikiTheme={["github-dark-default", "github-dark-default"]}
+                      shikiTheme={["dracula", "dracula"]}
                       controls={false}
                     >
                       {streamingOutput}
