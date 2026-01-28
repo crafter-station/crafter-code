@@ -11,6 +11,7 @@ import { Streamdown } from "streamdown";
 
 import {
   type ImageAttachment,
+  reconnectWorker,
   respondToPermission,
   setAcpSessionMode,
 } from "@/lib/ipc/orchestrator";
@@ -176,10 +177,35 @@ export function SessionCard({
           onClick={async (e) => {
             e.stopPropagation();
             const newMode = session.mode === "plan" ? "normal" : "plan";
-            try {
+
+            const trySetMode = async () => {
               await setAcpSessionMode(session.id, newMode);
+            };
+
+            try {
+              await trySetMode();
             } catch (error) {
-              console.error("Failed to set mode:", error);
+              const errorStr = String(error);
+              console.error("Failed to set mode:", errorStr);
+
+              // Check if session/worker is dead (app was restarted)
+              const isDeadSession =
+                errorStr.includes("No active worker for session") ||
+                errorStr.includes("not found");
+
+              if (isDeadSession) {
+                console.log("[Frontend] Session dead, reconnecting before mode change...");
+                const agentId = session.agentType || "claude";
+                const cwd = session.cwd || "/";
+
+                try {
+                  await reconnectWorker(session.id, agentId, cwd);
+                  console.log("[Frontend] Worker reconnected, retrying mode change...");
+                  await trySetMode();
+                } catch (reconnectError) {
+                  console.error("Reconnect failed:", reconnectError);
+                }
+              }
             }
           }}
           className={cn(
