@@ -7,19 +7,24 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
   Textarea,
 } from "@crafter-code/ui";
+import { homeDir } from "@tauri-apps/api/path";
+import { open } from "@tauri-apps/plugin-dialog";
 import {
-  AlertCircle,
-  CheckCircle2,
   ChevronDown,
   ChevronRight,
-  Clock,
+  Folder,
+  FolderOpen,
   Loader2,
   MessageSquare,
+  Pin,
   Plus,
+  Server,
   Square,
+  Terminal,
+  User,
+  X,
 } from "lucide-react";
 
 import {
@@ -27,14 +32,23 @@ import {
   createAcpSession,
   listAvailableAgents,
 } from "@/lib/ipc/orchestrator";
+import {
+  listWorkspaceCommands,
+  listWorkspaceSkills,
+  type WorkspaceCommandInfo,
+  type WorkspaceSkillInfo,
+} from "@/lib/ipc/skills";
 import { cn } from "@/lib/utils";
 
 import {
   type OrchestratorSession,
   useOrchestratorStore,
-  type WorkerSession,
-  type WorkerStatus,
 } from "@/stores/orchestrator-store";
+import {
+  type ActiveTerminal,
+  type ProjectInfo,
+  useWorkspaceStore,
+} from "@/stores/workspace-store";
 import { AgentIcon } from "./agent-icons";
 
 interface OrchestratorSidebarProps {
@@ -47,16 +61,88 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Collapsible section states (all open by default)
   const [sessionsOpen, setSessionsOpen] = useState(true);
-  const [workersOpen, setWorkersOpen] = useState(true);
+  const [terminalsOpen, setTerminalsOpen] = useState(true);
+  const [skillsOpen, setSkillsOpen] = useState(true);
+  const [commandsOpen, setCommandsOpen] = useState(true);
 
-  // Agent selection state
+  // Session list pagination
+  const [showAllSessions, setShowAllSessions] = useState(false);
+  const SESSIONS_LIMIT = 9;
+
+  // Agent selection state (for new agent form)
   const [availableAgents, setAvailableAgents] = useState<AgentConfig[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState<string>("");
   const [loadingAgents, setLoadingAgents] = useState(true);
 
+  // Project selection for NEW agent (local to form, not global)
+  const [selectedProjectPath, setSelectedProjectPath] = useState<string | null>(
+    null,
+  );
+
+  // Skills/commands state (contextual to active session)
+  const [globalSkills, setGlobalSkills] = useState<WorkspaceSkillInfo[]>([]);
+  const [projectSkills, setProjectSkills] = useState<WorkspaceSkillInfo[]>([]);
+  const [loadingSkills, setLoadingSkills] = useState(false);
+  const [builtinCommands, setBuiltinCommands] = useState<
+    WorkspaceCommandInfo[]
+  >([]);
+  const [globalCommands, setGlobalCommands] = useState<WorkspaceCommandInfo[]>(
+    [],
+  );
+  const [projectCommands, setProjectCommands] = useState<
+    WorkspaceCommandInfo[]
+  >([]);
+
   // Get selected agent config
   const selectedAgent = availableAgents.find((a) => a.id === selectedAgentId);
+
+  // Workspace state (for project list)
+  const {
+    getRecentProjects,
+    addRecentProject,
+    getRunningTerminals,
+    getActiveServers,
+    removeTerminal,
+  } = useWorkspaceStore();
+
+  const recentProjects = getRecentProjects();
+  const runningTerminals = getRunningTerminals();
+  const activeServers = getActiveServers();
+  const selectedProject = recentProjects.find(
+    (p) => p.path === selectedProjectPath,
+  );
+
+  // Orchestrator store
+  const {
+    sessions,
+    activeSessionId,
+    setActiveSession,
+    setSession,
+    addSessionMessage,
+    getAllWorkers,
+    getActiveSession,
+    setPendingInput,
+  } = useOrchestratorStore();
+
+  const allWorkers = getAllWorkers();
+  const runningWorkers = allWorkers.filter((w) => w.status === "running");
+  const activeSession = getActiveSession();
+
+  // Get the project path and agent type for the active session (for contextual skills/commands)
+  const activeSessionCwd = activeSession?.cwd;
+  const activeAgentId = activeSession?.agentType;
+
+  // Helper to inject text into active session input
+  const handleInjectToInput = useCallback(
+    (text: string) => {
+      if (activeSessionId) {
+        setPendingInput(activeSessionId, text);
+      }
+    },
+    [activeSessionId, setPendingInput],
+  );
 
   // Load available agents on mount
   useEffect(() => {
@@ -78,17 +164,96 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
     loadAgents();
   }, []);
 
-  const {
-    sessions,
-    activeSessionId,
-    setActiveSession,
-    setSession,
-    addSessionMessage,
-    getAllWorkers,
-  } = useOrchestratorStore();
+  // Load global skills when agent changes (or on mount with default)
+  useEffect(() => {
+    async function loadGlobalSkills() {
+      setLoadingSkills(true);
+      try {
+        const result = await listWorkspaceSkills(undefined, activeAgentId);
+        setGlobalSkills(result.globalSkills);
+      } catch (err) {
+        console.error("[Orchestrator] Failed to load global skills:", err);
+      } finally {
+        setLoadingSkills(false);
+      }
+    }
+    loadGlobalSkills();
+  }, [activeAgentId]);
 
-  const allWorkers = getAllWorkers();
-  const runningWorkers = allWorkers.filter((w) => w.status === "running");
+  // Load project skills when session with cwd is active (or agent changes)
+  useEffect(() => {
+    async function loadProjectSkills() {
+      if (!activeSessionCwd) {
+        setProjectSkills([]);
+        return;
+      }
+      try {
+        const result = await listWorkspaceSkills(
+          activeSessionCwd,
+          activeAgentId,
+        );
+        setProjectSkills(result.projectSkills);
+      } catch (err) {
+        console.error("[Orchestrator] Failed to load project skills:", err);
+      }
+    }
+    loadProjectSkills();
+  }, [activeSessionCwd, activeAgentId]);
+
+  // Load builtin and global commands when agent changes (or on mount with default)
+  useEffect(() => {
+    async function loadBuiltinCommands() {
+      try {
+        const result = await listWorkspaceCommands(undefined, activeAgentId);
+        setBuiltinCommands(result.builtinCommands);
+        setGlobalCommands(result.globalCommands);
+      } catch (err) {
+        console.error("[Orchestrator] Failed to load builtin commands:", err);
+      }
+    }
+    loadBuiltinCommands();
+  }, [activeAgentId]);
+
+  // Load project commands when session with cwd is active (or agent changes)
+  useEffect(() => {
+    async function loadProjectCommands() {
+      if (!activeSessionCwd) {
+        setProjectCommands([]);
+        return;
+      }
+      try {
+        const result = await listWorkspaceCommands(
+          activeSessionCwd,
+          activeAgentId,
+        );
+        setProjectCommands(result.projectCommands);
+      } catch (err) {
+        console.error("[Orchestrator] Failed to load project commands:", err);
+      }
+    }
+    loadProjectCommands();
+  }, [activeSessionCwd, activeAgentId]);
+
+  // Total skills count
+  const totalSkillsCount = globalSkills.length + projectSkills.length;
+
+  // Handle opening directory picker (for new agent form)
+  const handleBrowseDirectory = useCallback(async () => {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: "Select Project Directory",
+      });
+      if (selected && typeof selected === "string") {
+        const name = selected.split("/").pop() || selected;
+        addRecentProject({ path: selected, name });
+        setSelectedProjectPath(selected);
+      }
+    } catch (err) {
+      console.error("[Workspace] Failed to open directory:", err);
+    }
+  }, [addRecentProject]);
 
   const handleLaunch = useCallback(async () => {
     if (!prompt.trim() || isLoading || !selectedAgentId) return;
@@ -97,20 +262,21 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
     setError(null);
 
     try {
-      console.log(
-        "[Orchestrator] Creating ACP session with prompt:",
-        prompt,
-        "agent:",
-        selectedAgentId,
-      );
+      // Use selected project path, or home directory as fallback
+      let cwd: string;
+      if (selectedProjectPath) {
+        cwd = selectedProjectPath;
+      } else {
+        try {
+          cwd = await homeDir();
+        } catch {
+          cwd = "/";
+        }
+      }
 
-      // All agents now use ACP protocol
-      const cwd = process.cwd?.() || "/";
       const session = await createAcpSession(prompt, selectedAgentId, cwd);
 
-      console.log("[Orchestrator] Session created:", session);
       setSession(session);
-      // Add the initial prompt as a user message
       addSessionMessage(session.id, {
         type: "TEXT",
         role: "user",
@@ -119,6 +285,7 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
       });
       setActiveSession(session.id);
       setPrompt("");
+      setSelectedProjectPath(null); // Reset for next agent
       setIsNewAgentExpanded(false);
     } catch (err) {
       console.error("[Orchestrator] Failed to create session:", err);
@@ -136,6 +303,7 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
     prompt,
     isLoading,
     selectedAgentId,
+    selectedProjectPath,
     setSession,
     addSessionMessage,
     setActiveSession,
@@ -219,14 +387,18 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
                         disabled={!agent.available}
                         className={cn(
                           "text-xs cursor-pointer pl-2 pr-3 [&_[data-slot=select-item-indicator]]:!hidden hover:bg-[#262626] data-[state=checked]:bg-accent-orange/20 data-[state=checked]:text-accent-orange",
-                          !agent.available && "opacity-40 cursor-not-allowed"
+                          !agent.available && "opacity-40 cursor-not-allowed",
                         )}
                       >
                         <span className="flex items-center gap-2">
                           <AgentIcon agentId={agent.id} className="!size-4" />
                           {agent.name}
                           {!agent.available && (
-                            <span className="text-[9px] text-muted-foreground/50 ml-auto">not installed</span>
+                            <span className="text-[9px] text-muted-foreground/50 ml-auto truncate max-w-[100px]">
+                              {agent.description.toLowerCase().includes("requires")
+                                ? agent.description
+                                : "not installed"}
+                            </span>
                           )}
                         </span>
                       </SelectItem>
@@ -234,19 +406,92 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
                   </SelectContent>
                 </Select>
               )}
-              {/* Agent description and env vars */}
-              {selectedAgent && (
-                <div className="space-y-0.5 px-0.5">
-                  <p className="text-[9px] text-muted-foreground leading-tight">
-                    {selectedAgent.description}
-                  </p>
-                  {selectedAgent.env_vars.length > 0 && (
-                    <p className="text-[9px] text-muted-foreground/60">
-                      Requires: {selectedAgent.env_vars.join(", ")}
-                    </p>
+            </div>
+
+            {/* Project Picker */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
+                Directory
+              </label>
+              <div className="flex gap-1">
+                {recentProjects.length > 0 ? (
+                  <Select
+                    value={selectedProjectPath || ""}
+                    onValueChange={setSelectedProjectPath}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger className="h-7 text-xs flex-1 border-border bg-[#141414]">
+                      {selectedProject ? (
+                        <span className="flex items-center gap-1.5 truncate">
+                          <FolderOpen className="size-3 shrink-0 text-accent-orange" />
+                          <span className="truncate">
+                            {selectedProject.name}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <Folder className="size-3" />
+                          Home directory
+                        </span>
+                      )}
+                    </SelectTrigger>
+                    <SelectContent
+                      className="bg-[#141414] border border-[#262626] shadow-xl min-w-[180px]"
+                      position="popper"
+                      sideOffset={4}
+                    >
+                      {recentProjects.map((project) => (
+                        <SelectItem
+                          key={project.path}
+                          value={project.path}
+                          className="text-xs cursor-pointer pl-2 pr-3 hover:bg-[#262626] data-[state=checked]:bg-accent-orange/20 data-[state=checked]:text-accent-orange"
+                        >
+                          <span className="flex items-center gap-2 w-full">
+                            <FolderOpen className="size-3.5 shrink-0" />
+                            <span className="truncate flex-1">
+                              {project.name}
+                            </span>
+                            {project.pinned && (
+                              <Pin className="size-2.5 text-accent-orange shrink-0" />
+                            )}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleBrowseDirectory}
+                    disabled={isLoading}
+                    className={cn(
+                      "h-7 flex-1 flex items-center gap-1.5 px-2",
+                      "text-xs text-muted-foreground",
+                      "border border-border bg-[#141414] rounded-md",
+                      "hover:bg-[#1a1a1a] hover:text-foreground transition-colors",
+                      "disabled:opacity-50 disabled:cursor-not-allowed",
+                    )}
+                  >
+                    <Folder className="size-3" />
+                    Browse...
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleBrowseDirectory}
+                  disabled={isLoading}
+                  className={cn(
+                    "h-7 px-2 flex items-center justify-center",
+                    "border border-border bg-[#141414] rounded-md",
+                    "text-muted-foreground hover:text-foreground hover:bg-[#1a1a1a]",
+                    "transition-colors",
+                    "disabled:opacity-50 disabled:cursor-not-allowed",
                   )}
-                </div>
-              )}
+                  title="Browse for directory"
+                >
+                  <Plus className="size-3.5" />
+                </button>
+              </div>
             </div>
 
             <Textarea
@@ -310,7 +555,10 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
             </p>
           ) : (
             <div className="space-y-0.5 px-1.5">
-              {sessions.map((session) => (
+              {(showAllSessions
+                ? sessions
+                : sessions.slice(0, SESSIONS_LIMIT)
+              ).map((session) => (
                 <SessionItem
                   key={session.id}
                   session={session}
@@ -318,30 +566,245 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
                   onClick={() => setActiveSession(session.id)}
                 />
               ))}
+              {sessions.length > SESSIONS_LIMIT && !showAllSessions && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllSessions(true)}
+                  className="w-full px-2 py-1 text-[9px] text-muted-foreground/60 hover:text-muted-foreground hover:bg-sidebar-accent rounded-sm transition-colors"
+                >
+                  Show {sessions.length - SESSIONS_LIMIT} more...
+                </button>
+              )}
+              {showAllSessions && sessions.length > SESSIONS_LIMIT && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllSessions(false)}
+                  className="w-full px-2 py-1 text-[9px] text-muted-foreground/60 hover:text-muted-foreground hover:bg-sidebar-accent rounded-sm transition-colors"
+                >
+                  Show less
+                </button>
+              )}
             </div>
           )}
         </CollapsibleSection>
 
-        {/* Workers */}
+        {/* Active Terminals / Servers */}
         <CollapsibleSection
-          title="WORKERS"
-          count={allWorkers.length}
-          isOpen={workersOpen}
-          onToggle={() => setWorkersOpen(!workersOpen)}
+          title="TERMINALS"
+          count={runningTerminals.length}
+          isOpen={terminalsOpen}
+          onToggle={() => setTerminalsOpen(!terminalsOpen)}
         >
-          {allWorkers.length === 0 ? (
+          {runningTerminals.length === 0 ? (
             <p className="px-2 py-1.5 text-[10px] text-muted-foreground/60">
-              No workers spawned
+              No active terminals
             </p>
           ) : (
             <div className="space-y-0.5 px-1.5">
-              {allWorkers.slice(0, 10).map((worker) => (
-                <WorkerItem key={worker.id} worker={worker} />
-              ))}
-              {allWorkers.length > 10 && (
-                <p className="px-2 py-0.5 text-[10px] text-muted-foreground/60">
-                  +{allWorkers.length - 10} more
-                </p>
+              {/* Active Servers first */}
+              {activeServers.length > 0 && (
+                <>
+                  <p className="px-1.5 pt-1 text-[8px] font-mono uppercase tracking-wider text-muted-foreground/50">
+                    Servers
+                  </p>
+                  {activeServers.map((terminal) => (
+                    <TerminalItem
+                      key={terminal.id}
+                      terminal={terminal}
+                      isServer
+                      onKill={() => removeTerminal(terminal.id)}
+                    />
+                  ))}
+                </>
+              )}
+              {/* Other running terminals */}
+              {runningTerminals.filter((t) => !t.port).length > 0 && (
+                <>
+                  {activeServers.length > 0 && (
+                    <p className="px-1.5 pt-1 text-[8px] font-mono uppercase tracking-wider text-muted-foreground/50">
+                      Processes
+                    </p>
+                  )}
+                  {runningTerminals
+                    .filter((t) => !t.port)
+                    .map((terminal) => (
+                      <TerminalItem
+                        key={terminal.id}
+                        terminal={terminal}
+                        onKill={() => removeTerminal(terminal.id)}
+                      />
+                    ))}
+                </>
+              )}
+            </div>
+          )}
+        </CollapsibleSection>
+
+        {/* Skills (global always, project when session active) */}
+        <CollapsibleSection
+          title="SKILLS"
+          count={totalSkillsCount}
+          isOpen={skillsOpen}
+          onToggle={() => setSkillsOpen(!skillsOpen)}
+        >
+          {loadingSkills ? (
+            <p className="px-2 py-1.5 text-[10px] text-muted-foreground/60 flex items-center gap-1.5">
+              <Loader2 className="size-2.5 animate-spin" />
+              Loading...
+            </p>
+          ) : totalSkillsCount === 0 ? (
+            <p className="px-2 py-1.5 text-[10px] text-muted-foreground/60">
+              No skills in ~/.claude/skills/
+            </p>
+          ) : (
+            <div className="space-y-0.5 px-1.5 max-h-[300px] overflow-y-auto">
+              {/* Global/User Skills */}
+              {globalSkills.length > 0 && (
+                <div>
+                  <p className="px-1.5 pt-1.5 pb-0.5 text-[8px] font-mono uppercase tracking-wider text-muted-foreground/50 flex items-center gap-1">
+                    <User className="size-2" />
+                    Global
+                    <span className="text-muted-foreground/30">
+                      ({globalSkills.length})
+                    </span>
+                  </p>
+                  {globalSkills.slice(0, 20).map((skill) => (
+                    <WorkspaceSkillItem
+                      key={skill.path}
+                      skill={skill}
+                      onInject={
+                        activeSessionId ? handleInjectToInput : undefined
+                      }
+                    />
+                  ))}
+                  {globalSkills.length > 20 && (
+                    <p className="px-2 py-0.5 text-[9px] text-muted-foreground/50">
+                      +{globalSkills.length - 20} more
+                    </p>
+                  )}
+                </div>
+              )}
+              {/* Project Skills */}
+              {projectSkills.length > 0 && (
+                <div>
+                  <p className="px-1.5 pt-1.5 pb-0.5 text-[8px] font-mono uppercase tracking-wider text-muted-foreground/50 flex items-center gap-1">
+                    <Folder className="size-2" />
+                    Project
+                    <span className="text-muted-foreground/30">
+                      ({projectSkills.length})
+                    </span>
+                  </p>
+                  {projectSkills.slice(0, 20).map((skill) => (
+                    <WorkspaceSkillItem
+                      key={skill.path}
+                      skill={skill}
+                      onInject={
+                        activeSessionId ? handleInjectToInput : undefined
+                      }
+                    />
+                  ))}
+                  {projectSkills.length > 20 && (
+                    <p className="px-2 py-0.5 text-[9px] text-muted-foreground/50">
+                      +{projectSkills.length - 20} more
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </CollapsibleSection>
+
+        {/* Commands (builtin always, project when session active) */}
+        <CollapsibleSection
+          title="COMMANDS"
+          count={
+            builtinCommands.length +
+            globalCommands.length +
+            projectCommands.length
+          }
+          isOpen={commandsOpen}
+          onToggle={() => setCommandsOpen(!commandsOpen)}
+        >
+          {builtinCommands.length === 0 ? (
+            <p className="px-2 py-1.5 text-[10px] text-muted-foreground/60">
+              Loading commands...
+            </p>
+          ) : (
+            <div className="space-y-0.5 px-1.5 max-h-[300px] overflow-y-auto">
+              {/* Built-in commands grouped by category */}
+              {["swarm", "code", "git", "analysis", "utility"].map(
+                (category) => {
+                  const categoryCommands = builtinCommands.filter(
+                    (c) => c.category === category,
+                  );
+                  if (categoryCommands.length === 0) return null;
+                  return (
+                    <div key={category}>
+                      <p className="px-1.5 pt-1.5 pb-0.5 text-[8px] font-mono uppercase tracking-wider text-muted-foreground/50">
+                        {category}
+                        <span className="text-muted-foreground/30 ml-1">
+                          ({categoryCommands.length})
+                        </span>
+                      </p>
+                      {categoryCommands.map((cmd) => (
+                        <WorkspaceCommandItem
+                          key={cmd.name}
+                          command={cmd}
+                          onInject={
+                            activeSessionId ? handleInjectToInput : undefined
+                          }
+                        />
+                      ))}
+                    </div>
+                  );
+                },
+              )}
+              {/* Global/User commands from ~/.claude/commands/ */}
+              {globalCommands.length > 0 && (
+                <div>
+                  <p className="px-1.5 pt-1.5 pb-0.5 text-[8px] font-mono uppercase tracking-wider text-muted-foreground/50 flex items-center gap-1">
+                    <User className="size-2" />
+                    Global
+                    <span className="text-muted-foreground/30">
+                      ({globalCommands.length})
+                    </span>
+                  </p>
+                  {globalCommands.slice(0, 30).map((cmd) => (
+                    <WorkspaceCommandItem
+                      key={cmd.name}
+                      command={cmd}
+                      onInject={
+                        activeSessionId ? handleInjectToInput : undefined
+                      }
+                    />
+                  ))}
+                  {globalCommands.length > 30 && (
+                    <p className="px-2 py-0.5 text-[9px] text-muted-foreground/50">
+                      +{globalCommands.length - 30} more
+                    </p>
+                  )}
+                </div>
+              )}
+              {/* Project commands (when session active) */}
+              {projectCommands.length > 0 && (
+                <div>
+                  <p className="px-1.5 pt-1.5 pb-0.5 text-[8px] font-mono uppercase tracking-wider text-muted-foreground/50 flex items-center gap-1">
+                    <Folder className="size-2" />
+                    Project
+                    <span className="text-muted-foreground/30">
+                      ({projectCommands.length})
+                    </span>
+                  </p>
+                  {projectCommands.map((cmd) => (
+                    <WorkspaceCommandItem
+                      key={cmd.name}
+                      command={cmd}
+                      onInject={
+                        activeSessionId ? handleInjectToInput : undefined
+                      }
+                    />
+                  ))}
+                </div>
               )}
             </div>
           )}
@@ -368,6 +831,7 @@ interface CollapsibleSectionProps {
   isOpen: boolean;
   onToggle: () => void;
   children: React.ReactNode;
+  icon?: React.ReactNode;
 }
 
 function CollapsibleSection({
@@ -376,6 +840,7 @@ function CollapsibleSection({
   isOpen,
   onToggle,
   children,
+  icon,
 }: CollapsibleSectionProps) {
   return (
     <div className="border-b border-sidebar-border">
@@ -389,6 +854,7 @@ function CollapsibleSection({
         ) : (
           <ChevronRight className="size-2.5 text-muted-foreground" />
         )}
+        {icon && <span className="text-muted-foreground">{icon}</span>}
         <span className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
           {title}
         </span>
@@ -403,6 +869,22 @@ function CollapsibleSection({
   );
 }
 
+// Relative time utility
+function getRelativeTime(timestamp: number): string {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (seconds < 60) return "now";
+  if (minutes < 60) return `${minutes}m`;
+  if (hours < 24) return `${hours}h`;
+  if (days < 7) return `${days}d`;
+  return `${Math.floor(days / 7)}w`;
+}
+
 // Session Item Component
 interface SessionItemProps {
   session: OrchestratorSession;
@@ -411,83 +893,231 @@ interface SessionItemProps {
 }
 
 function SessionItem({ session, isActive, onClick }: SessionItemProps) {
-  // Get all messages including worker messages
-  const allMessages = [
-    ...(session.messages || []),
-    ...session.workers.flatMap((w) => w.messages || []),
-  ].sort((a, b) => a.timestamp - b.timestamp);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const relativeTime = getRelativeTime(session.updatedAt || session.createdAt);
+  const messageCount =
+    (session.messages?.length || 0) +
+    session.workers.reduce((acc, w) => acc + (w.messages?.length || 0), 0);
 
-  const lastMessage = allMessages[allMessages.length - 1];
-  const messageCount = allMessages.length;
-
-  // Truncate last message content
-  const lastMessagePreview = lastMessage?.content
-    ? lastMessage.content.slice(0, 40) + (lastMessage.content.length > 40 ? "..." : "")
-    : "";
+  // Get running workers for this session
+  const runningWorkers = session.workers.filter((w) => w.status === "running");
+  const hasRunningWorkers = runningWorkers.length > 0;
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "w-full text-left px-1.5 py-1 rounded-sm transition-colors",
-        isActive
-          ? "bg-accent-orange/15 border border-accent-orange/30"
-          : "hover:bg-sidebar-accent",
-      )}
-    >
-      <div className="flex items-center gap-1.5">
-        <AgentIcon agentId={session.agentType} className="size-3 shrink-0" />
-        <span className="text-[10px] truncate flex-1">{session.prompt}</span>
-        <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground/50 shrink-0">
-          {messageCount}
-          <MessageSquare className="size-2 mb-0.5" />
+    <div className="space-y-0.5">
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          "w-full text-left px-1.5 py-0.5 rounded-sm transition-colors flex items-center gap-1.5 min-w-0",
+          isActive
+            ? "bg-accent-orange/15 border border-accent-orange/30"
+            : "hover:bg-sidebar-accent",
+        )}
+      >
+        {hasRunningWorkers ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExpanded(!isExpanded);
+            }}
+            className="shrink-0"
+          >
+            {isExpanded ? (
+              <ChevronDown className="size-3 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="size-3 text-muted-foreground" />
+            )}
+          </button>
+        ) : (
+          <AgentIcon agentId={session.agentType} className="size-3 shrink-0" />
+        )}
+        <span className="text-[10px] truncate flex-1 min-w-0">
+          {session.prompt}
         </span>
-      </div>
-      {lastMessagePreview && (
-        <p className="text-[9px] text-muted-foreground/60 truncate mt-0.5 pl-[18px]">
-          {lastMessagePreview}
-        </p>
+        <span className="text-[8px] text-muted-foreground/40 shrink-0 tabular-nums flex items-center gap-0.5">
+          {messageCount > 0 && (
+            <>
+              <span>{messageCount}</span>
+              <MessageSquare className="size-2" />
+              <span className="mx-0.5">·</span>
+            </>
+          )}
+          {relativeTime}
+        </span>
+      </button>
+
+      {/* Nested workers when expanded */}
+      {isExpanded && hasRunningWorkers && (
+        <div className="ml-3 pl-2 border-l border-border/50 space-y-0.5">
+          {runningWorkers.map((worker) => (
+            <div
+              key={worker.id}
+              className="flex items-center gap-1.5 px-1.5 py-0.5 text-[9px] text-muted-foreground"
+            >
+              <span className="size-1.5 rounded-full bg-accent-orange animate-pulse shrink-0" />
+              <span className="truncate flex-1">
+                {worker.task || "Working..."}
+              </span>
+            </div>
+          ))}
+        </div>
       )}
-    </button>
+    </div>
   );
 }
 
-// Worker Item Component
-interface WorkerItemProps {
-  worker: WorkerSession & { sessionPrompt: string };
+// Terminal Item Component
+interface TerminalItemProps {
+  terminal: ActiveTerminal;
+  isServer?: boolean;
+  onKill: () => void;
 }
 
-const STATUS_DOTS: Record<WorkerStatus, string> = {
-  pending: "bg-muted-foreground/50",
-  running: "bg-accent-orange animate-pulse",
-  completed: "bg-green-500/70",
-  failed: "bg-red-400/70",
-  cancelled: "bg-muted-foreground/30",
-};
+function TerminalItem({ terminal, isServer, onKill }: TerminalItemProps) {
+  const [isHovered, setIsHovered] = useState(false);
 
-const MODEL_COLORS: Record<string, string> = {
-  opus: "text-violet-400",
-  sonnet: "text-blue-400",
-  haiku: "text-emerald-400",
-};
-
-function WorkerItem({ worker }: WorkerItemProps) {
-  const totalTokens = worker.inputTokens + worker.outputTokens;
-  const modelColor = MODEL_COLORS[worker.model] || "text-muted-foreground";
+  // Format command for display
+  const displayCommand = terminal.args
+    ? `${terminal.command} ${terminal.args.join(" ")}`
+    : terminal.command;
+  const truncatedCommand =
+    displayCommand.length > 30
+      ? displayCommand.slice(0, 27) + "..."
+      : displayCommand;
 
   return (
-    <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm hover:bg-sidebar-accent">
-      <span className={cn("size-1.5 rounded-full shrink-0", STATUS_DOTS[worker.status])} />
-      <span className="text-[9px] truncate flex-1">{worker.task}</span>
-      {totalTokens > 0 && (
-        <span className="text-[8px] text-muted-foreground/50 shrink-0">
-          {totalTokens > 1000 ? `${(totalTokens / 1000).toFixed(1)}k` : totalTokens}
+    <div
+      className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm hover:bg-sidebar-accent group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {isServer ? (
+        <Server className="size-3 shrink-0 text-green-500" />
+      ) : (
+        <Terminal className="size-3 shrink-0 text-muted-foreground" />
+      )}
+      <span className="text-[9px] truncate flex-1" title={displayCommand}>
+        {truncatedCommand}
+      </span>
+      {terminal.port && (
+        <span className="text-[8px] font-mono text-green-500 shrink-0">
+          :{terminal.port}
         </span>
       )}
-      <span className={cn("text-[8px] font-medium shrink-0", modelColor)}>
-        {worker.model.charAt(0).toUpperCase()}
-      </span>
+      {terminal.running && (
+        <span className="size-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
+      )}
+      {isHovered && terminal.running && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onKill();
+          }}
+          className="p-0.5 hover:bg-destructive/20 rounded transition-colors"
+          title="Kill process"
+        >
+          <X className="size-2.5 text-destructive" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Workspace Skill Item Component (for SKILL.md files)
+interface WorkspaceSkillItemProps {
+  skill: WorkspaceSkillInfo;
+  onInject?: (text: string) => void;
+}
+
+function WorkspaceSkillItem({ skill, onInject }: WorkspaceSkillItemProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleInject = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onInject?.(`@${skill.name} `);
+  };
+
+  return (
+    <div
+      className="group cursor-pointer"
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      <div className="flex items-center gap-1.5 px-1.5 py-1 rounded-sm hover:bg-sidebar-accent h-6">
+        <span className="text-[9px] font-mono text-foreground/80 truncate flex-1 min-w-0">
+          {skill.name}
+        </span>
+        {onInject && (
+          <button
+            type="button"
+            onClick={handleInject}
+            className="opacity-0 group-hover:opacity-100 flex items-center justify-center size-4 rounded-sm bg-accent-orange/20 hover:bg-accent-orange/40 text-accent-orange transition-opacity shrink-0"
+            title="Add to input"
+          >
+            <Plus className="size-2.5" />
+          </button>
+        )}
+      </div>
+      {isExpanded && (
+        <div className="px-3 pb-1 space-y-0.5">
+          <p className="text-[9px] text-muted-foreground/70 leading-relaxed">
+            {skill.description}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Workspace Command Item Component (for built-in slash commands)
+interface WorkspaceCommandItemProps {
+  command: WorkspaceCommandInfo;
+  onInject?: (command: string) => void;
+}
+
+function WorkspaceCommandItem({
+  command,
+  onInject,
+}: WorkspaceCommandItemProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleInject = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onInject?.(`/${command.name} `);
+  };
+
+  return (
+    <div
+      className="group cursor-pointer"
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      <div className="flex items-center gap-1.5 px-1.5 py-1 rounded-sm hover:bg-sidebar-accent h-6">
+        <span className="text-[9px] font-mono text-foreground/80 truncate flex-1 min-w-0">
+          /{command.name}
+        </span>
+        {command.inputHint && (
+          <span className="text-[8px] text-muted-foreground/40 truncate max-w-[40px] group-hover:opacity-0 transition-opacity">
+            {command.inputHint}
+          </span>
+        )}
+        {onInject && (
+          <button
+            type="button"
+            onClick={handleInject}
+            className="opacity-0 group-hover:opacity-100 flex items-center justify-center size-4 rounded-sm bg-accent-orange/20 hover:bg-accent-orange/40 text-accent-orange transition-opacity shrink-0"
+            title="Add to input"
+          >
+            <Plus className="size-2.5" />
+          </button>
+        )}
+      </div>
+      {isExpanded && (
+        <p className="px-3 pb-1 text-[9px] text-muted-foreground/70 leading-relaxed">
+          {command.description}
+        </p>
+      )}
     </div>
   );
 }

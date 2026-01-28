@@ -5,8 +5,10 @@ import { type KeyboardEvent, useCallback, useEffect, useRef, useState } from "re
 import { ArrowUp, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useOrchestratorStore } from "@/stores/orchestrator-store";
 
 interface SessionInputProps {
+  sessionId: string;
   onSubmit: (message: string) => void;
   disabled?: boolean;
   isLoading?: boolean;
@@ -16,6 +18,7 @@ interface SessionInputProps {
 }
 
 export function SessionInput({
+  sessionId,
   onSubmit,
   disabled,
   isLoading,
@@ -25,6 +28,7 @@ export function SessionInput({
 }: SessionInputProps) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { pendingInput, clearPendingInput } = useOrchestratorStore();
 
   // Auto-focus when autoFocus prop changes to true
   useEffect(() => {
@@ -32,6 +36,15 @@ export function SessionInput({
       inputRef.current.focus();
     }
   }, [autoFocus, disabled]);
+
+  // Consume pending input from store only if it's for THIS session
+  useEffect(() => {
+    if (pendingInput && pendingInput.sessionId === sessionId && inputRef.current) {
+      setValue((prev) => prev ? `${prev}${pendingInput.text}` : pendingInput.text);
+      clearPendingInput();
+      inputRef.current.focus();
+    }
+  }, [pendingInput, sessionId, clearPendingInput]);
 
   const handleSubmit = useCallback(() => {
     if (!value.trim() || disabled || isLoading) return;

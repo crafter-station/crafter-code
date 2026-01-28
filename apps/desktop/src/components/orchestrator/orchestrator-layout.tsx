@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ChevronRight, Wifi, X } from "lucide-react";
 
-import { onWorkerStatusChange, onWorkerStream, onWorkerToolCall, onWorkerPermission } from "@/lib/ipc/orchestrator";
+import { onWorkerStatusChange, onWorkerStream, onWorkerToolCall, onWorkerPermission, onWorkerCommands, onWorkerModeChange } from "@/lib/ipc/orchestrator";
 import { cn } from "@/lib/utils";
 
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
@@ -25,11 +25,14 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
     activeSessionId,
     setActiveSession,
     removeSession,
+    updateSession,
     updateWorker,
     appendWorkerOutput,
     addWorkerMessage,
+    appendWorkerThinking,
     updateWorkerToolCall,
     updateWorkerPlan,
+    updateWorkerCommands,
     addPermissionRequest,
     getActiveSession,
   } = useOrchestratorStore();
@@ -70,12 +73,14 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
   const subscribedWorkersRef = useRef<Map<string, () => void>>(new Map());
   const toolCallSubscribedRef = useRef<Map<string, () => void>>(new Map());
   const permissionSubscribedRef = useRef<Map<string, () => void>>(new Map());
-  const storeActionsRef = useRef({ appendWorkerOutput, updateWorker, addWorkerMessage, updateWorkerToolCall, updateWorkerPlan, addPermissionRequest });
+  const commandsSubscribedRef = useRef<Map<string, () => void>>(new Map());
+  const modeSubscribedRef = useRef<Map<string, () => void>>(new Map());
+  const storeActionsRef = useRef({ appendWorkerOutput, updateWorker, updateSession, addWorkerMessage, appendWorkerThinking, updateWorkerToolCall, updateWorkerPlan, updateWorkerCommands, addPermissionRequest });
 
   // Keep store actions ref up to date
   useEffect(() => {
-    storeActionsRef.current = { appendWorkerOutput, updateWorker, addWorkerMessage, updateWorkerToolCall, updateWorkerPlan, addPermissionRequest };
-  }, [appendWorkerOutput, updateWorker, addWorkerMessage, updateWorkerToolCall, updateWorkerPlan, addPermissionRequest]);
+    storeActionsRef.current = { appendWorkerOutput, updateWorker, updateSession, addWorkerMessage, appendWorkerThinking, updateWorkerToolCall, updateWorkerPlan, updateWorkerCommands, addPermissionRequest };
+  }, [appendWorkerOutput, updateWorker, updateSession, addWorkerMessage, appendWorkerThinking, updateWorkerToolCall, updateWorkerPlan, updateWorkerCommands, addPermissionRequest]);
 
   // Listen for worker output streams - subscribe only to new workers
   useEffect(() => {
@@ -98,13 +103,8 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
           const actions = storeActionsRef.current;
 
           if (event.type === "thinking") {
-            // Add thinking as a proper message so it persists
-            actions.addWorkerMessage(sessionId, workerId, {
-              type: "THINKING",
-              role: "assistant",
-              content: event.text,
-              timestamp: Date.now(),
-            });
+            // Accumulate thinking chunks into a single message
+            actions.appendWorkerThinking(sessionId, workerId, event.text);
           } else if (event.type === "delta") {
             console.log("[Frontend] Delta text:", event.text);
             actions.appendWorkerOutput(sessionId, workerId, event.text);
@@ -250,6 +250,76 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
         permissionSubscribed.delete(workerId);
       }
     }
+
+    // Subscribe to commands/skills events for new workers
+    const commandsSubscribed = commandsSubscribedRef.current;
+    for (const [workerId, sessionId] of currentWorkers) {
+      if (!commandsSubscribed.has(workerId)) {
+        console.log("[Frontend] Subscribing to commands for worker:", workerId);
+        const unsub = onWorkerCommands(workerId, (commands) => {
+          console.log("[Frontend] Received commands:", commands.length);
+          const actions = storeActionsRef.current;
+          // Parse source from description (e.g., "(user)", "(project)")
+          const parsed = commands.map((cmd) => {
+            const sourceMatch = cmd.description.match(/\((user|project)\)$/);
+            return {
+              name: cmd.name,
+              description: cmd.description.replace(/\s*\((user|project)\)$/, ""),
+              source: sourceMatch?.[1] as "user" | "project" | undefined,
+              input: cmd.input?.Unstructured ? { hint: cmd.input.Unstructured.hint } : undefined,
+            };
+          });
+          actions.updateWorkerCommands(sessionId, workerId, parsed);
+        });
+
+        unsub.then((cleanup) => {
+          if (currentWorkers.has(workerId)) {
+            commandsSubscribed.set(workerId, cleanup);
+          } else {
+            cleanup();
+          }
+        });
+        commandsSubscribed.set(workerId, () => {});
+      }
+    }
+
+    // Unsubscribe commands from removed workers
+    for (const [workerId, cleanup] of commandsSubscribed) {
+      if (!currentWorkers.has(workerId)) {
+        cleanup();
+        commandsSubscribed.delete(workerId);
+      }
+    }
+
+    // Subscribe to mode change events for new workers
+    const modeSubscribed = modeSubscribedRef.current;
+    for (const [workerId, sessionId] of currentWorkers) {
+      if (!modeSubscribed.has(workerId)) {
+        console.log("[Frontend] Subscribing to mode changes for worker:", workerId);
+        const unsub = onWorkerModeChange(workerId, (modeId) => {
+          console.log("[Frontend] Mode changed to:", modeId);
+          const actions = storeActionsRef.current;
+          actions.updateSession(sessionId, { mode: modeId as "normal" | "plan" });
+        });
+
+        unsub.then((cleanup) => {
+          if (currentWorkers.has(workerId)) {
+            modeSubscribed.set(workerId, cleanup);
+          } else {
+            cleanup();
+          }
+        });
+        modeSubscribed.set(workerId, () => {});
+      }
+    }
+
+    // Unsubscribe mode from removed workers
+    for (const [workerId, cleanup] of modeSubscribed) {
+      if (!currentWorkers.has(workerId)) {
+        cleanup();
+        modeSubscribed.delete(workerId);
+      }
+    }
   }, [sessions]);
 
   // Cleanup all subscriptions on unmount
@@ -267,6 +337,14 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
         cleanup();
       }
       permissionSubscribedRef.current.clear();
+      for (const cleanup of commandsSubscribedRef.current.values()) {
+        cleanup();
+      }
+      commandsSubscribedRef.current.clear();
+      for (const cleanup of modeSubscribedRef.current.values()) {
+        cleanup();
+      }
+      modeSubscribedRef.current.clear();
     };
   }, []);
 

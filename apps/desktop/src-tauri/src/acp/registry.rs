@@ -5,6 +5,7 @@
 //! - Gemini CLI (native ACP support)
 //! - Codex CLI (OpenAI's coding agent)
 //! - OpenCode (open source coding agent)
+//! - GitHub Copilot (via copilot-language-server)
 
 use serde::{Deserialize, Serialize};
 use std::process::Command;
@@ -19,6 +20,9 @@ pub struct AgentConfig {
     pub available: bool,
     /// Environment variables required for this agent
     pub env_vars: Vec<String>,
+    /// Config directory name for this agent (e.g., ".claude", ".gemini", ".copilot")
+    /// Used for provider-specific skills and commands
+    pub config_dir: String,
 }
 
 impl AgentConfig {
@@ -29,6 +33,7 @@ impl AgentConfig {
         command: &str,
         args: Vec<&str>,
         env_vars: Vec<&str>,
+        config_dir: &str,
     ) -> Self {
         let available = check_command_exists(command);
         // Use full path if found in common locations
@@ -45,6 +50,28 @@ impl AgentConfig {
             args: args.into_iter().map(String::from).collect(),
             available,
             env_vars: env_vars.into_iter().map(String::from).collect(),
+            config_dir: config_dir.to_string(),
+        }
+    }
+
+    /// Create an agent that's always marked as unavailable (e.g., requires subscription)
+    fn unavailable(
+        id: &str,
+        name: &str,
+        description: &str,
+        command: &str,
+        args: Vec<&str>,
+        config_dir: &str,
+    ) -> Self {
+        Self {
+            id: id.to_string(),
+            name: name.to_string(),
+            description: description.to_string(),
+            command: command.to_string(),
+            args: args.into_iter().map(String::from).collect(),
+            available: false,
+            env_vars: vec![],
+            config_dir: config_dir.to_string(),
         }
     }
 }
@@ -69,6 +96,7 @@ fn check_command_exists(command: &str) -> bool {
         format!("{}/go/bin/{}", home, command),
         format!("{}/.local/bin/{}", home, command),
         format!("{}/.cargo/bin/{}", home, command),
+        format!("{}/.copilot/bin/{}", home, command),
     ];
 
     common_paths.iter().any(|path| std::path::Path::new(path).exists())
@@ -82,6 +110,7 @@ fn get_command_path(command: &str) -> String {
         (format!("{}/go/bin/{}", home, command), command),
         (format!("{}/.local/bin/{}", home, command), command),
         (format!("{}/.cargo/bin/{}", home, command), command),
+        (format!("{}/.copilot/bin/{}", home, command), command),
     ];
 
     for (path, _cmd) in common_paths {
@@ -107,6 +136,7 @@ fn known_agents() -> Vec<AgentConfig> {
             "claude-code-acp",
             vec![],
             vec!["ANTHROPIC_API_KEY"],
+            ".claude",
         ),
         // Gemini CLI with experimental ACP mode
         // Install: bun install -g @google/gemini-cli
@@ -117,6 +147,7 @@ fn known_agents() -> Vec<AgentConfig> {
             "gemini",
             vec!["--experimental-acp"],
             vec![],
+            ".gemini",
         ),
         // Codex ACP adapter by Zed Industries
         // Install: bun install -g @zed-industries/codex-acp
@@ -127,6 +158,7 @@ fn known_agents() -> Vec<AgentConfig> {
             "codex-acp",
             vec![],
             vec!["OPENAI_API_KEY"],
+            ".codex",
         ),
         // OpenCode - open source coding agent
         // Install: go install github.com/anomaly/opencode@latest
@@ -138,6 +170,18 @@ fn known_agents() -> Vec<AgentConfig> {
             "opencode",
             vec!["acp"],
             vec![],
+            ".opencode",
+        ),
+        // GitHub Copilot CLI with ACP support (hidden flag)
+        // Install: brew install --cask copilot-cli
+        // Requires: GitHub Copilot subscription (Pro/Enterprise)
+        AgentConfig::unavailable(
+            "copilot",
+            "GitHub Copilot",
+            "Requires Copilot subscription",
+            "copilot",
+            vec!["--acp"],
+            ".copilot",
         ),
     ]
 }
@@ -156,9 +200,15 @@ pub fn list_all_agents() -> Vec<AgentConfig> {
     known_agents()
 }
 
-/// Get a specific agent by ID
+/// Get a specific agent by ID (only if available)
 pub fn get_agent(id: &str) -> Option<AgentConfig> {
     known_agents().into_iter().find(|a| a.id == id && a.available)
+}
+
+/// Get a specific agent config by ID (regardless of availability)
+/// Used for getting config_dir even when agent is not installed
+pub fn get_agent_config(id: &str) -> Option<AgentConfig> {
+    known_agents().into_iter().find(|a| a.id == id)
 }
 
 /// Get the default agent (Claude if available, otherwise first available)

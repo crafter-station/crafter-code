@@ -36,6 +36,8 @@ export type SessionStatus =
   | "failed"
   | "cancelled";
 
+export type SessionMode = "normal" | "plan";
+
 export type WorkerStatus =
   | "pending"
   | "running"
@@ -61,6 +63,8 @@ export interface ToolCall {
   status: ToolCallStatus;
   content?: ToolCallContent[];
   timestamp: number;
+  // Raw input for special tool calls (e.g., plan for ExitPlanMode)
+  rawInput?: Record<string, unknown>;
 }
 
 // Simplified content for UI display
@@ -92,6 +96,18 @@ export interface Message {
   rendered?: boolean;
 }
 
+/**
+ * Available command/skill from ACP agent
+ */
+export interface AvailableCommand {
+  name: string;
+  description: string;
+  source?: "user" | "project" | "builtin";
+  input?: {
+    hint?: string;
+  };
+}
+
 export interface WorkerSession {
   id: string;
   sessionId: string;
@@ -105,6 +121,7 @@ export interface WorkerSession {
   outputBuffer: string;
   messages: Message[];
   toolCalls: ToolCall[];
+  availableCommands: AvailableCommand[];
   plan?: AcpPlan;
   planTimestamp?: number;
   filesTouched: string[];
@@ -117,6 +134,8 @@ export interface OrchestratorSession {
   id: string;
   prompt: string;
   status: SessionStatus;
+  /** Session mode: normal (execute) or plan (explore + plan first) */
+  mode: SessionMode;
   model: Model;
   agentType: AgentType;
   workers: WorkerSession[];
@@ -127,6 +146,10 @@ export interface OrchestratorSession {
   createdAt: number;
   updatedAt: number;
   plan?: string;
+  /** Working directory for this session */
+  cwd?: string;
+  /** ACP session ID for resuming (from the agent) */
+  acpSessionId?: string;
 }
 
 export interface FileConflict {
@@ -151,8 +174,11 @@ interface OrchestratorState {
   sessions: OrchestratorSession[];
   activeSessionId: string | null;
   permissionRequests: PermissionRequest[];
+  pendingInput: { sessionId: string; text: string } | null;
 
   // Actions
+  setPendingInput: (sessionId: string, text: string) => void;
+  clearPendingInput: () => void;
   setSession: (session: OrchestratorSession) => void;
   updateSession: (id: string, updates: Partial<OrchestratorSession>) => void;
   removeSession: (id: string) => void;
@@ -180,6 +206,11 @@ interface OrchestratorState {
     workerId: string,
     message: Omit<Message, "id">,
   ) => void;
+  appendWorkerThinking: (
+    sessionId: string,
+    workerId: string,
+    text: string,
+  ) => void;
 
   // Tool call actions
   updateWorkerToolCall: (
@@ -193,6 +224,13 @@ interface OrchestratorState {
     sessionId: string,
     workerId: string,
     plan: AcpPlan,
+  ) => void;
+
+  // Available commands actions
+  updateWorkerCommands: (
+    sessionId: string,
+    workerId: string,
+    commands: AvailableCommand[],
   ) => void;
 
   // Permission actions
@@ -213,6 +251,10 @@ export const useOrchestratorStore = create<OrchestratorState>()(
       sessions: [],
       activeSessionId: null,
       permissionRequests: [],
+      pendingInput: null,
+
+      setPendingInput: (sessionId, text) => set({ pendingInput: { sessionId, text } }),
+      clearPendingInput: () => set({ pendingInput: null }),
 
       setSession: (session) => {
         set((state) => {
@@ -383,6 +425,51 @@ export const useOrchestratorStore = create<OrchestratorState>()(
         }));
       },
 
+      appendWorkerThinking: (sessionId, workerId, text) => {
+        set((state) => ({
+          sessions: state.sessions.map((session) => {
+            if (session.id !== sessionId) return session;
+            return {
+              ...session,
+              workers: session.workers.map((worker) => {
+                if (worker.id !== workerId) return worker;
+                const messages = worker.messages || [];
+                const lastMessage = messages[messages.length - 1];
+                // Only append if the LAST message is THINKING AND no delta streaming has started
+                // (delta goes to outputBuffer, so if outputBuffer has content, thinking round is over)
+                if (lastMessage?.type === "THINKING" && !worker.outputBuffer) {
+                  // Append to existing thinking message
+                  const updatedMessages = [...messages];
+                  updatedMessages[messages.length - 1] = {
+                    ...lastMessage,
+                    content: lastMessage.content + text,
+                  };
+                  return {
+                    ...worker,
+                    messages: updatedMessages,
+                    updatedAt: Date.now(),
+                  };
+                }
+                // Create new thinking message
+                const newMessage: Message = {
+                  id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+                  type: "THINKING",
+                  role: "assistant",
+                  content: text,
+                  timestamp: Date.now(),
+                };
+                return {
+                  ...worker,
+                  messages: [...messages, newMessage],
+                  updatedAt: Date.now(),
+                };
+              }),
+              updatedAt: Date.now(),
+            };
+          }),
+        }));
+      },
+
       updateWorkerToolCall: (sessionId, workerId, toolCall) => {
         set((state) => ({
           sessions: state.sessions.map((session) => {
@@ -407,6 +494,8 @@ export const useOrchestratorStore = create<OrchestratorState>()(
                           ...(toolCall.status && { status: toolCall.status }),
                           // Only update content if new content is provided and non-empty
                           ...(toolCall.content && toolCall.content.length > 0 && { content: toolCall.content }),
+                          // Update rawInput if provided (for plan mode, etc.)
+                          ...(toolCall.rawInput && { rawInput: toolCall.rawInput }),
                         };
                       })
                     : [...(worker.toolCalls || []), toolCall];
@@ -434,6 +523,26 @@ export const useOrchestratorStore = create<OrchestratorState>()(
                   ...worker,
                   plan,
                   planTimestamp: worker.planTimestamp ?? Date.now(), // Preserve original timestamp
+                  updatedAt: Date.now(),
+                };
+              }),
+              updatedAt: Date.now(),
+            };
+          }),
+        }));
+      },
+
+      updateWorkerCommands: (sessionId, workerId, commands) => {
+        set((state) => ({
+          sessions: state.sessions.map((session) => {
+            if (session.id !== sessionId) return session;
+            return {
+              ...session,
+              workers: session.workers.map((worker) => {
+                if (worker.id !== workerId) return worker;
+                return {
+                  ...worker,
+                  availableCommands: commands,
                   updatedAt: Date.now(),
                 };
               }),

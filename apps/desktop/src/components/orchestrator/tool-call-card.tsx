@@ -16,10 +16,20 @@ import {
   Trash2,
   Copy,
   Check,
+  ExternalLink,
+  FileCode,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { ToolCall, ToolCallContent, ToolCallKind } from "@/stores/orchestrator-store";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@crafter-code/ui/dialog";
+import { ScrollArea } from "@crafter-code/ui/scroll-area";
 
 interface ToolCallCardProps {
   toolCall: ToolCall;

@@ -2,11 +2,23 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
+/// Session mode controls how the agent behaves
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum SessionMode {
+    /// Normal mode - agent executes tools and makes changes directly
+    #[default]
+    Normal,
+    /// Plan mode - agent explores and creates a plan before executing
+    Plan,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentSession {
     pub id: String,
     pub prompt: String,
     pub status: SessionStatus,
+    pub mode: SessionMode,
     pub iteration: u32,
     pub max_iterations: u32,
     pub tokens_used: u64,
@@ -39,11 +51,21 @@ impl AgentManager {
     }
 
     pub fn create_session(&mut self, prompt: String, max_iterations: u32) -> AgentSession {
+        self.create_session_with_mode(prompt, max_iterations, SessionMode::Normal)
+    }
+
+    pub fn create_session_with_mode(
+        &mut self,
+        prompt: String,
+        max_iterations: u32,
+        mode: SessionMode,
+    ) -> AgentSession {
         let now = chrono_timestamp();
         let session = AgentSession {
             id: Uuid::new_v4().to_string(),
             prompt,
             status: SessionStatus::Pending,
+            mode,
             iteration: 0,
             max_iterations,
             tokens_used: 0,
@@ -53,6 +75,19 @@ impl AgentManager {
         };
         self.sessions.insert(session.id.clone(), session.clone());
         session
+    }
+
+    pub fn set_session_mode(&mut self, id: &str, mode: SessionMode) -> Option<&AgentSession> {
+        if let Some(session) = self.sessions.get_mut(id) {
+            session.mode = mode;
+            session.updated_at = chrono_timestamp();
+            return Some(session);
+        }
+        None
+    }
+
+    pub fn get_session_mode(&self, id: &str) -> Option<SessionMode> {
+        self.sessions.get(id).map(|s| s.mode.clone())
     }
 
     pub fn get_session(&self, id: &str) -> Option<&AgentSession> {

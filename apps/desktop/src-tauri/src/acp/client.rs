@@ -3,15 +3,17 @@
 use agent_client_protocol::{
     Agent, Client, ClientSideConnection,
     // Schema types
+    AgentCapabilities, AuthenticateRequest, AuthMethod, AuthMethodId,
     CancelNotification, ClientCapabilities, ContentBlock, CreateTerminalRequest,
     CreateTerminalResponse, FileSystemCapability, Implementation, InitializeRequest,
-    KillTerminalCommandRequest, KillTerminalCommandResponse, NewSessionRequest,
-    PromptRequest, ReadTextFileRequest, ReadTextFileResponse, ReleaseTerminalRequest,
+    InitializeResponse, KillTerminalCommandRequest, KillTerminalCommandResponse,
+    LoadSessionRequest, NewSessionRequest, PermissionOptionId, PromptRequest,
+    ReadTextFileRequest, ReadTextFileResponse, ReleaseTerminalRequest,
     ReleaseTerminalResponse, RequestPermissionOutcome, RequestPermissionRequest,
-    RequestPermissionResponse, SelectedPermissionOutcome, SessionNotification, SessionUpdate,
-    StopReason, TerminalExitStatus, TerminalOutputRequest, TerminalOutputResponse,
-    TextContent, WaitForTerminalExitRequest, WaitForTerminalExitResponse, WriteTextFileRequest,
-    WriteTextFileResponse, PermissionOptionId,
+    RequestPermissionResponse, SelectedPermissionOutcome, SessionModeId, SessionNotification,
+    SessionUpdate, SetSessionModeRequest, StopReason, TerminalExitStatus, TerminalOutputRequest,
+    TerminalOutputResponse, TextContent, WaitForTerminalExitRequest, WaitForTerminalExitResponse,
+    WriteTextFileRequest, WriteTextFileResponse,
 };
 use futures::io::BufReader;
 use once_cell::sync::Lazy;
@@ -23,6 +25,10 @@ use tauri::{AppHandle, Emitter};
 use tokio::process::Command;
 use tokio::sync::{mpsc, oneshot};
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
+
+use crate::acp::swarm::{execute_swarm_command, is_swarm_command, parse_swarm_command};
+use crate::inbox::InboxManager;
+use crate::tasks::TaskManager;
 
 /// Global registry for permission response channels
 /// Maps worker_id -> oneshot sender for the response
@@ -43,20 +49,52 @@ pub fn send_permission_response(worker_id: &str, option_id: String) -> Result<()
 pub struct CrafterClient {
     app_handle: AppHandle,
     worker_id: String,
+    session_id: String,
+    /// Session working directory (default for terminals)
+    session_cwd: Arc<Mutex<Option<String>>>,
     /// Terminal processes spawned via terminal/create
     terminals: Arc<Mutex<HashMap<String, Child>>>,
     /// Accumulated text for the current response
     accumulated_text: Arc<Mutex<String>>,
+    /// Task manager for swarm coordination
+    task_manager: Option<Arc<TaskManager>>,
+    /// Inbox manager for swarm coordination
+    inbox_manager: Option<Arc<InboxManager>>,
 }
 
 impl CrafterClient {
-    pub fn new(app_handle: AppHandle, worker_id: String) -> Self {
+    pub fn new(app_handle: AppHandle, worker_id: String, session_id: String) -> Self {
         Self {
             app_handle,
             worker_id,
+            session_id,
+            session_cwd: Arc::new(Mutex::new(None)),
             terminals: Arc::new(Mutex::new(HashMap::new())),
             accumulated_text: Arc::new(Mutex::new(String::new())),
+            task_manager: None,
+            inbox_manager: None,
         }
+    }
+
+    /// Set the session's working directory
+    pub fn set_session_cwd(&self, cwd: String) {
+        *self.session_cwd.lock() = Some(cwd);
+    }
+
+    /// Get the session's working directory
+    pub fn get_session_cwd(&self) -> Option<String> {
+        self.session_cwd.lock().clone()
+    }
+
+    /// Set the coordination managers for swarm command support
+    pub fn with_coordination(
+        mut self,
+        task_manager: Arc<TaskManager>,
+        inbox_manager: Arc<InboxManager>,
+    ) -> Self {
+        self.task_manager = Some(task_manager);
+        self.inbox_manager = Some(inbox_manager);
+        self
     }
 
     fn emit_event(&self, event_type: &str, data: serde_json::Value) {
@@ -74,6 +112,88 @@ impl CrafterClient {
             "event": event
         });
         let _ = self.app_handle.emit(&event_name, payload);
+    }
+
+    /// Handle a swarm command by executing it against TaskManager/InboxManager
+    /// and creating a fake terminal that immediately returns the result
+    fn handle_swarm_terminal(
+        &self,
+        command: &str,
+    ) -> agent_client_protocol::Result<CreateTerminalResponse> {
+        eprintln!("[ACP] Intercepted swarm command: {}", command);
+
+        // Check if we have the coordination managers
+        let (task_manager, inbox_manager) = match (&self.task_manager, &self.inbox_manager) {
+            (Some(tm), Some(im)) => (tm.clone(), im.clone()),
+            _ => {
+                return Err(agent_client_protocol::Error::new(
+                    -32000,
+                    "Swarm coordination not enabled for this session".to_string(),
+                ));
+            }
+        };
+
+        // Parse the swarm command
+        let swarm_cmd = match parse_swarm_command(command) {
+            Some(cmd) => cmd,
+            None => {
+                return Err(agent_client_protocol::Error::new(
+                    -32000,
+                    format!("Failed to parse swarm command: {}", command),
+                ));
+            }
+        };
+
+        // Execute the swarm command
+        let result = execute_swarm_command(&swarm_cmd, &task_manager, &inbox_manager, &self.worker_id);
+
+        // Emit swarm activity event to frontend for UI updates
+        let _ = self.app_handle.emit(
+            "swarm-activity",
+            serde_json::json!({
+                "worker_id": self.worker_id,
+                "session_id": self.session_id,
+                "command": command,
+                "result": {
+                    "success": result.success,
+                    "output": result.output,
+                    "data": result.data
+                },
+                "timestamp": chrono::Utc::now().timestamp_millis()
+            }),
+        );
+
+        // Create a virtual terminal ID for tracking
+        // We use a special prefix so we know this is a swarm result
+        let _terminal_id = format!("swarm_{}_{}", self.worker_id, chrono::Utc::now().timestamp_millis());
+
+        // Store the result as a "completed" terminal with pre-filled output
+        // We'll create a process that just echoes the result
+        let output = if result.success {
+            result.to_json()
+        } else {
+            format!("Error: {}", result.output)
+        };
+
+        // Create a simple echo process that outputs the result
+        let mut cmd = std::process::Command::new("/bin/sh");
+        cmd.args(["-c", &format!("echo '{}'", output.replace('\'', "'\"'\"'"))]);
+        cmd.stdout(std::process::Stdio::piped());
+        cmd.stderr(std::process::Stdio::piped());
+
+        let child = cmd.spawn().map_err(|e| {
+            agent_client_protocol::Error::new(-32000, format!("Failed to create swarm terminal: {}", e))
+        })?;
+
+        let actual_terminal_id = format!("term_{}", child.id());
+        {
+            let mut terminals = self.terminals.lock();
+            terminals.insert(actual_terminal_id.clone(), child);
+        }
+
+        eprintln!("[ACP] Swarm command result: success={}, output={}", result.success, result.output);
+
+        Ok(CreateTerminalResponse::new(actual_terminal_id))
     }
 }
 
@@ -248,6 +368,9 @@ impl Client for CrafterClient {
                     })
                     .collect();
 
+                // Extract raw_input for plan mode and other metadata
+                let raw_input = tool_call.raw_input.as_ref().map(|v| v.clone());
+
                 let _ = self.app_handle.emit(
                     &event_name,
                     serde_json::json!({
@@ -256,7 +379,8 @@ impl Client for CrafterClient {
                         "title": tool_call.title,
                         "kind": format!("{:?}", tool_call.kind).to_lowercase(),
                         "status": format!("{:?}", tool_call.status).to_lowercase(),
-                        "content": content
+                        "content": content,
+                        "raw_input": raw_input
                     }),
                 );
             }
@@ -325,6 +449,11 @@ impl Client for CrafterClient {
                 // Only include content if not empty (to avoid overwriting existing content)
                 if !content.is_empty() {
                     payload["content"] = serde_json::json!(content);
+                }
+
+                // Include raw_input if available (for plan mode, etc.)
+                if let Some(raw_input) = &update.fields.raw_input {
+                    payload["raw_input"] = raw_input.clone();
                 }
 
                 let _ = self.app_handle.emit(&event_name, payload);
@@ -459,11 +588,21 @@ impl Client for CrafterClient {
             format!("{} {}", args.command, args.args.join(" "))
         };
 
+        // INTERCEPT: Check for swarm commands
+        if is_swarm_command(&full_command) {
+            return self.handle_swarm_terminal(&full_command);
+        }
+
         // Use shell to execute the command (handles commands like "ls -la" properly)
         let mut cmd = std::process::Command::new("/bin/sh");
         cmd.args(["-c", &full_command]);
 
-        if let Some(cwd) = &args.cwd {
+        // Use request's cwd, or fall back to session's cwd
+        let effective_cwd: Option<std::path::PathBuf> = args.cwd.clone().or_else(|| {
+            self.get_session_cwd().map(std::path::PathBuf::from)
+        });
+        if let Some(cwd) = &effective_cwd {
+            eprintln!("[ACP] terminal using cwd: {}", cwd.display());
             cmd.current_dir(cwd);
         }
         for env_var in &args.env {
@@ -482,6 +621,21 @@ impl Client for CrafterClient {
             terminals.insert(terminal_id.clone(), child);
         }
 
+        // Emit terminal created event for frontend tracking
+        let _ = self.app_handle.emit(
+            "terminal-created",
+            serde_json::json!({
+                "terminal_id": terminal_id,
+                "session_id": self.session_id,
+                "worker_id": self.worker_id,
+                "command": args.command,
+                "args": args.args,
+                "cwd": args.cwd,
+                "running": true,
+                "timestamp": chrono::Utc::now().timestamp_millis()
+            }),
+        );
+
         Ok(CreateTerminalResponse::new(terminal_id))
     }
 
@@ -491,6 +645,7 @@ impl Client for CrafterClient {
     ) -> agent_client_protocol::Result<TerminalOutputResponse> {
         eprintln!("[ACP] terminal/output: terminalId={}", args.terminal_id);
 
+        let terminal_id_str = args.terminal_id.0.as_ref().to_string();
         let mut terminals = self.terminals.lock();
         let child = terminals
             .get_mut(args.terminal_id.0.as_ref())
@@ -511,10 +666,28 @@ impl Client for CrafterClient {
         }
 
         // Check if process has exited
-        if let Ok(Some(status)) = child.try_wait() {
-            exit_status =
-                Some(TerminalExitStatus::new().exit_code(status.code().map(|c| c as u32)));
-        }
+        let is_running = match child.try_wait() {
+            Ok(Some(status)) => {
+                exit_status =
+                    Some(TerminalExitStatus::new().exit_code(status.code().map(|c| c as u32)));
+                false
+            }
+            Ok(None) => true,
+            Err(_) => false,
+        };
+
+        // Emit terminal output event for frontend tracking
+        let _ = self.app_handle.emit(
+            "terminal-output",
+            serde_json::json!({
+                "terminal_id": terminal_id_str,
+                "session_id": self.session_id,
+                "output": output,
+                "running": is_running,
+                "exit_code": exit_status.as_ref().and_then(|s| s.exit_code),
+                "timestamp": chrono::Utc::now().timestamp_millis()
+            }),
+        );
 
         let mut response = TerminalOutputResponse::new(output, false);
         if let Some(status) = exit_status {
@@ -533,6 +706,7 @@ impl Client for CrafterClient {
             args.terminal_id
         );
 
+        let terminal_id_str = args.terminal_id.0.as_ref().to_string();
         let mut terminals = self.terminals.lock();
         let child = terminals
             .get_mut(args.terminal_id.0.as_ref())
@@ -542,8 +716,22 @@ impl Client for CrafterClient {
             agent_client_protocol::Error::new(-32000, format!("Failed to wait: {}", e))
         })?;
 
+        let exit_code = status.code().map(|c| c as u32);
+
+        // Emit terminal exited event for frontend tracking
+        let _ = self.app_handle.emit(
+            "terminal-exited",
+            serde_json::json!({
+                "terminal_id": terminal_id_str,
+                "session_id": self.session_id,
+                "exit_code": exit_code,
+                "running": false,
+                "timestamp": chrono::Utc::now().timestamp_millis()
+            }),
+        );
+
         Ok(WaitForTerminalExitResponse::new(
-            TerminalExitStatus::new().exit_code(status.code().map(|c| c as u32)),
+            TerminalExitStatus::new().exit_code(exit_code),
         ))
     }
 
@@ -553,10 +741,22 @@ impl Client for CrafterClient {
     ) -> agent_client_protocol::Result<KillTerminalCommandResponse> {
         eprintln!("[ACP] terminal/kill: terminalId={}", args.terminal_id);
 
+        let terminal_id_str = args.terminal_id.0.as_ref().to_string();
         let mut terminals = self.terminals.lock();
         if let Some(child) = terminals.get_mut(args.terminal_id.0.as_ref()) {
             let _ = child.kill();
         }
+
+        // Emit terminal killed event for frontend tracking
+        let _ = self.app_handle.emit(
+            "terminal-killed",
+            serde_json::json!({
+                "terminal_id": terminal_id_str,
+                "session_id": self.session_id,
+                "running": false,
+                "timestamp": chrono::Utc::now().timestamp_millis()
+            }),
+        );
 
         Ok(KillTerminalCommandResponse::new())
     }
@@ -567,8 +767,19 @@ impl Client for CrafterClient {
     ) -> agent_client_protocol::Result<ReleaseTerminalResponse> {
         eprintln!("[ACP] terminal/release: terminalId={}", args.terminal_id);
 
+        let terminal_id_str = args.terminal_id.0.as_ref().to_string();
         let mut terminals = self.terminals.lock();
         terminals.remove(args.terminal_id.0.as_ref());
+
+        // Emit terminal released event for frontend tracking
+        let _ = self.app_handle.emit(
+            "terminal-released",
+            serde_json::json!({
+                "terminal_id": terminal_id_str,
+                "session_id": self.session_id,
+                "timestamp": chrono::Utc::now().timestamp_millis()
+            }),
+        );
 
         Ok(ReleaseTerminalResponse::new())
     }
@@ -609,11 +820,21 @@ impl std::error::Error for AcpError {}
 /// ACP client wrapper that manages the connection lifecycle
 pub struct AcpClient {
     connection: ClientSideConnection,
-    session_id: Option<agent_client_protocol::SessionId>,
+    acp_session_id: Option<agent_client_protocol::SessionId>,
     process: tokio::process::Child,
     accumulated_text: Arc<Mutex<String>>,
+    /// Shared session cwd (for terminal commands to use)
+    session_cwd: Arc<Mutex<Option<String>>>,
     app_handle: AppHandle,
     worker_id: String,
+    #[allow(dead_code)]
+    session_id: String,
+    /// Authentication methods supported by the agent (from InitializeResponse)
+    auth_methods: Vec<AuthMethod>,
+    /// Whether the client has successfully authenticated
+    is_authenticated: bool,
+    /// Agent capabilities (from InitializeResponse)
+    agent_capabilities: Option<AgentCapabilities>,
 }
 
 impl AcpClient {
@@ -622,15 +843,23 @@ impl AcpClient {
         command: &str,
         args: &[&str],
         cwd: &str,
+        env_vars: &[String],
         app_handle: AppHandle,
         worker_id: String,
+        session_id: String,
+        task_manager: Option<Arc<TaskManager>>,
+        inbox_manager: Option<Arc<InboxManager>>,
     ) -> Result<Self, AcpError> {
-        let mut process = Command::new(command)
-            .args(args)
+        let mut cmd = Command::new(command);
+        cmd.args(args)
             .current_dir(cwd)
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::inherit())
+            // Inherit ALL environment variables from parent process
+            .envs(std::env::vars());
+
+        let mut process = cmd
             .spawn()
             .map_err(|e| AcpError::SpawnFailed(format!("{}: {}", command, e)))?;
 
@@ -648,9 +877,17 @@ impl AcpClient {
         let stdin_compat = stdin.compat_write();
         let stdout_compat = stdout.compat();
 
-        // Create our client implementation
-        let client = CrafterClient::new(app_handle.clone(), worker_id.clone());
+        // Create our client implementation with coordination support
+        let mut client = CrafterClient::new(app_handle.clone(), worker_id.clone(), session_id.clone());
+
+        // Enable swarm coordination if managers are provided
+        if let (Some(tm), Some(im)) = (task_manager, inbox_manager) {
+            client = client.with_coordination(tm, im);
+        }
+
+        // Extract Arcs before moving client into connection
         let accumulated_text = client.accumulated_text.clone();
+        let session_cwd = client.session_cwd.clone();
 
         // Create the connection using the official crate with futures-compatible streams
         let (connection, io_task) = ClientSideConnection::new(
@@ -671,16 +908,21 @@ impl AcpClient {
 
         Ok(Self {
             connection,
-            session_id: None,
+            acp_session_id: None,
             process,
             accumulated_text,
+            session_cwd,
             app_handle,
             worker_id,
+            session_id,
+            auth_methods: Vec::new(),
+            is_authenticated: false,
+            agent_capabilities: None,
         })
     }
 
     /// Initialize the ACP connection
-    pub async fn initialize(&self) -> Result<(), AcpError> {
+    pub async fn initialize(&mut self) -> Result<InitializeResponse, AcpError> {
         let init_request = InitializeRequest::new(1.into())
             .client_info(Implementation::new("crafter-code", env!("CARGO_PKG_VERSION")))
             .client_capabilities(
@@ -693,27 +935,101 @@ impl AcpClient {
                     .terminal(true),
             );
 
-        self.connection
+        let response = self.connection
             .initialize(init_request)
             .await
             .map_err(|e: agent_client_protocol::Error| AcpError::InitializeFailed(e.to_string()))?;
 
+        // Store auth methods and capabilities from response
+        self.auth_methods = response.auth_methods.clone();
+        self.agent_capabilities = Some(response.agent_capabilities.clone());
+
+        // If no auth methods required, mark as authenticated
+        if self.auth_methods.is_empty() {
+            self.is_authenticated = true;
+        }
+
+        Ok(response)
+    }
+
+    /// Authenticate with the agent using the specified method
+    pub async fn authenticate(&mut self, method_id: &str) -> Result<(), AcpError> {
+        let request = AuthenticateRequest::new(AuthMethodId::new(method_id));
+        self.connection
+            .authenticate(request)
+            .await
+            .map_err(|e| AcpError::ProtocolError(format!("Authentication failed: {}", e)))?;
+        self.is_authenticated = true;
+        eprintln!("[ACP] Authenticated with method: {}", method_id);
         Ok(())
     }
 
+    /// Check if authentication is required but not yet completed
+    pub fn requires_authentication(&self) -> bool {
+        !self.auth_methods.is_empty() && !self.is_authenticated
+    }
+
+    /// Get the available authentication methods
+    pub fn get_auth_methods(&self) -> &[AuthMethod] {
+        &self.auth_methods
+    }
+
+    /// Check if the agent supports loading sessions
+    pub fn supports_load_session(&self) -> bool {
+        self.agent_capabilities
+            .as_ref()
+            .map(|caps| caps.load_session)
+            .unwrap_or(false)
+    }
+
+    /// Load an existing session (requires loadSession capability)
+    pub async fn load_acp_session(&mut self, session_id: String, cwd: String) -> Result<String, AcpError> {
+        if !self.supports_load_session() {
+            return Err(AcpError::ProtocolError(
+                "Agent does not support loadSession capability".to_string(),
+            ));
+        }
+
+        eprintln!("[AcpClient::load_acp_session] Loading session {} with cwd: {}", session_id, cwd);
+
+        // Store the cwd for terminal commands to use as fallback
+        *self.session_cwd.lock() = Some(cwd.clone());
+
+        // Clone session_id before moving it into the request
+        let session_id_for_return = session_id.clone();
+
+        let request = LoadSessionRequest::new(
+            agent_client_protocol::SessionId::new(session_id),
+            cwd.clone(),
+        );
+        self.connection
+            .load_session(request)
+            .await
+            .map_err(|e: agent_client_protocol::Error| AcpError::SessionFailed(e.to_string()))?;
+
+        let acp_session_id = agent_client_protocol::SessionId::new(session_id_for_return.clone());
+        eprintln!("[ACP] Session loaded: {} with cwd: {}", acp_session_id, cwd);
+        self.acp_session_id = Some(acp_session_id);
+        Ok(session_id_for_return)
+    }
+
     /// Create a new session
-    pub async fn create_session(&mut self, cwd: &str) -> Result<String, AcpError> {
-        // NewSessionRequest::new takes cwd as first argument
+    pub async fn create_acp_session(&mut self, cwd: &str) -> Result<String, AcpError> {
+        eprintln!("[AcpClient::create_acp_session] Creating session with cwd: {}", cwd);
+
+        // Store the cwd for terminal commands to use as fallback
+        *self.session_cwd.lock() = Some(cwd.to_string());
+
         let session_response = self
             .connection
             .new_session(NewSessionRequest::new(cwd))
             .await
             .map_err(|e: agent_client_protocol::Error| AcpError::SessionFailed(e.to_string()))?;
 
-        let session_id = session_response.session_id;
-        eprintln!("[ACP] Session created: {}", session_id);
-        self.session_id = Some(session_id.clone());
-        Ok(session_id.to_string())
+        let acp_session_id = session_response.session_id;
+        eprintln!("[ACP] ACP Session created: {} with cwd: {}", acp_session_id, cwd);
+        self.acp_session_id = Some(acp_session_id.clone());
+        Ok(acp_session_id.to_string())
     }
 
     /// Send a prompt and wait for completion
@@ -722,14 +1038,14 @@ impl AcpClient {
         message: &str,
         cancel_rx: &mut mpsc::Receiver<()>,
     ) -> Result<StopReason, AcpError> {
-        let session_id = self
-            .session_id
+        let acp_session_id = self
+            .acp_session_id
             .clone()
-            .ok_or_else(|| AcpError::PromptFailed("No active session".to_string()))?;
+            .ok_or_else(|| AcpError::PromptFailed("No active ACP session".to_string()))?;
 
         // ContentBlock::Text is a tuple variant that takes TextContent
         let prompt_request = PromptRequest::new(
-            session_id.clone(),
+            acp_session_id.clone(),
             vec![ContentBlock::Text(TextContent::new(message))],
         );
 
@@ -740,7 +1056,7 @@ impl AcpClient {
             }
             _ = cancel_rx.recv() => {
                 // Send cancel notification
-                let _ = self.connection.cancel(CancelNotification::new(session_id)).await;
+                let _ = self.connection.cancel(CancelNotification::new(acp_session_id)).await;
                 Err(AcpError::Cancelled)
             }
         };
@@ -770,6 +1086,38 @@ impl AcpClient {
         }
 
         result.map(|r| r.stop_reason)
+    }
+
+    /// Set the session mode (e.g., "plan", "normal", "code")
+    /// Uses the official ACP session/set_mode method
+    pub async fn set_mode(&self, mode_id: &str) -> Result<(), AcpError> {
+        let acp_session_id = self
+            .acp_session_id
+            .clone()
+            .ok_or_else(|| AcpError::PromptFailed("No active ACP session".to_string()))?;
+
+        let request = SetSessionModeRequest::new(acp_session_id, SessionModeId::new(mode_id));
+
+        self.connection
+            .set_session_mode(request)
+            .await
+            .map_err(|e: agent_client_protocol::Error| {
+                AcpError::ProtocolError(format!("Failed to set mode: {}", e))
+            })?;
+
+        eprintln!("[ACP] Session mode set to: {}", mode_id);
+
+        // Emit mode change event to frontend
+        let event_name = format!("worker-mode-{}", self.worker_id);
+        let _ = self.app_handle.emit(
+            &event_name,
+            serde_json::json!({
+                "worker_id": self.worker_id,
+                "mode_id": mode_id
+            }),
+        );
+
+        Ok(())
     }
 
     /// Kill the agent process
@@ -804,15 +1152,27 @@ pub async fn run_acp_agent(
     command: &str,
     args: &[&str],
     cwd: &str,
+    env_vars: &[String],
     message: &str,
     app_handle: AppHandle,
     worker_id: String,
+    session_id: String,
     mut cancel_rx: mpsc::Receiver<()>,
 ) -> Result<StopReason, AcpError> {
-    let mut client = AcpClient::spawn(command, args, cwd, app_handle, worker_id).await?;
+    let mut client = AcpClient::spawn(
+        command,
+        args,
+        cwd,
+        env_vars,
+        app_handle,
+        worker_id,
+        session_id,
+        None, // No coordination for convenience function
+        None,
+    ).await?;
 
     client.initialize().await?;
-    client.create_session(cwd).await?;
+    client.create_acp_session(cwd).await?;
 
     let result = client.prompt(message, &mut cancel_rx).await;
 

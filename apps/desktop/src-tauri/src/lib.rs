@@ -61,6 +61,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(AppState {
             agent_manager: agent_manager.clone(),
             orchestrator_manager: orchestrator_manager.clone(),
@@ -91,6 +92,15 @@ pub fn run() {
             acp::commands::create_acp_session,
             acp::commands::send_acp_prompt,
             acp::commands::respond_to_permission,
+            acp::commands::set_acp_session_mode,
+            acp::commands::authenticate_acp_session,
+            // Session persistence commands
+            acp::commands::list_persisted_sessions,
+            acp::commands::get_persisted_session,
+            acp::commands::delete_persisted_session,
+            acp::commands::resume_acp_session,
+            acp::commands::save_session_to_persistence,
+            acp::commands::reconnect_worker,
             // Task commands
             tasks::commands::task_create,
             tasks::commands::task_list,
@@ -109,6 +119,24 @@ pub fn run() {
             inbox::commands::inbox_send_structured,
             inbox::commands::inbox_count,
             inbox::commands::inbox_get_workers,
+            // Skills commands
+            acp::skills_commands::list_skills,
+            acp::skills_commands::get_skill,
+            acp::skills_commands::activate_skill,
+            acp::skills_commands::deactivate_skill,
+            acp::skills_commands::get_active_skill_prompts,
+            acp::skills_commands::suggest_skills,
+            acp::skills_commands::init_skills,
+            acp::skills_commands::reload_skills,
+            acp::skills_commands::list_workspace_skills,
+            acp::skills_commands::list_workspace_commands,
+            // Slash commands
+            acp::skills_commands::list_slash_commands,
+            acp::skills_commands::list_commands_by_category,
+            acp::skills_commands::process_slash_command,
+            acp::skills_commands::is_slash_command,
+            acp::skills_commands::process_user_input,
+            acp::skills_commands::cleanup_session_features,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

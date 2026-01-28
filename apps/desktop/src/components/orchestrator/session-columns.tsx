@@ -4,7 +4,7 @@ import { useCallback, useRef, useState, useEffect } from "react";
 
 import { Users } from "lucide-react";
 
-import { sendAcpPrompt } from "@/lib/ipc/orchestrator";
+import { sendAcpPrompt, reconnectWorker } from "@/lib/ipc/orchestrator";
 import { cn } from "@/lib/utils";
 
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
@@ -48,11 +48,41 @@ export function SessionColumns({ className }: SessionColumnsProps) {
         await sendAcpPrompt(sessionId, message);
         // Response will stream back to the same session via worker events
       } catch (error) {
-        console.error("Follow-up failed:", error);
+        const errorStr = String(error);
+        console.error("Follow-up failed:", errorStr);
+
+        // Check if this is a "dead worker" error (app was restarted)
+        if (errorStr.includes("No active worker for session")) {
+          console.log("[Frontend] Worker dead, attempting to reconnect...");
+
+          // Try to reconnect the worker
+          const agentId = originalSession.agentType || "claude";
+          const cwd = originalSession.cwd || process.env.HOME || "/";
+
+          try {
+            await reconnectWorker(sessionId, agentId, cwd);
+            console.log("[Frontend] Worker reconnected, retrying prompt...");
+
+            // Retry the prompt after reconnection
+            await sendAcpPrompt(sessionId, message);
+            return; // Success!
+          } catch (reconnectError) {
+            console.error("Reconnect failed:", reconnectError);
+            addSessionMessage(sessionId, {
+              type: "ERROR",
+              role: "assistant",
+              content: `Session expired. Failed to reconnect: ${String(reconnectError)}`,
+              timestamp: Date.now(),
+            });
+            return;
+          }
+        }
+
+        // Other errors: show to user
         addSessionMessage(sessionId, {
           type: "ERROR",
           role: "assistant",
-          content: String(error),
+          content: errorStr,
           timestamp: Date.now(),
         });
       }
@@ -117,7 +147,7 @@ export function SessionColumns({ className }: SessionColumnsProps) {
       {/* Session columns */}
       <div
         ref={scrollRef}
-        className="flex-1 flex gap-1.5 overflow-x-auto p-1.5 scroll-smooth"
+        className="flex-1 flex gap-1.5 overflow-x-auto p-1.5 scroll-smooth scrollbar-none"
       >
         {sessions.map((session) => (
           <SessionCard

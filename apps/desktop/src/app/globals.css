@@ -101,6 +101,15 @@
   }
 }
 
+/* Hide scrollbar utility */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* macOS titlebar drag region */
 [data-tauri-drag-region] {
   -webkit-app-region: drag;
@@ -198,17 +207,17 @@
 .streamdown-compact {
   font-size: 11px;
   line-height: 1.5;
+  word-wrap: break-word;
 }
 
-/* Override Streamdown's default spacing */
-.streamdown-compact .my-4,
+/* Override streamdown's spacing utilities for compact view */
+.streamdown-compact [class*="space-y-"] > * + * {
+  margin-top: 0.5em !important;
+}
+
 .streamdown-compact [class*="my-"] {
-  margin-top: 0.25em !important;
-  margin-bottom: 0.25em !important;
-}
-
-.streamdown-compact .space-y-2 > * + * {
-  margin-top: 0.25em !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 .streamdown-compact > div:first-child {
@@ -275,6 +284,7 @@
   border-radius: 4px;
   background: #1a1a1a !important;
   overflow-x: auto;
+  white-space: pre-wrap;
 }
 
 .streamdown-compact pre code {
@@ -424,6 +434,8 @@
   line-height: 1.5;
   color: rgba(115, 115, 115, 0.8);
   font-style: italic;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .streamdown-thinking p {

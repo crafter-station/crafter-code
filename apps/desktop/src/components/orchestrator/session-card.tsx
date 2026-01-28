@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useRef, useMemo } from "react";
 
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, FileText, Zap } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { code } from "@streamdown/code";
 
 import { cn } from "@/lib/utils";
-import { respondToPermission } from "@/lib/ipc/orchestrator";
+import { respondToPermission, setAcpSessionMode } from "@/lib/ipc/orchestrator";
 
 import type { AcpPlan, Message, OrchestratorSession, PermissionRequest, ToolCall } from "@/stores/orchestrator-store";
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
@@ -142,6 +142,33 @@ export function SessionCard({
         <h3 className="text-[11px] truncate flex-1 text-foreground/80">
           {session.prompt}
         </h3>
+        {/* Mode toggle button */}
+        <button
+          type="button"
+          onClick={async (e) => {
+            e.stopPropagation();
+            const newMode = session.mode === "plan" ? "normal" : "plan";
+            try {
+              await setAcpSessionMode(session.id, newMode);
+              // Update local state via store (listener will handle this from event)
+            } catch (error) {
+              console.error("Failed to set mode:", error);
+            }
+          }}
+          className={cn(
+            "p-0.5 rounded transition-colors shrink-0",
+            session.mode === "plan"
+              ? "bg-accent-orange/20 text-accent-orange hover:bg-accent-orange/30"
+              : "hover:bg-muted text-muted-foreground"
+          )}
+          title={session.mode === "plan" ? "Plan Mode (click for Normal)" : "Normal Mode (click for Plan)"}
+        >
+          {session.mode === "plan" ? (
+            <FileText className="size-3" />
+          ) : (
+            <Zap className="size-3" />
+          )}
+        </button>
         {onClose && (
           <button
             type="button"
@@ -276,6 +303,7 @@ export function SessionCard({
       {/* Input - compact */}
       <div className="px-1.5 py-1 border-t border-border shrink-0">
         <SessionInput
+          sessionId={session.id}
           onSubmit={handleFollowUp}
           disabled={
             !onFollowUp ||

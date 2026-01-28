@@ -9,10 +9,13 @@ export type SessionStatus =
   | "failed"
   | "cancelled";
 
+export type SessionMode = "normal" | "plan";
+
 export interface AgentSession {
   id: string;
   prompt: string;
   status: SessionStatus;
+  mode: SessionMode;
   iteration: number;
   maxIterations: number;
   tokensUsed: number;
@@ -49,6 +52,7 @@ export const useAgentStore = create<AgentState>()(
           id: crypto.randomUUID(),
           prompt,
           status: "pending",
+          mode: "normal",
           iteration: 0,
           maxIterations,
           tokensUsed: 0,

@@ -1,3 +1,10 @@
 pub mod client;
 pub mod commands;
+pub mod coordination_prompt;
 pub mod registry;
+pub mod session_store;
+pub mod skill_loader;
+pub mod skills;
+pub mod skills_commands;
+pub mod slash_commands;
+pub mod swarm;
