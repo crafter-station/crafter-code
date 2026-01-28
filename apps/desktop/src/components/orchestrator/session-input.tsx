@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 
-import { ArrowUp, Loader2, Paperclip, X } from "lucide-react";
+import { ArrowUp, Paperclip, Square, X } from "lucide-react";
 
 import type { ImageAttachment } from "@/lib/ipc/orchestrator";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ import { useOrchestratorStore } from "@/stores/orchestrator-store";
 interface SessionInputProps {
   sessionId: string;
   onSubmit: (message: string, images?: ImageAttachment[]) => void;
+  onStop?: () => void;
   disabled?: boolean;
   isLoading?: boolean;
   placeholder?: string;
@@ -36,6 +37,7 @@ interface ImagePreview {
 export function SessionInput({
   sessionId,
   onSubmit,
+  onStop,
   disabled,
   isLoading,
   placeholder = "Follow-up...",
@@ -229,14 +231,14 @@ export function SessionInput({
           className="hidden"
         />
 
-        {/* Text input */}
+        {/* Text input - always editable during loading */}
         <textarea
           ref={inputRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          disabled={disabled || isLoading}
+          disabled={disabled}
           placeholder={placeholder}
           rows={1}
           className={cn(
@@ -248,26 +250,37 @@ export function SessionInput({
           )}
         />
 
-        {/* Submit button */}
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!canSubmit}
-          className={cn(
-            "absolute right-1 top-1/2 -translate-y-1/2",
-            "p-0.5 rounded-sm transition-colors",
-            "disabled:opacity-20 disabled:cursor-not-allowed",
-            canSubmit
-              ? "bg-accent-orange text-white hover:bg-accent-orange/90"
-              : "text-muted-foreground/50",
-          )}
-        >
-          {isLoading ? (
-            <Loader2 className="size-3 animate-spin" />
-          ) : (
+        {/* Submit or Stop button */}
+        {isLoading ? (
+          <button
+            type="button"
+            onClick={onStop}
+            className={cn(
+              "absolute right-1 top-1/2 -translate-y-1/2",
+              "p-0.5 rounded-sm transition-colors",
+              "bg-destructive/80 text-white hover:bg-destructive",
+            )}
+            title="Stop"
+          >
+            <Square className="size-3 fill-current" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            className={cn(
+              "absolute right-1 top-1/2 -translate-y-1/2",
+              "p-0.5 rounded-sm transition-colors",
+              "disabled:opacity-20 disabled:cursor-not-allowed",
+              canSubmit
+                ? "bg-accent-orange text-white hover:bg-accent-orange/90"
+                : "text-muted-foreground/50",
+            )}
+          >
             <ArrowUp className="size-3" />
-          )}
-        </button>
+          </button>
+        )}
       </div>
     </div>
   );

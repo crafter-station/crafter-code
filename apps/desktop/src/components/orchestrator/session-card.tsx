@@ -10,6 +10,7 @@ import { FileText, Loader2, X, Zap } from "lucide-react";
 import { Streamdown } from "streamdown";
 
 import {
+  cancelWorker,
   type ImageAttachment,
   reconnectWorker,
   respondToPermission,
@@ -76,6 +77,20 @@ export function SessionCard({
     },
     [session.id, onFollowUp],
   );
+
+  // Stop running worker
+  const handleStop = useCallback(async () => {
+    const runningWorker = session.workers.find(
+      (w) => w.status === "running" || w.status === "pending",
+    );
+    if (runningWorker) {
+      try {
+        await cancelWorker(session.id, runningWorker.id);
+      } catch (error) {
+        console.error("Failed to cancel worker:", error);
+      }
+    }
+  }, [session.id, session.workers]);
 
   // Get permission requests - use raw selector and filter with useMemo to avoid infinite loop
   const allPermissionRequests = useOrchestratorStore(
@@ -376,6 +391,7 @@ export function SessionCard({
         <SessionInput
           sessionId={session.id}
           onSubmit={handleFollowUp}
+          onStop={handleStop}
           disabled={
             !onFollowUp ||
             session.status === "failed" ||
@@ -387,7 +403,7 @@ export function SessionCard({
             isWaitingForPermission
               ? "Type to cancel or wait..."
               : isRunning
-                ? "..."
+                ? "Type while waiting..."
                 : session.status === "failed"
                   ? "Failed"
                   : "Follow-up"
