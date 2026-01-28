@@ -277,23 +277,46 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* Shiki dual-theme CSS variable support */
+.streamdown-compact pre,
+.streamdown-compact code {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+
+.dark .streamdown-compact pre,
+.dark .streamdown-compact code,
+:is(.dark *) .streamdown-compact pre,
+:is(.dark *) .streamdown-compact code {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}
+
+/* Token colors from Shiki */
+.streamdown-compact [style*="--shiki"] {
+  color: var(--shiki-light);
+}
+
+.dark .streamdown-compact [style*="--shiki"],
+:is(.dark *) .streamdown-compact [style*="--shiki"] {
+  color: var(--shiki-dark);
+}
+
 .streamdown-compact pre {
   font-size: 10px;
   margin: 0.5em 0;
   padding: 0.5em !important;
   border-radius: 4px;
-  background: #1a1a1a !important;
   overflow-x: auto;
   white-space: pre-wrap;
 }
 
-/* Code block body inside code block container */
+/* Code block body - let Shiki control colors via CSS variables */
 .streamdown-compact [data-streamdown="code-block-body"] {
   font-size: 10px !important;
   padding: 0.5em !important;
   margin: 0 !important;
   border-radius: 0 0 4px 4px !important;
-  background: #1a1a1a !important;
   border-top: none !important;
 }
 
