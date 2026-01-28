@@ -187,6 +187,7 @@ interface OrchestratorState {
   getSession: (id: string) => OrchestratorSession | undefined;
 
   // Worker actions
+  addWorkerToSession: (sessionId: string, worker: WorkerSession) => void;
   updateWorker: (
     sessionId: string,
     workerId: string,
@@ -298,6 +299,21 @@ export const useOrchestratorStore = create<OrchestratorState>()(
 
       getSession: (id) => {
         return get().sessions.find((s) => s.id === id);
+      },
+
+      addWorkerToSession: (sessionId, worker) => {
+        set((state) => ({
+          sessions: state.sessions.map((session) => {
+            if (session.id !== sessionId) return session;
+            // Don't add if worker already exists
+            if (session.workers.some((w) => w.id === worker.id)) return session;
+            return {
+              ...session,
+              workers: [...session.workers, worker],
+              updatedAt: Date.now(),
+            };
+          }),
+        }));
       },
 
       updateWorker: (sessionId, workerId, updates) => {

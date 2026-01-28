@@ -27,6 +27,7 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
     removeSession,
     updateSession,
     updateWorker,
+    addWorkerToSession,
     appendWorkerOutput,
     addWorkerMessage,
     appendWorkerThinking,
@@ -42,6 +43,27 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
   // Listen for worker status changes globally
   useEffect(() => {
     const unsubscribe = onWorkerStatusChange((event) => {
+      // If reconnecting, add a new worker to the session first
+      if (event.reconnecting) {
+        console.log("[Frontend] Reconnecting worker detected, adding to session:", event.worker_id);
+        addWorkerToSession(event.session_id, {
+          id: event.worker_id,
+          sessionId: event.session_id,
+          task: "(reconnected)",
+          status: "running",
+          model: "opus",
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          inputTokens: 0,
+          outputTokens: 0,
+          costUsd: 0,
+          outputBuffer: "",
+          thinkingBuffer: "",
+          messages: [],
+          toolCalls: [],
+        });
+      }
+
       updateWorker(event.session_id, event.worker_id, {
         status: event.status as
           | "pending"
@@ -67,7 +89,7 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
     return () => {
       unsubscribe.then((fn) => fn());
     };
-  }, [updateWorker, addWorkerMessage]);
+  }, [updateWorker, addWorkerMessage, addWorkerToSession]);
 
   // Track subscribed workers to avoid unsubscribe/resubscribe on session updates
   const subscribedWorkersRef = useRef<Map<string, () => void>>(new Map());
