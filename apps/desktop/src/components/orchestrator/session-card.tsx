@@ -324,7 +324,7 @@ export function SessionCard({
                       plugins={{ code }}
                       isAnimating={true}
                       caret="circle"
-                      shikiTheme={["github-light", "github-dark"]}
+                      shikiTheme={["github-dark", "github-dark"]}
                       controls={false}
                     >
                       {streamingOutput}

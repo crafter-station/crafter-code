@@ -61,7 +61,7 @@ export function MessageBubble({
           <Streamdown
             plugins={{ code }}
             isAnimating={isStreaming}
-            shikiTheme={["github-light", "github-dark"]}
+            shikiTheme={["github-dark", "github-dark"]}
             controls={false}
           >
             {content}
@@ -86,7 +86,7 @@ export function MessageBubble({
             plugins={{ code }}
             isAnimating={isStreaming}
             caret={isStreaming ? "circle" : undefined}
-            shikiTheme={["github-light", "github-dark"]}
+            shikiTheme={["github-dark", "github-dark"]}
             controls={false}
           >
             {content}
