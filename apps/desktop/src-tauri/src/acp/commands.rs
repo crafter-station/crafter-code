@@ -1443,9 +1443,21 @@ pub async fn reconnect_worker(
     let agent = get_agent(&agent_id)
         .ok_or_else(|| format!("Agent '{}' not found or not available", agent_id))?;
 
-    // Get or create worker in the session
+    // Get or create the session and worker
     let worker_id = {
         let mut mgr = state.orchestrator_manager.lock();
+
+        // Create session if it doesn't exist (app was restarted)
+        if mgr.get_session(&session_id).is_none() {
+            eprintln!("[ACP] Session not in memory, recreating for reconnect");
+            let session = OrchestratorSession::new(
+                session_id.clone(),
+                "(reconnected session)".to_string(),
+                Model::Opus,
+            );
+            mgr.add_session(session);
+        }
+
         let session = mgr.get_session_mut(&session_id)
             .ok_or_else(|| format!("Session '{}' not found", session_id))?;
 

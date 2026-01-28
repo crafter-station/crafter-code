@@ -67,9 +67,13 @@ export function SessionColumns({ className }: SessionColumnsProps) {
         const errorStr = String(error);
         console.error("Follow-up failed:", errorStr);
 
-        // Check if this is a "dead worker" error (app was restarted)
-        if (errorStr.includes("No active worker for session")) {
-          console.log("[Frontend] Worker dead, attempting to reconnect...");
+        // Check if this is a "dead session/worker" error (app was restarted)
+        const isDeadSession =
+          errorStr.includes("No active worker for session") ||
+          errorStr.includes("not found");
+
+        if (isDeadSession) {
+          console.log("[Frontend] Session/worker dead, attempting to reconnect...");
 
           // Try to reconnect the worker
           const agentId = originalSession.agentType || "claude";

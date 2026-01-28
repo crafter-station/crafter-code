@@ -175,27 +175,27 @@ export function SessionCard({
             const newMode = session.mode === "plan" ? "normal" : "plan";
             try {
               await setAcpSessionMode(session.id, newMode);
-              // Update local state via store (listener will handle this from event)
             } catch (error) {
               console.error("Failed to set mode:", error);
             }
           }}
           className={cn(
-            "p-0.5 rounded transition-colors shrink-0",
+            "flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium transition-colors shrink-0",
             session.mode === "plan"
               ? "bg-accent-orange/20 text-accent-orange hover:bg-accent-orange/30"
-              : "hover:bg-muted text-muted-foreground",
+              : "bg-muted/50 text-muted-foreground hover:bg-muted",
           )}
-          title={
-            session.mode === "plan"
-              ? "Plan Mode (click for Normal)"
-              : "Normal Mode (click for Plan)"
-          }
         >
           {session.mode === "plan" ? (
-            <FileText className="size-3" />
+            <>
+              <FileText className="size-2.5" />
+              <span>Plan</span>
+            </>
           ) : (
-            <Zap className="size-3" />
+            <>
+              <Zap className="size-2.5" />
+              <span>Normal</span>
+            </>
           )}
         </button>
         {onClose && (

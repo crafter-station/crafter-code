@@ -64,6 +64,11 @@ impl OrchestratorManager {
         self.sessions.get(id)
     }
 
+    /// Add an existing session (for reconnect scenarios)
+    pub fn add_session(&mut self, session: OrchestratorSession) {
+        self.sessions.insert(session.id.clone(), session);
+    }
+
     pub fn get_session_mut(&mut self, id: &str) -> Option<&mut OrchestratorSession> {
         self.sessions.get_mut(id)
     }
