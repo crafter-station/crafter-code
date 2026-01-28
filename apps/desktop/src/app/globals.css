@@ -280,11 +280,21 @@
 .streamdown-compact pre {
   font-size: 10px;
   margin: 0.5em 0;
-  padding: 0.5em;
+  padding: 0.5em !important;
   border-radius: 4px;
   background: #1a1a1a !important;
   overflow-x: auto;
   white-space: pre-wrap;
+}
+
+/* Code block body inside code block container */
+.streamdown-compact [data-streamdown="code-block-body"] {
+  font-size: 10px !important;
+  padding: 0.5em !important;
+  margin: 0 !important;
+  border-radius: 0 0 4px 4px !important;
+  background: #1a1a1a !important;
+  border-top: none !important;
 }
 
 .streamdown-compact pre code {
@@ -329,6 +339,7 @@
 }
 
 /* Streamdown code block controls - compact */
+.streamdown-compact [data-streamdown="code-block-actions"],
 .streamdown-compact [data-streamdown-code-actions],
 .streamdown-compact .streamdown-code-actions {
   position: absolute;
@@ -338,6 +349,7 @@
   gap: 0.25em;
 }
 
+.streamdown-compact [data-streamdown="code-block-actions"] button,
 .streamdown-compact [data-streamdown-code-actions] button,
 .streamdown-compact .streamdown-code-actions button,
 .streamdown-compact pre button {
@@ -350,6 +362,7 @@
   transition: opacity 0.15s, background 0.15s;
 }
 
+.streamdown-compact [data-streamdown="code-block-actions"] button:hover,
 .streamdown-compact [data-streamdown-code-actions] button:hover,
 .streamdown-compact .streamdown-code-actions button:hover,
 .streamdown-compact pre button:hover {
@@ -357,6 +370,7 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+.streamdown-compact [data-streamdown="code-block-actions"] svg,
 .streamdown-compact [data-streamdown-code-actions] svg,
 .streamdown-compact .streamdown-code-actions svg,
 .streamdown-compact pre button svg {
@@ -365,22 +379,38 @@
 }
 
 /* Code block header with controls */
+.streamdown-compact [data-streamdown="code-block-header"],
 .streamdown-compact [data-streamdown-code-header],
 .streamdown-compact .streamdown-code-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.25em 0.5em;
-  background: #0d0d0d;
+  padding: 0.25em 0.5em !important;
+  background: #0d0d0d !important;
   border-radius: 4px 4px 0 0;
-  font-size: 9px;
+  font-size: 9px !important;
   color: #737373;
+  min-height: 1.5em;
 }
 
+/* Show "plaintext" when no language specified */
+.streamdown-compact [data-streamdown="code-block-header"][data-language=""]:before,
+.streamdown-compact [data-streamdown="code-block-header"]:not([data-language]):before {
+  content: "plaintext";
+}
+
+.streamdown-compact [data-streamdown="code-block-header"] + pre,
 .streamdown-compact [data-streamdown-code-header] + pre,
 .streamdown-compact .streamdown-code-header + pre {
   border-radius: 0 0 4px 4px;
   margin-top: 0;
+}
+
+/* Code block container */
+.streamdown-compact [data-streamdown="code-block"] {
+  margin: 0.5em 0 !important;
+  border-radius: 4px !important;
+  overflow: hidden;
 }
 
 /* Hide default streamdown code buttons, use our compact styling */
