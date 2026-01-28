@@ -277,11 +277,7 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Code block styling - using single dark theme so inline colors work directly */
-.streamdown-compact pre,
-.streamdown-compact code {
-  background-color: #0d1117 !important; /* github-dark bg */
-}
+/* Code block styling - let Shiki theme control colors */
 
 .streamdown-compact pre {
   font-size: 10px;
@@ -390,7 +386,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.25em 0.5em !important;
-  background: #0d0d0d !important;
+  background: rgba(0, 0, 0, 0.3) !important;
   border-radius: 4px 4px 0 0;
   font-size: 9px !important;
   color: #737373;

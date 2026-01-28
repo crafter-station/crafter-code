@@ -4,7 +4,7 @@ import { Streamdown } from "streamdown";
 import { createCodePlugin } from "@streamdown/code";
 
 // Create code plugin with github-dark theme hardcoded
-const code = createCodePlugin({ themes: ["github-dark", "github-dark"] });
+const code = createCodePlugin({ themes: ["vesper", "vesper"] });
 
 import { cn } from "@/lib/utils";
 
@@ -64,7 +64,6 @@ export function MessageBubble({
           <Streamdown
             plugins={{ code }}
             isAnimating={isStreaming}
-            shikiTheme={["dracula", "dracula"]}
             controls={false}
           >
             {content}
@@ -89,7 +88,6 @@ export function MessageBubble({
             plugins={{ code }}
             isAnimating={isStreaming}
             caret={isStreaming ? "circle" : undefined}
-            shikiTheme={["dracula", "dracula"]}
             controls={false}
           >
             {content}
