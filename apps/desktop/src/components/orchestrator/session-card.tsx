@@ -1,15 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
-import { Loader2, X, FileText, Zap } from "lucide-react";
-import { Streamdown } from "streamdown";
 import { code } from "@streamdown/code";
+import { FileText, Loader2, X, Zap } from "lucide-react";
+import { Streamdown } from "streamdown";
 
+import {
+  type ImageAttachment,
+  respondToPermission,
+  setAcpSessionMode,
+} from "@/lib/ipc/orchestrator";
 import { cn } from "@/lib/utils";
-import { respondToPermission, setAcpSessionMode } from "@/lib/ipc/orchestrator";
 
-import type { AcpPlan, Message, OrchestratorSession, PermissionRequest, ToolCall } from "@/stores/orchestrator-store";
+import type {
+  AcpPlan,
+  Message,
+  OrchestratorSession,
+  PermissionRequest,
+  ToolCall,
+} from "@/stores/orchestrator-store";
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
 import { AgentIcon } from "./agent-icons";
 import { MessageBubble } from "./message-bubble";
@@ -28,7 +38,11 @@ interface SessionCardProps {
   session: OrchestratorSession;
   isActive?: boolean;
   onClose?: () => void;
-  onFollowUp?: (sessionId: string, message: string) => void;
+  onFollowUp?: (
+    sessionId: string,
+    message: string,
+    images?: ImageAttachment[],
+  ) => void;
   onFocus?: () => void;
   className?: string;
 }
@@ -53,19 +67,23 @@ export function SessionCard({
   }, [session.messages, session.workers]);
 
   const handleFollowUp = useCallback(
-    (message: string) => {
-      onFollowUp?.(session.id, message);
+    (message: string, images?: ImageAttachment[]) => {
+      onFollowUp?.(session.id, message, images);
     },
     [session.id, onFollowUp],
   );
 
   // Get permission requests - use raw selector and filter with useMemo to avoid infinite loop
-  const allPermissionRequests = useOrchestratorStore((state) => state.permissionRequests);
-  const removePermissionRequest = useOrchestratorStore((state) => state.removePermissionRequest);
+  const allPermissionRequests = useOrchestratorStore(
+    (state) => state.permissionRequests,
+  );
+  const removePermissionRequest = useOrchestratorStore(
+    (state) => state.removePermissionRequest,
+  );
 
   const permissionRequests = useMemo(
     () => allPermissionRequests.filter((r) => r.sessionId === session.id),
-    [allPermissionRequests, session.id]
+    [allPermissionRequests, session.id],
   );
 
   // Check if waiting for permission (to enable input)
@@ -101,7 +119,10 @@ export function SessionCard({
 
     const items: TimelineItem[] = [
       ...allMessages.map((m) => ({ kind: "message" as const, data: m })),
-      ...permissionRequests.map((p) => ({ kind: "permission" as const, data: p })),
+      ...permissionRequests.map((p) => ({
+        kind: "permission" as const,
+        data: p,
+      })),
       ...toolCalls.map((tc) => ({ kind: "tool_call" as const, data: tc })),
       ...plans.map((p) => ({ kind: "plan" as const, data: p })),
     ];
@@ -115,7 +136,11 @@ export function SessionCard({
     .map((w) => w.outputBuffer)
     .join("");
 
-  const handlePermissionResponse = async (workerId: string, toolCallId: string, optionId: string) => {
+  const handlePermissionResponse = async (
+    workerId: string,
+    toolCallId: string,
+    optionId: string,
+  ) => {
     try {
       await respondToPermission(workerId, optionId);
       removePermissionRequest(workerId, toolCallId);
@@ -159,9 +184,13 @@ export function SessionCard({
             "p-0.5 rounded transition-colors shrink-0",
             session.mode === "plan"
               ? "bg-accent-orange/20 text-accent-orange hover:bg-accent-orange/30"
-              : "hover:bg-muted text-muted-foreground"
+              : "hover:bg-muted text-muted-foreground",
           )}
-          title={session.mode === "plan" ? "Plan Mode (click for Normal)" : "Normal Mode (click for Plan)"}
+          title={
+            session.mode === "plan"
+              ? "Plan Mode (click for Normal)"
+              : "Normal Mode (click for Plan)"
+          }
         >
           {session.mode === "plan" ? (
             <FileText className="size-3" />
@@ -208,8 +237,13 @@ export function SessionCard({
                   const message = item.data;
                   // Show streaming indicator only for last assistant TEXT message while running
                   const isLastMessage = index === timeline.length - 1;
-                  const isAssistantText = message.role === "assistant" && message.type === "TEXT";
-                  const showStreaming = isRunning && isLastMessage && isAssistantText && !message.rendered;
+                  const isAssistantText =
+                    message.role === "assistant" && message.type === "TEXT";
+                  const showStreaming =
+                    isRunning &&
+                    isLastMessage &&
+                    isAssistantText &&
+                    !message.rendered;
                   return (
                     <MessageBubble
                       key={message.id}
@@ -233,7 +267,9 @@ export function SessionCard({
                 }
                 if (item.kind === "plan") {
                   const plan = item.data;
-                  return <PlanCard key={`plan-${plan.timestamp}`} plan={plan} />;
+                  return (
+                    <PlanCard key={`plan-${plan.timestamp}`} plan={plan} />
+                  );
                 }
                 // Permission request
                 const req = item.data as PermissionRequest;
@@ -256,12 +292,19 @@ export function SessionCard({
                         <button
                           key={opt.id}
                           type="button"
-                          onClick={() => handlePermissionResponse(req.workerId, req.toolCallId, opt.id)}
+                          onClick={() =>
+                            handlePermissionResponse(
+                              req.workerId,
+                              req.toolCallId,
+                              opt.id,
+                            )
+                          }
                           className={cn(
                             "px-2 py-0.5 rounded text-[10px] font-medium transition-colors",
-                            opt.kind === "allow_once" || opt.kind === "allow_always"
+                            opt.kind === "allow_once" ||
+                              opt.kind === "allow_always"
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                              : "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                              : "bg-red-500/20 text-red-400 hover:bg-red-500/30",
                           )}
                         >
                           {opt.name}

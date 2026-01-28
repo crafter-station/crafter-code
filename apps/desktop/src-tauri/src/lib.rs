@@ -91,6 +91,7 @@ pub fn run() {
             acp::commands::list_available_agents,
             acp::commands::create_acp_session,
             acp::commands::send_acp_prompt,
+            acp::commands::send_acp_prompt_with_images,
             acp::commands::respond_to_permission,
             acp::commands::set_acp_session_mode,
             acp::commands::authenticate_acp_session,

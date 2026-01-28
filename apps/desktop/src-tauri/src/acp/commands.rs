@@ -1,5 +1,6 @@
 //! Tauri commands for ACP-based agent orchestration
 
+use agent_client_protocol::{ContentBlock, ImageContent, TextContent};
 use crate::acp::client::{send_permission_response, AcpClient, AcpError};
 use crate::acp::coordination_prompt::build_coordination_prompt;
 use crate::acp::registry::{get_agent, list_all_agents, AgentConfig};
@@ -23,12 +24,28 @@ pub struct AcpSessionResponse {
     pub session: OrchestratorSession,
 }
 
+/// Image attachment for prompts
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ImageAttachment {
+    /// Base64-encoded image data
+    pub data: String,
+    /// MIME type (e.g., "image/png", "image/jpeg")
+    pub mime_type: String,
+}
+
 /// Commands that can be sent to a persistent worker thread
 #[derive(Debug)]
 pub enum WorkerCommand {
-    /// Send a prompt to the agent
+    /// Send a prompt to the agent (text only)
     Prompt {
         message: String,
+        /// Channel to signal completion
+        done_tx: oneshot::Sender<Result<(), String>>,
+    },
+    /// Send a prompt with images to the agent
+    PromptWithImages {
+        message: String,
+        images: Vec<ImageAttachment>,
         /// Channel to signal completion
         done_tx: oneshot::Sender<Result<(), String>>,
     },
@@ -276,6 +293,108 @@ pub async fn send_acp_prompt(
     Ok(())
 }
 
+/// Send a follow-up prompt with images to an existing ACP session
+#[tauri::command]
+pub async fn send_acp_prompt_with_images(
+    session_id: String,
+    prompt: String,
+    images: Vec<ImageAttachment>,
+    app_handle: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    eprintln!(
+        "[ACP] send_acp_prompt_with_images called: session={}, prompt={}, images={}",
+        session_id, prompt, images.len()
+    );
+
+    // Get worker ID from session
+    let worker_id = {
+        let mgr = state.orchestrator_manager.lock();
+        let session = mgr
+            .get_session(&session_id)
+            .ok_or_else(|| format!("Session '{}' not found", session_id))?;
+        session
+            .workers
+            .first()
+            .map(|w| w.id.clone())
+            .ok_or_else(|| "No worker in session".to_string())?
+    };
+
+    // Get the worker handle
+    let command_tx = {
+        let handles = state.worker_handles.lock();
+        handles
+            .get(&session_id)
+            .map(|h| h.command_tx.clone())
+            .ok_or_else(|| format!("No active worker for session '{}'", session_id))?
+    };
+
+    // Update session status to running
+    {
+        let mut mgr = state.orchestrator_manager.lock();
+        mgr.update_session_status(&session_id, SessionStatus::Running);
+        mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Running);
+    }
+
+    let _ = app_handle.emit(
+        "worker-status-change",
+        serde_json::json!({
+            "session_id": session_id,
+            "worker_id": worker_id,
+            "status": "running"
+        }),
+    );
+
+    // Create completion channel
+    let (done_tx, done_rx) = oneshot::channel();
+
+    // Send prompt with images command to the persistent worker
+    command_tx
+        .send(WorkerCommand::PromptWithImages {
+            message: prompt,
+            images,
+            done_tx,
+        })
+        .await
+        .map_err(|_| "Worker thread has stopped".to_string())?;
+
+    // Wait for completion in a background task (don't block the command)
+    let session_id_clone = session_id.clone();
+    let worker_id_clone = worker_id.clone();
+    let app_handle_clone = app_handle.clone();
+    let manager = state.orchestrator_manager.clone();
+
+    tokio::spawn(async move {
+        match done_rx.await {
+            Ok(Ok(())) => {
+                // Success - worker already emitted completion event
+            }
+            Ok(Err(e)) => {
+                // Error from worker
+                handle_worker_failure(
+                    &session_id_clone,
+                    &worker_id_clone,
+                    e,
+                    &app_handle_clone,
+                    &manager,
+                );
+            }
+            Err(_) => {
+                // Channel closed - worker died
+                handle_worker_failure(
+                    &session_id_clone,
+                    &worker_id_clone,
+                    "Worker thread stopped unexpectedly".to_string(),
+                    &app_handle_clone,
+                    &manager,
+                );
+            }
+        }
+    });
+
+    Ok(())
+}
+
 /// Persistent worker that handles all prompts for a session
 async fn run_persistent_worker(
     agent: AgentConfig,
@@ -370,11 +489,12 @@ async fn run_persistent_worker(
         Ok(_init_response) => {
             // Check if authentication is required
             if client.requires_authentication() {
-                let auth_methods = client.get_auth_methods();
-                eprintln!("[ACP] Agent requires authentication. Available methods: {:?}", auth_methods);
-                // For now, we auto-authenticate with the first method if available
-                // In the future, this could prompt the user to select a method
-                if let Some(first_method) = auth_methods.first() {
+                // Claude Code uses manual login (claude /login) - skip programmatic auth
+                if agent.id == "claude" {
+                    eprintln!("[ACP] Claude Code detected - skipping programmatic auth (use `claude /login` first)");
+                    client.mark_authenticated();
+                } else if let Some(first_method) = client.get_auth_methods().first() {
+                    // Try programmatic authentication for other agents
                     if let Err(e) = client.authenticate(&first_method.id.to_string()).await {
                         handle_worker_failure(
                             &session_id,
@@ -545,6 +665,88 @@ async fn run_persistent_worker(
                         // Don't exit - let caller decide
                         handle_worker_failure(&session_id, &worker_id, error_msg, &app_handle, &manager);
                         break; // Exit on error for now
+                    }
+                }
+            }
+            WorkerCommand::PromptWithImages { message, images, done_tx } => {
+                eprintln!("[ACP] Worker received prompt with {} images: {}", images.len(), message);
+
+                // Update status to running
+                {
+                    let mut mgr = manager.lock();
+                    mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Running);
+                }
+
+                // Create cancel channel for this prompt
+                let (cancel_tx, mut cancel_rx) = mpsc::channel::<()>(1);
+                {
+                    let mut mgr = manager.lock();
+                    mgr.register_worker_cancel(worker_id.clone(), cancel_tx);
+                }
+
+                // Build content blocks: text first, then images
+                let mut content: Vec<ContentBlock> = vec![
+                    ContentBlock::Text(TextContent::new(&message))
+                ];
+
+                // Add image content blocks
+                for img in &images {
+                    content.push(ContentBlock::Image(ImageContent::new(
+                        img.data.clone(),
+                        img.mime_type.clone(),
+                    )));
+                }
+
+                let result = client.prompt_with_content(content, &mut cancel_rx).await;
+
+                match result {
+                    Ok(stop_reason) => {
+                        {
+                            let mut mgr = manager.lock();
+                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Completed);
+                            mgr.remove_worker_cancel(&worker_id);
+                        }
+
+                        let _ = app_handle.emit(
+                            "worker-status-change",
+                            serde_json::json!({
+                                "session_id": session_id,
+                                "worker_id": worker_id,
+                                "status": "completed",
+                                "stop_reason": format!("{:?}", stop_reason)
+                            }),
+                        );
+
+                        let _ = done_tx.send(Ok(()));
+                    }
+                    Err(AcpError::Cancelled) => {
+                        {
+                            let mut mgr = manager.lock();
+                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Cancelled);
+                            mgr.remove_worker_cancel(&worker_id);
+                        }
+
+                        let _ = app_handle.emit(
+                            "worker-status-change",
+                            serde_json::json!({
+                                "session_id": session_id,
+                                "worker_id": worker_id,
+                                "status": "cancelled"
+                            }),
+                        );
+
+                        let _ = done_tx.send(Ok(()));
+                        break;
+                    }
+                    Err(e) => {
+                        let error_msg = e.to_string();
+                        {
+                            let mut mgr = manager.lock();
+                            mgr.remove_worker_cancel(&worker_id);
+                        }
+                        let _ = done_tx.send(Err(error_msg.clone()));
+                        handle_worker_failure(&session_id, &worker_id, error_msg, &app_handle, &manager);
+                        break;
                     }
                 }
             }
@@ -964,8 +1166,11 @@ async fn run_resume_worker(
 
             // Check if authentication is required
             if client.requires_authentication() {
-                let auth_methods = client.get_auth_methods();
-                if let Some(first_method) = auth_methods.first() {
+                // Claude Code uses manual login - skip programmatic auth
+                if agent.id == "claude" {
+                    eprintln!("[ACP] Claude Code detected - skipping programmatic auth");
+                    client.mark_authenticated();
+                } else if let Some(first_method) = client.get_auth_methods().first() {
                     if let Err(e) = client.authenticate(&first_method.id.to_string()).await {
                         handle_worker_failure(
                             &session_id,
@@ -1128,6 +1333,79 @@ async fn run_resume_worker(
                     }
                     Err(e) => {
                         let _ = done_tx.send(Err(format!("Failed to authenticate: {}", e)));
+                    }
+                }
+            }
+            WorkerCommand::PromptWithImages { message, images, done_tx } => {
+                eprintln!("[ACP] Resume worker received prompt with {} images", images.len());
+
+                {
+                    let mut mgr = manager.lock();
+                    mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Running);
+                }
+
+                let (cancel_tx, mut cancel_rx) = mpsc::channel::<()>(1);
+                {
+                    let mut mgr = manager.lock();
+                    mgr.register_worker_cancel(worker_id.clone(), cancel_tx);
+                }
+
+                let mut content: Vec<ContentBlock> = vec![
+                    ContentBlock::Text(TextContent::new(&message))
+                ];
+                for img in &images {
+                    content.push(ContentBlock::Image(ImageContent::new(
+                        img.data.clone(),
+                        img.mime_type.clone(),
+                    )));
+                }
+
+                let result = client.prompt_with_content(content, &mut cancel_rx).await;
+
+                match result {
+                    Ok(stop_reason) => {
+                        {
+                            let mut mgr = manager.lock();
+                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Completed);
+                            mgr.remove_worker_cancel(&worker_id);
+                        }
+                        let _ = app_handle.emit(
+                            "worker-status-change",
+                            serde_json::json!({
+                                "session_id": session_id,
+                                "worker_id": worker_id,
+                                "status": "completed",
+                                "stop_reason": format!("{:?}", stop_reason)
+                            }),
+                        );
+                        let _ = done_tx.send(Ok(()));
+                    }
+                    Err(AcpError::Cancelled) => {
+                        {
+                            let mut mgr = manager.lock();
+                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Cancelled);
+                            mgr.remove_worker_cancel(&worker_id);
+                        }
+                        let _ = app_handle.emit(
+                            "worker-status-change",
+                            serde_json::json!({
+                                "session_id": session_id,
+                                "worker_id": worker_id,
+                                "status": "cancelled"
+                            }),
+                        );
+                        let _ = done_tx.send(Ok(()));
+                        break;
+                    }
+                    Err(e) => {
+                        let error_msg = e.to_string();
+                        {
+                            let mut mgr = manager.lock();
+                            mgr.remove_worker_cancel(&worker_id);
+                        }
+                        let _ = done_tx.send(Err(error_msg.clone()));
+                        handle_worker_failure(&session_id, &worker_id, error_msg, &app_handle, &manager);
+                        break;
                     }
                 }
             }
@@ -1309,8 +1587,11 @@ async fn run_reconnect_worker(
         Ok(_init_response) => {
             // Check if authentication is required
             if client.requires_authentication() {
-                let auth_methods = client.get_auth_methods();
-                if let Some(first_method) = auth_methods.first() {
+                // Claude Code uses manual login - skip programmatic auth
+                if agent.id == "claude" {
+                    eprintln!("[ACP] Claude Code detected - skipping programmatic auth");
+                    client.mark_authenticated();
+                } else if let Some(first_method) = client.get_auth_methods().first() {
                     if let Err(e) = client.authenticate(&first_method.id.to_string()).await {
                         handle_worker_failure(
                             &session_id,
@@ -1473,6 +1754,79 @@ async fn run_reconnect_worker(
                     }
                     Err(e) => {
                         let _ = done_tx.send(Err(format!("Failed to authenticate: {}", e)));
+                    }
+                }
+            }
+            WorkerCommand::PromptWithImages { message, images, done_tx } => {
+                eprintln!("[ACP] Reconnect worker received prompt with {} images", images.len());
+
+                {
+                    let mut mgr = manager.lock();
+                    mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Running);
+                }
+
+                let (cancel_tx, mut cancel_rx) = mpsc::channel::<()>(1);
+                {
+                    let mut mgr = manager.lock();
+                    mgr.register_worker_cancel(worker_id.clone(), cancel_tx);
+                }
+
+                let mut content: Vec<ContentBlock> = vec![
+                    ContentBlock::Text(TextContent::new(&message))
+                ];
+                for img in &images {
+                    content.push(ContentBlock::Image(ImageContent::new(
+                        img.data.clone(),
+                        img.mime_type.clone(),
+                    )));
+                }
+
+                let result = client.prompt_with_content(content, &mut cancel_rx).await;
+
+                match result {
+                    Ok(stop_reason) => {
+                        {
+                            let mut mgr = manager.lock();
+                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Completed);
+                            mgr.remove_worker_cancel(&worker_id);
+                        }
+                        let _ = app_handle.emit(
+                            "worker-status-change",
+                            serde_json::json!({
+                                "session_id": session_id,
+                                "worker_id": worker_id,
+                                "status": "completed",
+                                "stop_reason": format!("{:?}", stop_reason)
+                            }),
+                        );
+                        let _ = done_tx.send(Ok(()));
+                    }
+                    Err(AcpError::Cancelled) => {
+                        {
+                            let mut mgr = manager.lock();
+                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Cancelled);
+                            mgr.remove_worker_cancel(&worker_id);
+                        }
+                        let _ = app_handle.emit(
+                            "worker-status-change",
+                            serde_json::json!({
+                                "session_id": session_id,
+                                "worker_id": worker_id,
+                                "status": "cancelled"
+                            }),
+                        );
+                        let _ = done_tx.send(Ok(()));
+                        break;
+                    }
+                    Err(e) => {
+                        let error_msg = e.to_string();
+                        {
+                            let mut mgr = manager.lock();
+                            mgr.remove_worker_cancel(&worker_id);
+                        }
+                        let _ = done_tx.send(Err(error_msg.clone()));
+                        handle_worker_failure(&session_id, &worker_id, error_msg, &app_handle, &manager);
+                        break;
                     }
                 }
             }

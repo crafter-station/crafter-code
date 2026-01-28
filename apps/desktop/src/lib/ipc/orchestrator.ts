@@ -1,6 +1,6 @@
+import type { PermissionOptionKind } from "@agentclientprotocol/sdk";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import type { PermissionOptionKind } from "@agentclientprotocol/sdk";
 
 import type {
   AgentType,
@@ -244,6 +244,27 @@ export async function sendAcpPrompt(
   });
 }
 
+// Image attachment for prompts
+export interface ImageAttachment {
+  /** Base64-encoded image data */
+  data: string;
+  /** MIME type (e.g., "image/png", "image/jpeg") */
+  mime_type: string;
+}
+
+// Send a prompt with images to an existing ACP session
+export async function sendAcpPromptWithImages(
+  sessionId: string,
+  prompt: string,
+  images: ImageAttachment[],
+): Promise<void> {
+  return invoke<void>("send_acp_prompt_with_images", {
+    sessionId,
+    prompt,
+    images,
+  });
+}
+
 // Listen for worker stream events (deltas, complete, error)
 export function onWorkerStream(
   workerId: string,
@@ -285,14 +306,21 @@ export function onWorkerToolCall(
   callback: (toolCall: ToolCall) => void,
 ): Promise<UnlistenFn> {
   return listen<WorkerToolCallEvent>(`worker-tool-${workerId}`, (event) => {
-    const { tool_call_id, title, kind, status, content, raw_input } = event.payload;
+    const { tool_call_id, title, kind, status, content, raw_input } =
+      event.payload;
     callback({
       id: tool_call_id,
       title,
       kind: kind as ToolCallKind,
       status: status as ToolCallStatus,
       content: content?.map((c) => ({
-        type: c.type as "text" | "code" | "error" | "content" | "diff" | "terminal",
+        type: c.type as
+          | "text"
+          | "code"
+          | "error"
+          | "content"
+          | "diff"
+          | "terminal",
         text: c.text,
         code: c.code,
         language: c.language,
@@ -321,13 +349,16 @@ export function onWorkerPermission(
     options: PermissionOption[];
   }) => void,
 ): Promise<UnlistenFn> {
-  return listen<WorkerPermissionEvent>(`worker-permission-${workerId}`, (event) => {
-    callback({
-      title: event.payload.title,
-      toolCallId: event.payload.tool_call_id,
-      options: event.payload.options,
-    });
-  });
+  return listen<WorkerPermissionEvent>(
+    `worker-permission-${workerId}`,
+    (event) => {
+      callback({
+        title: event.payload.title,
+        toolCallId: event.payload.tool_call_id,
+        options: event.payload.options,
+      });
+    },
+  );
 }
 
 // Respond to a permission request
@@ -385,14 +416,11 @@ export function onWorkerAuthenticated(
   workerId: string,
   callback: (methodId: string) => void,
 ): Promise<UnlistenFn> {
-  return listen<WorkerAuthenticatedEvent>(
-    `worker-authenticated`,
-    (event) => {
-      if (event.payload.worker_id === workerId) {
-        callback(event.payload.method_id);
-      }
-    },
-  );
+  return listen<WorkerAuthenticatedEvent>(`worker-authenticated`, (event) => {
+    if (event.payload.worker_id === workerId) {
+      callback(event.payload.method_id);
+    }
+  });
 }
 
 // ============================================================================
@@ -429,7 +457,9 @@ export interface PersistedSessionSummary {
 }
 
 // List all persisted sessions
-export async function listPersistedSessions(): Promise<PersistedSessionSummary[]> {
+export async function listPersistedSessions(): Promise<
+  PersistedSessionSummary[]
+> {
   return invoke<PersistedSessionSummary[]>("list_persisted_sessions");
 }
 
@@ -441,9 +471,7 @@ export async function getPersistedSession(
 }
 
 // Delete a persisted session
-export async function deletePersistedSession(
-  sessionId: string,
-): Promise<void> {
+export async function deletePersistedSession(sessionId: string): Promise<void> {
   return invoke<void>("delete_persisted_session", { sessionId });
 }
 

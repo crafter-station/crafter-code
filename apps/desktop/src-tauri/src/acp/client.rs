@@ -974,12 +974,45 @@ impl AcpClient {
         &self.auth_methods
     }
 
+    /// Mark as authenticated (for manual login methods where we skip programmatic auth)
+    pub fn mark_authenticated(&mut self) {
+        self.is_authenticated = true;
+    }
+
     /// Check if the agent supports loading sessions
     pub fn supports_load_session(&self) -> bool {
         self.agent_capabilities
             .as_ref()
             .map(|caps| caps.load_session)
             .unwrap_or(false)
+    }
+
+    /// Check if the agent supports image content in prompts
+    pub fn supports_image(&self) -> bool {
+        self.agent_capabilities
+            .as_ref()
+            .map(|caps| caps.prompt_capabilities.image)
+            .unwrap_or(false)
+    }
+
+    /// Check if the agent supports embedded context in prompts
+    pub fn supports_embedded_context(&self) -> bool {
+        self.agent_capabilities
+            .as_ref()
+            .map(|caps| caps.prompt_capabilities.embedded_context)
+            .unwrap_or(false)
+    }
+
+    /// Get the agent's prompt capabilities (image, audio, embedded_context)
+    pub fn get_prompt_capabilities(&self) -> (bool, bool, bool) {
+        self.agent_capabilities
+            .as_ref()
+            .map(|caps| (
+                caps.prompt_capabilities.image,
+                caps.prompt_capabilities.audio,
+                caps.prompt_capabilities.embedded_context,
+            ))
+            .unwrap_or((false, false, false))
     }
 
     /// Load an existing session (requires loadSession capability)
@@ -1038,16 +1071,25 @@ impl AcpClient {
         message: &str,
         cancel_rx: &mut mpsc::Receiver<()>,
     ) -> Result<StopReason, AcpError> {
+        // Wrap text in ContentBlock and delegate to prompt_with_content
+        self.prompt_with_content(
+            vec![ContentBlock::Text(TextContent::new(message))],
+            cancel_rx,
+        ).await
+    }
+
+    /// Send a prompt with arbitrary content blocks (text, images, etc.)
+    pub async fn prompt_with_content(
+        &self,
+        content: Vec<ContentBlock>,
+        cancel_rx: &mut mpsc::Receiver<()>,
+    ) -> Result<StopReason, AcpError> {
         let acp_session_id = self
             .acp_session_id
             .clone()
             .ok_or_else(|| AcpError::PromptFailed("No active ACP session".to_string()))?;
 
-        // ContentBlock::Text is a tuple variant that takes TextContent
-        let prompt_request = PromptRequest::new(
-            acp_session_id.clone(),
-            vec![ContentBlock::Text(TextContent::new(message))],
-        );
+        let prompt_request = PromptRequest::new(acp_session_id.clone(), content);
 
         // Run prompt with cancellation support
         let result = tokio::select! {

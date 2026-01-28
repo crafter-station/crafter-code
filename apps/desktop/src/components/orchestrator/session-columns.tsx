@@ -1,10 +1,15 @@
 "use client";
 
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Users } from "lucide-react";
 
-import { sendAcpPrompt, reconnectWorker } from "@/lib/ipc/orchestrator";
+import {
+  type ImageAttachment,
+  reconnectWorker,
+  sendAcpPrompt,
+  sendAcpPromptWithImages,
+} from "@/lib/ipc/orchestrator";
 import { cn } from "@/lib/utils";
 
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
@@ -31,7 +36,7 @@ export function SessionColumns({ className }: SessionColumnsProps) {
   );
 
   const handleFollowUp = useCallback(
-    async (sessionId: string, message: string) => {
+    async (sessionId: string, message: string, images?: ImageAttachment[]) => {
       const originalSession = sessions.find((s) => s.id === sessionId);
       if (!originalSession) return;
 
@@ -39,13 +44,24 @@ export function SessionColumns({ className }: SessionColumnsProps) {
       addSessionMessage(sessionId, {
         type: "TEXT",
         role: "user",
-        content: message,
+        content: images?.length
+          ? `${message} [${images.length} image(s)]`
+          : message,
         timestamp: Date.now(),
       });
 
+      // Helper to send prompt (with or without images)
+      const sendPrompt = async () => {
+        if (images?.length) {
+          await sendAcpPromptWithImages(sessionId, message, images);
+        } else {
+          await sendAcpPrompt(sessionId, message);
+        }
+      };
+
       try {
         // Send follow-up to existing ACP session (keeps CLI alive)
-        await sendAcpPrompt(sessionId, message);
+        await sendPrompt();
         // Response will stream back to the same session via worker events
       } catch (error) {
         const errorStr = String(error);
@@ -64,7 +80,7 @@ export function SessionColumns({ className }: SessionColumnsProps) {
             console.log("[Frontend] Worker reconnected, retrying prompt...");
 
             // Retry the prompt after reconnection
-            await sendAcpPrompt(sessionId, message);
+            await sendPrompt();
             return; // Success!
           } catch (reconnectError) {
             console.error("Reconnect failed:", reconnectError);
@@ -140,7 +156,7 @@ export function SessionColumns({ className }: SessionColumnsProps) {
       <div
         className={cn(
           "absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-background/60 to-transparent z-10 pointer-events-none transition-opacity duration-200",
-          canScrollLeft ? "opacity-100" : "opacity-0"
+          canScrollLeft ? "opacity-100" : "opacity-0",
         )}
       />
 
@@ -166,7 +182,7 @@ export function SessionColumns({ className }: SessionColumnsProps) {
       <div
         className={cn(
           "absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background/60 to-transparent z-10 pointer-events-none transition-opacity duration-200",
-          canScrollRight ? "opacity-100" : "opacity-0"
+          canScrollRight ? "opacity-100" : "opacity-0",
         )}
       />
     </div>
