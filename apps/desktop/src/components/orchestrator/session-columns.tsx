@@ -395,7 +395,7 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
               )}
 
               {/* Main input */}
-              <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="rounded-xl border border-border bg-card shadow-sm">
                 <textarea
                   ref={emptyInputRef}
                   value={emptyPrompt}
