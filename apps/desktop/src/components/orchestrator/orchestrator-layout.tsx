@@ -19,6 +19,7 @@ interface OrchestratorLayoutProps {
 
 export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
   const [showCoordinationPanel, setShowCoordinationPanel] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
 
   const {
     sessions,
@@ -455,11 +456,14 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
       {/* Main Content */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Sidebar */}
-        <OrchestratorSidebar />
+        {showSidebar && <OrchestratorSidebar />}
 
         {/* Session Columns */}
         <main className="flex-1 min-w-0 overflow-hidden bg-background">
-          <SessionColumns />
+          <SessionColumns
+            showSidebar={showSidebar}
+            onToggleSidebar={() => setShowSidebar(!showSidebar)}
+          />
         </main>
 
         {/* Coordination Panel (Tasks + Inbox) */}

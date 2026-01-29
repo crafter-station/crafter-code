@@ -9,7 +9,7 @@ import {
   type ClipboardEvent,
 } from "react";
 
-import { ArrowUp, ChevronDown, ImagePlus, X } from "lucide-react";
+import { ArrowUp, ChevronDown, ImagePlus, PanelLeft, X } from "lucide-react";
 import { homeDir } from "@tauri-apps/api/path";
 
 import {
@@ -25,11 +25,12 @@ import { cn } from "@/lib/utils";
 
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
 import { SessionCard } from "./session-card";
-import { CrafterCodeAscii } from "./crafter-code-ascii";
 import { AgentIcon } from "./agent-icons";
 
 interface SessionColumnsProps {
   className?: string;
+  showSidebar?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 interface ImagePreview {
@@ -39,7 +40,7 @@ interface ImagePreview {
   preview: string;
 }
 
-export function SessionColumns({ className }: SessionColumnsProps) {
+export function SessionColumns({ className, showSidebar, onToggleSidebar }: SessionColumnsProps) {
   const {
     sessions,
     activeSessionId,
@@ -275,7 +276,6 @@ export function SessionColumns({ className }: SessionColumnsProps) {
         cwd = "/";
       }
 
-      // Create session with selected agent and model
       const session = await createAcpSession(
         images.length > 0 ? "" : emptyPrompt,
         selectedAgentId,
@@ -328,196 +328,233 @@ export function SessionColumns({ className }: SessionColumnsProps) {
     [handleEmptySubmit]
   );
 
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowAgentDropdown(false);
+      setShowModelDropdown(false);
+    };
+    if (showAgentDropdown || showModelDropdown) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [showAgentDropdown, showModelDropdown]);
+
   const canSubmit = (emptyPrompt.trim() || images.length > 0) && !isLaunching;
 
   if (sessions.length === 0) {
     return (
-      <div className={cn("flex items-center justify-center h-full", className)}>
-        <div className="flex flex-col items-center gap-6 w-full max-w-2xl px-4">
-          <CrafterCodeAscii />
+      <div className={cn("relative flex flex-col h-full", className)}>
+        {/* Sidebar toggle button when sidebar is hidden */}
+        {!showSidebar && onToggleSidebar && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className="absolute top-3 left-3 p-1.5 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground hover:text-foreground z-10"
+            title="Show sidebar"
+          >
+            <PanelLeft className="size-4" />
+          </button>
+        )}
 
-          {/* Input container */}
-          <div className="w-full">
-            {/* Image previews */}
-            {images.length > 0 && (
-              <div className="flex gap-1.5 flex-wrap mb-2 px-3">
-                {images.map((img) => (
-                  <div
-                    key={img.id}
-                    className="relative group size-10 rounded border border-border/50 overflow-hidden bg-muted/30"
-                  >
-                    {/* biome-ignore lint/a11y/useAltText: preview */}
-                    {/* biome-ignore lint/performance/noImgElement: base64 */}
-                    <img
-                      src={img.preview}
-                      className="size-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(img.id)}
-                      className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        {/* Centered content */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-full max-w-[560px] px-6">
+            {/* Logo */}
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground mb-1">
+                Crafter Code
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Multi-agent development environment
+              </p>
+            </div>
+
+            {/* Input container */}
+            <div className="space-y-3">
+              {/* Image previews */}
+              {images.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {images.map((img) => (
+                    <div
+                      key={img.id}
+                      className="relative group size-12 rounded-md border border-border overflow-hidden bg-muted/30"
                     >
-                      <X className="size-2.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Main input box */}
-            <div className="rounded-lg border border-border/50 bg-background/60 focus-within:border-border transition-all">
-              {/* Text input */}
-              <textarea
-                ref={emptyInputRef}
-                value={emptyPrompt}
-                onChange={(e) => setEmptyPrompt(e.target.value)}
-                onKeyDown={handleEmptyKeyDown}
-                onPaste={handlePaste}
-                disabled={isLaunching}
-                placeholder='Ask anything... "Help me debug this issue"'
-                rows={1}
-                className={cn(
-                  "w-full resize-none bg-transparent px-3 py-3",
-                  "text-sm placeholder:text-muted-foreground/40",
-                  "focus:outline-none",
-                  "disabled:opacity-50 disabled:cursor-not-allowed",
-                )}
-                style={{ minHeight: "44px", maxHeight: "120px" }}
-              />
-
-              {/* Bottom bar with selects and buttons */}
-              <div className="flex items-center gap-1 px-2 pb-2">
-                {/* Agent select */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowAgentDropdown(!showAgentDropdown);
-                      setShowModelDropdown(false);
-                    }}
-                    className="flex items-center gap-1 px-2 py-1 rounded hover:bg-muted/50 transition-colors text-xs text-muted-foreground"
-                  >
-                    {selectedAgent && (
-                      <AgentIcon agentId={selectedAgentId} className="size-3.5" />
-                    )}
-                    <span>{selectedAgent?.name || "Agent"}</span>
-                    <ChevronDown className="size-3 opacity-50" />
-                  </button>
-
-                  {showAgentDropdown && (
-                    <div className="absolute bottom-full left-0 mb-1 py-1 bg-popover border border-border rounded-md shadow-lg z-50 min-w-[140px]">
-                      {availableAgents.filter(a => a.available).map((agent) => (
-                        <button
-                          key={agent.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedAgentId(agent.id);
-                            setSelectedModelId(agent.default_model || "");
-                            setShowAgentDropdown(false);
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors",
-                            agent.id === selectedAgentId && "bg-accent-orange/10 text-accent-orange"
-                          )}
-                        >
-                          <AgentIcon agentId={agent.id} className="size-4" />
-                          {agent.name}
-                        </button>
-                      ))}
+                      {/* biome-ignore lint/a11y/useAltText: preview */}
+                      {/* biome-ignore lint/performance/noImgElement: base64 */}
+                      <img
+                        src={img.preview}
+                        className="size-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(img.id)}
+                        className="absolute -top-1 -right-1 size-5 rounded-full bg-background border border-border text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:text-foreground"
+                      >
+                        <X className="size-3" />
+                      </button>
                     </div>
-                  )}
+                  ))}
                 </div>
+              )}
 
-                {/* Model select */}
-                {selectedAgent && selectedAgent.models.length > 1 && (
-                  <div className="relative">
+              {/* Main input */}
+              <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                <textarea
+                  ref={emptyInputRef}
+                  value={emptyPrompt}
+                  onChange={(e) => setEmptyPrompt(e.target.value)}
+                  onKeyDown={handleEmptyKeyDown}
+                  onPaste={handlePaste}
+                  disabled={isLaunching}
+                  placeholder="What do you want to build?"
+                  rows={2}
+                  className={cn(
+                    "w-full resize-none bg-transparent px-4 pt-4 pb-2",
+                    "text-[15px] placeholder:text-muted-foreground/50",
+                    "focus:outline-none",
+                    "disabled:opacity-50 disabled:cursor-not-allowed",
+                  )}
+                  style={{ minHeight: "72px", maxHeight: "200px" }}
+                />
+
+                {/* Bottom toolbar */}
+                <div className="flex items-center gap-0.5 px-2 pb-2">
+                  {/* Agent select */}
+                  <div className="relative" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={() => {
-                        setShowModelDropdown(!showModelDropdown);
-                        setShowAgentDropdown(false);
+                        setShowAgentDropdown(!showAgentDropdown);
+                        setShowModelDropdown(false);
                       }}
-                      className="flex items-center gap-1 px-2 py-1 rounded hover:bg-muted/50 transition-colors text-xs text-muted-foreground"
+                      className="flex items-center gap-1.5 h-7 px-2 rounded-md hover:bg-muted transition-colors text-xs"
                     >
-                      <span>{selectedModel?.name || "Model"}</span>
-                      <ChevronDown className="size-3 opacity-50" />
+                      {selectedAgent && (
+                        <AgentIcon agentId={selectedAgentId} className="size-4" />
+                      )}
+                      <span className="text-muted-foreground">{selectedAgent?.name || "Agent"}</span>
+                      <ChevronDown className="size-3 text-muted-foreground/50" />
                     </button>
 
-                    {showModelDropdown && (
-                      <div className="absolute bottom-full left-0 mb-1 py-1 bg-popover border border-border rounded-md shadow-lg z-50 min-w-[160px]">
-                        {selectedAgent.models.map((model) => (
+                    {showAgentDropdown && (
+                      <div className="absolute bottom-full left-0 mb-1 py-1 bg-popover border border-border rounded-lg shadow-lg z-50 min-w-[160px]">
+                        {availableAgents.filter(a => a.available).map((agent) => (
                           <button
-                            key={model.id}
+                            key={agent.id}
                             type="button"
                             onClick={() => {
-                              setSelectedModelId(model.id);
-                              setShowModelDropdown(false);
+                              setSelectedAgentId(agent.id);
+                              setSelectedModelId(agent.default_model || "");
+                              setShowAgentDropdown(false);
                             }}
                             className={cn(
-                              "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors text-left",
-                              model.id === selectedModelId && "bg-accent-orange/10 text-accent-orange"
+                              "w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors",
+                              agent.id === selectedAgentId && "bg-muted"
                             )}
                           >
-                            <span>{model.name}</span>
-                            {model.id === selectedAgent.default_model && (
-                              <span className="text-[10px] text-muted-foreground/50 ml-auto">default</span>
-                            )}
+                            <AgentIcon agentId={agent.id} className="size-4" />
+                            <span>{agent.name}</span>
                           </button>
                         ))}
                       </div>
                     )}
                   </div>
-                )}
 
-                {/* Default label (when using default model) */}
-                {selectedModel?.id === selectedAgent?.default_model && (
-                  <span className="text-xs text-muted-foreground/40 px-1">Default</span>
-                )}
+                  {/* Model select */}
+                  {selectedAgent && selectedAgent.models.length > 1 && (
+                    <div className="relative" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowModelDropdown(!showModelDropdown);
+                          setShowAgentDropdown(false);
+                        }}
+                        className="flex items-center gap-1 h-7 px-2 rounded-md hover:bg-muted transition-colors text-xs"
+                      >
+                        <span className="text-muted-foreground">{selectedModel?.name || "Model"}</span>
+                        <ChevronDown className="size-3 text-muted-foreground/50" />
+                      </button>
 
-                {/* Spacer */}
-                <div className="flex-1" />
-
-                {/* Image attachment button */}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isLaunching}
-                  className={cn(
-                    "p-1.5 rounded hover:bg-muted/50 transition-colors",
-                    "text-muted-foreground/50 hover:text-muted-foreground",
-                    "disabled:opacity-40 disabled:cursor-not-allowed",
+                      {showModelDropdown && (
+                        <div className="absolute bottom-full left-0 mb-1 py-1 bg-popover border border-border rounded-lg shadow-lg z-50 min-w-[180px]">
+                          {selectedAgent.models.map((model) => (
+                            <button
+                              key={model.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedModelId(model.id);
+                                setShowModelDropdown(false);
+                              }}
+                              className={cn(
+                                "w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-muted transition-colors text-left",
+                                model.id === selectedModelId && "bg-muted"
+                              )}
+                            >
+                              <span>{model.name}</span>
+                              {model.id === selectedAgent.default_model && (
+                                <span className="text-[10px] text-muted-foreground">default</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
-                  title="Attach image"
-                >
-                  <ImagePlus className="size-4" />
-                </button>
 
-                {/* Hidden file input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
+                  <div className="flex-1" />
 
-                {/* Submit button */}
-                <button
-                  type="button"
-                  onClick={handleEmptySubmit}
-                  disabled={!canSubmit}
-                  className={cn(
-                    "p-1.5 rounded transition-all",
-                    "disabled:opacity-20 disabled:cursor-not-allowed",
-                    canSubmit
-                      ? "bg-foreground text-background hover:bg-foreground/90"
-                      : "bg-muted text-muted-foreground",
-                  )}
-                  title="Send"
-                >
-                  <ArrowUp className="size-4" />
-                </button>
+                  {/* Image button */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isLaunching}
+                    className={cn(
+                      "size-7 flex items-center justify-center rounded-md hover:bg-muted transition-colors",
+                      "text-muted-foreground/60 hover:text-muted-foreground",
+                      "disabled:opacity-40 disabled:cursor-not-allowed",
+                    )}
+                    title="Attach image"
+                  >
+                    <ImagePlus className="size-4" />
+                  </button>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+
+                  {/* Submit */}
+                  <button
+                    type="button"
+                    onClick={handleEmptySubmit}
+                    disabled={!canSubmit}
+                    className={cn(
+                      "size-7 flex items-center justify-center rounded-md transition-all",
+                      "disabled:opacity-30 disabled:cursor-not-allowed",
+                      canSubmit
+                        ? "bg-foreground text-background hover:opacity-90"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                    title="Send"
+                  >
+                    <ArrowUp className="size-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick actions */}
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
+                <span>Press</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono text-[10px]">Enter</kbd>
+                <span>to send</span>
+                <span className="text-muted-foreground/30">·</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono text-[10px]">Shift+Enter</kbd>
+                <span>for new line</span>
               </div>
             </div>
           </div>
@@ -528,6 +565,18 @@ export function SessionColumns({ className }: SessionColumnsProps) {
 
   return (
     <div className={cn("relative flex h-full", className)}>
+      {/* Sidebar toggle when hidden */}
+      {!showSidebar && onToggleSidebar && (
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="absolute top-2 left-2 p-1.5 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground hover:text-foreground z-10"
+          title="Show sidebar"
+        >
+          <PanelLeft className="size-4" />
+        </button>
+      )}
+
       {/* Left fade indicator */}
       <div
         className={cn(
