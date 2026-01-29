@@ -24,16 +24,29 @@ export function CoordinationPanel({
 
   if (!sessionId) {
     return (
-      <div
-        className={cn(
-          "flex flex-col items-center justify-center text-center p-4",
-          className
+      <div className={cn("flex flex-col h-full bg-card", className)}>
+        {/* Header with collapse button */}
+        {onCollapse && (
+          <div className="flex items-center border-b border-border shrink-0">
+            <button
+              type="button"
+              onClick={onCollapse}
+              className="p-2 hover:bg-muted transition-colors"
+              title="Collapse panel"
+            >
+              <ChevronLeft className="size-3.5 text-muted-foreground" />
+            </button>
+            <span className="text-[11px] text-muted-foreground font-medium px-2">Coordination</span>
+          </div>
         )}
-      >
-        <ListTodo className="size-8 text-muted-foreground/30 mb-2" />
-        <p className="text-[11px] text-muted-foreground">
-          Select a session to view coordination
-        </p>
+
+        {/* Empty state - centered */}
+        <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
+          <ListTodo className="size-8 text-muted-foreground/30 mb-2" />
+          <p className="text-[11px] text-muted-foreground">
+            Select a session to view coordination
+          </p>
+        </div>
       </div>
     );
   }

@@ -9,7 +9,7 @@ import {
   type ClipboardEvent,
 } from "react";
 
-import { ArrowUp, ChevronDown, ImagePlus, PanelLeft, X } from "lucide-react";
+import { ArrowUp, ChevronDown, FileText, ImagePlus, PanelLeft, X } from "lucide-react";
 import { homeDir } from "@tauri-apps/api/path";
 
 import {
@@ -40,6 +40,15 @@ interface ImagePreview {
   mimeType: string;
   preview: string;
 }
+
+interface TextAttachment {
+  id: string;
+  content: string;
+  lineCount: number;
+}
+
+const LARGE_TEXT_THRESHOLD = 200;
+const LARGE_TEXT_LINES_THRESHOLD = 5;
 
 export function SessionColumns({ className, showSidebar, onToggleSidebar }: SessionColumnsProps) {
   const {
@@ -158,6 +167,7 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
   const [emptyPrompt, setEmptyPrompt] = useState("");
   const [isLaunching, setIsLaunching] = useState(false);
   const [images, setImages] = useState<ImagePreview[]>([]);
+  const [textAttachments, setTextAttachments] = useState<TextAttachment[]>([]);
   const emptyInputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -222,12 +232,34 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
     [fileToBase64],
   );
 
+  // Check if text is large
+  const isLargeText = useCallback((text: string): boolean => {
+    const lineCount = text.split("\n").length;
+    return text.length > LARGE_TEXT_THRESHOLD || lineCount > LARGE_TEXT_LINES_THRESHOLD;
+  }, []);
+
+  // Add text attachment
+  const addTextAttachment = useCallback((text: string) => {
+    const lineCount = text.split("\n").length;
+    setTextAttachments((prev) => [...prev, {
+      id: crypto.randomUUID(),
+      content: text,
+      lineCount,
+    }]);
+  }, []);
+
+  // Remove text attachment
+  const removeTextAttachment = useCallback((id: string) => {
+    setTextAttachments((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
   // Handle paste
   const handlePaste = useCallback(
     async (e: ClipboardEvent<HTMLTextAreaElement>) => {
       const items = e.clipboardData?.items;
       if (!items) return;
 
+      // Check for image first
       for (const item of items) {
         if (item.type.startsWith("image/")) {
           e.preventDefault();
@@ -238,8 +270,15 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
           return;
         }
       }
+
+      // Check for large text
+      const text = e.clipboardData?.getData("text/plain");
+      if (text && isLargeText(text)) {
+        e.preventDefault();
+        addTextAttachment(text);
+      }
     },
-    [addImage],
+    [addImage, isLargeText, addTextAttachment],
   );
 
   // Handle file input change
@@ -265,7 +304,7 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
   }, []);
 
   const handleEmptySubmit = useCallback(async () => {
-    const hasContent = emptyPrompt.trim() || images.length > 0;
+    const hasContent = emptyPrompt.trim() || images.length > 0 || textAttachments.length > 0;
     if (!hasContent || isLaunching) return;
 
     setIsLaunching(true);
@@ -277,8 +316,19 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
         cwd = "/";
       }
 
+      // Combine prompt with text attachments
+      let fullPrompt = emptyPrompt;
+      if (textAttachments.length > 0) {
+        const attachmentTexts = textAttachments.map((t, i) =>
+          `<attachment${textAttachments.length > 1 ? ` ${i + 1}` : ""}>\n${t.content}\n</attachment${textAttachments.length > 1 ? ` ${i + 1}` : ""}>`
+        ).join("\n\n");
+        fullPrompt = fullPrompt.trim()
+          ? `${fullPrompt}\n\n${attachmentTexts}`
+          : attachmentTexts;
+      }
+
       const session = await createAcpSession(
-        images.length > 0 ? "" : emptyPrompt,
+        images.length > 0 ? "" : fullPrompt,
         selectedAgentId,
         cwd,
         selectedModelId || undefined
@@ -293,31 +343,41 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
           mime_type: img.mimeType,
         }));
 
+        const attachmentInfo = [
+          images.length > 0 ? `${images.length} image(s)` : null,
+          textAttachments.length > 0 ? `${textAttachments.length} text attachment(s)` : null,
+        ].filter(Boolean).join(", ");
+
         addSessionMessage(session.id, {
           type: "TEXT",
           role: "user",
-          content: `${emptyPrompt} [${images.length} image(s)]`,
+          content: `${emptyPrompt}${attachmentInfo ? ` [${attachmentInfo}]` : ""}`,
           timestamp: Date.now(),
         });
 
-        await sendAcpPromptWithImages(session.id, emptyPrompt, attachments);
+        await sendAcpPromptWithImages(session.id, fullPrompt, attachments);
       } else {
+        const attachmentInfo = textAttachments.length > 0
+          ? ` [${textAttachments.length} text attachment(s)]`
+          : "";
+
         addSessionMessage(session.id, {
           type: "TEXT",
           role: "user",
-          content: emptyPrompt,
+          content: `${emptyPrompt}${attachmentInfo}`,
           timestamp: Date.now(),
         });
       }
 
       setEmptyPrompt("");
       setImages([]);
+      setTextAttachments([]);
     } catch (err) {
       console.error("[SessionColumns] Failed to create session:", err);
     } finally {
       setIsLaunching(false);
     }
-  }, [emptyPrompt, images, isLaunching, selectedAgentId, selectedModelId, setSession, addSessionMessage, setActiveSession]);
+  }, [emptyPrompt, images, textAttachments, isLaunching, selectedAgentId, selectedModelId, setSession, addSessionMessage, setActiveSession]);
 
   const handleEmptyKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -341,7 +401,7 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
     }
   }, [showAgentDropdown, showModelDropdown]);
 
-  const canSubmit = (emptyPrompt.trim() || images.length > 0) && !isLaunching;
+  const canSubmit = (emptyPrompt.trim() || images.length > 0 || textAttachments.length > 0) && !isLaunching;
 
   if (sessions.length === 0) {
     return (
@@ -370,9 +430,10 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
             <div className="space-y-3">
               {/* Main input */}
               <div className="rounded-xl border border-border bg-card shadow-sm">
-                {/* Image previews - inside the card */}
-                {images.length > 0 && (
+                {/* Attachments preview - inside the card */}
+                {(images.length > 0 || textAttachments.length > 0) && (
                   <div className="flex gap-3 flex-wrap p-3 pb-0">
+                    {/* Image attachments */}
                     {images.map((img) => (
                       <div
                         key={img.id}
@@ -387,6 +448,29 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
                         <button
                           type="button"
                           onClick={() => removeImage(img.id)}
+                          className="absolute top-1 right-1 size-6 rounded-full bg-background/80 border border-border text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:text-foreground hover:bg-background"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    {/* Text attachments */}
+                    {textAttachments.map((text) => (
+                      <div
+                        key={text.id}
+                        className="relative group h-24 min-w-24 max-w-48 rounded-lg border border-border overflow-hidden bg-muted/30 flex flex-col"
+                      >
+                        <div className="flex-1 flex items-center justify-center">
+                          <FileText className="size-8 text-muted-foreground/60" />
+                        </div>
+                        <div className="px-2 pb-2 text-center">
+                          <span className="text-[10px] text-muted-foreground font-mono">
+                            {text.lineCount} lines
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeTextAttachment(text.id)}
                           className="absolute top-1 right-1 size-6 rounded-full bg-background/80 border border-border text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:text-foreground hover:bg-background"
                         >
                           <X className="size-3.5" />
