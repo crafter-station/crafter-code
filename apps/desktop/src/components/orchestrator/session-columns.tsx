@@ -9,12 +9,14 @@ import {
   type ClipboardEvent,
 } from "react";
 
-import { ArrowUp, Paperclip, X } from "lucide-react";
+import { ArrowUp, ChevronDown, ImagePlus, X } from "lucide-react";
 import { homeDir } from "@tauri-apps/api/path";
 
 import {
   type ImageAttachment,
+  type AgentConfig,
   createAcpSession,
+  listAvailableAgents,
   reconnectWorker,
   sendAcpPrompt,
   sendAcpPromptWithImages,
@@ -24,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
 import { SessionCard } from "./session-card";
 import { CrafterCodeAscii } from "./crafter-code-ascii";
+import { AgentIcon } from "./agent-icons";
 
 interface SessionColumnsProps {
   className?: string;
@@ -31,9 +34,9 @@ interface SessionColumnsProps {
 
 interface ImagePreview {
   id: string;
-  data: string; // base64
+  data: string;
   mimeType: string;
-  preview: string; // data URL for display
+  preview: string;
 }
 
 export function SessionColumns({ className }: SessionColumnsProps) {
@@ -58,7 +61,6 @@ export function SessionColumns({ className }: SessionColumnsProps) {
       const originalSession = sessions.find((s) => s.id === sessionId);
       if (!originalSession) return;
 
-      // Add user message to current session
       addSessionMessage(sessionId, {
         type: "TEXT",
         role: "user",
@@ -68,7 +70,6 @@ export function SessionColumns({ className }: SessionColumnsProps) {
         timestamp: Date.now(),
       });
 
-      // Helper to send prompt (with or without images)
       const sendPrompt = async () => {
         if (images?.length) {
           await sendAcpPromptWithImages(sessionId, message, images);
@@ -78,14 +79,11 @@ export function SessionColumns({ className }: SessionColumnsProps) {
       };
 
       try {
-        // Send follow-up to existing ACP session (keeps CLI alive)
         await sendPrompt();
-        // Response will stream back to the same session via worker events
       } catch (error) {
         const errorStr = String(error);
         console.error("Follow-up failed:", errorStr);
 
-        // Check if this is a "dead session/worker" error (app was restarted)
         const isDeadSession =
           errorStr.includes("No active worker for session") ||
           errorStr.includes("not found");
@@ -93,17 +91,14 @@ export function SessionColumns({ className }: SessionColumnsProps) {
         if (isDeadSession) {
           console.log("[Frontend] Session/worker dead, attempting to reconnect...");
 
-          // Try to reconnect the worker
           const agentId = originalSession.agentType || "claude";
           const cwd = originalSession.cwd || process.env.HOME || "/";
 
           try {
             await reconnectWorker(sessionId, agentId, cwd);
             console.log("[Frontend] Worker reconnected, retrying prompt...");
-
-            // Retry the prompt after reconnection
             await sendPrompt();
-            return; // Success!
+            return;
           } catch (reconnectError) {
             console.error("Reconnect failed:", reconnectError);
             addSessionMessage(sessionId, {
@@ -116,7 +111,6 @@ export function SessionColumns({ className }: SessionColumnsProps) {
           }
         }
 
-        // Other errors: show to user
         addSessionMessage(sessionId, {
           type: "ERROR",
           role: "assistant",
@@ -149,7 +143,6 @@ export function SessionColumns({ className }: SessionColumnsProps) {
     updateScrollState();
     el.addEventListener("scroll", updateScrollState);
 
-    // Also check on resize
     const resizeObserver = new ResizeObserver(updateScrollState);
     resizeObserver.observe(el);
 
@@ -165,6 +158,36 @@ export function SessionColumns({ className }: SessionColumnsProps) {
   const [images, setImages] = useState<ImagePreview[]>([]);
   const emptyInputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Agent/Model selection
+  const [availableAgents, setAvailableAgents] = useState<AgentConfig[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("claude");
+  const [selectedModelId, setSelectedModelId] = useState<string>("");
+  const [showAgentDropdown, setShowAgentDropdown] = useState(false);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+
+  // Load available agents
+  useEffect(() => {
+    async function loadAgents() {
+      try {
+        const agents = await listAvailableAgents();
+        setAvailableAgents(agents);
+        const defaultAgent = agents.find((a) => a.id === "claude") || agents[0];
+        if (defaultAgent) {
+          setSelectedAgentId(defaultAgent.id);
+          setSelectedModelId(defaultAgent.default_model || "");
+        }
+      } catch (err) {
+        console.error("[SessionColumns] Failed to load agents:", err);
+      }
+    }
+    loadAgents();
+  }, []);
+
+  const selectedAgent = availableAgents.find((a) => a.id === selectedAgentId);
+  const selectedModel = selectedAgent?.models.find((m) => m.id === selectedModelId)
+    || selectedAgent?.models.find((m) => m.id === selectedAgent.default_model)
+    || selectedAgent?.models[0];
 
   // Convert file to base64
   const fileToBase64 = useCallback((file: File): Promise<string> => {
@@ -252,17 +275,17 @@ export function SessionColumns({ className }: SessionColumnsProps) {
         cwd = "/";
       }
 
-      // Create session with text prompt first
+      // Create session with selected agent and model
       const session = await createAcpSession(
-        images.length > 0 ? "" : emptyPrompt, // Empty prompt if we'll send with images
-        "claude",
-        cwd
+        images.length > 0 ? "" : emptyPrompt,
+        selectedAgentId,
+        cwd,
+        selectedModelId || undefined
       );
 
       setSession(session);
       setActiveSession(session.id);
 
-      // If we have images, send the full prompt with images as first message
       if (images.length > 0) {
         const attachments: ImageAttachment[] = images.map((img) => ({
           data: img.data,
@@ -293,7 +316,7 @@ export function SessionColumns({ className }: SessionColumnsProps) {
     } finally {
       setIsLaunching(false);
     }
-  }, [emptyPrompt, images, isLaunching, setSession, addSessionMessage, setActiveSession]);
+  }, [emptyPrompt, images, isLaunching, selectedAgentId, selectedModelId, setSession, addSessionMessage, setActiveSession]);
 
   const handleEmptyKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -310,14 +333,14 @@ export function SessionColumns({ className }: SessionColumnsProps) {
   if (sessions.length === 0) {
     return (
       <div className={cn("flex items-center justify-center h-full", className)}>
-        <div className="flex flex-col items-center gap-6 w-full max-w-lg px-4">
+        <div className="flex flex-col items-center gap-6 w-full max-w-2xl px-4">
           <CrafterCodeAscii />
 
-          {/* Input container - single unified bar */}
-          <div className="w-full space-y-2">
+          {/* Input container */}
+          <div className="w-full">
             {/* Image previews */}
             {images.length > 0 && (
-              <div className="flex gap-1.5 flex-wrap">
+              <div className="flex gap-1.5 flex-wrap mb-2 px-3">
                 {images.map((img) => (
                   <div
                     key={img.id}
@@ -341,33 +364,8 @@ export function SessionColumns({ className }: SessionColumnsProps) {
               </div>
             )}
 
-            {/* Unified input bar */}
-            <div className="relative flex items-center rounded-md border border-border/50 bg-background/60 focus-within:border-accent-orange/40 focus-within:ring-1 focus-within:ring-accent-orange/20 transition-all">
-              {/* Attachment button - inside */}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLaunching}
-                className={cn(
-                  "p-2 pl-3 transition-colors shrink-0",
-                  "text-muted-foreground/50 hover:text-muted-foreground",
-                  "disabled:opacity-40 disabled:cursor-not-allowed",
-                )}
-                title="Attach image"
-              >
-                <Paperclip className="size-4" />
-              </button>
-
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFileChange}
-                className="hidden"
-              />
-
+            {/* Main input box */}
+            <div className="rounded-lg border border-border/50 bg-background/60 focus-within:border-border transition-all">
               {/* Text input */}
               <textarea
                 ref={emptyInputRef}
@@ -376,38 +374,152 @@ export function SessionColumns({ className }: SessionColumnsProps) {
                 onKeyDown={handleEmptyKeyDown}
                 onPaste={handlePaste}
                 disabled={isLaunching}
-                placeholder="What do you want to build?"
+                placeholder='Ask anything... "Help me debug this issue"'
                 rows={1}
                 className={cn(
-                  "flex-1 resize-none bg-transparent py-2.5 pr-2",
-                  "text-sm placeholder:text-muted-foreground/30",
+                  "w-full resize-none bg-transparent px-3 py-3",
+                  "text-sm placeholder:text-muted-foreground/40",
                   "focus:outline-none",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                 )}
-                style={{ minHeight: "40px", maxHeight: "80px" }}
+                style={{ minHeight: "44px", maxHeight: "120px" }}
               />
 
-              {/* Submit button - inside */}
-              <button
-                type="button"
-                onClick={handleEmptySubmit}
-                disabled={!canSubmit}
-                className={cn(
-                  "p-2 pr-3 transition-all shrink-0",
-                  "disabled:opacity-20 disabled:cursor-not-allowed",
-                  canSubmit
-                    ? "text-accent-orange hover:text-accent-orange/80"
-                    : "text-muted-foreground/30",
-                )}
-                title="Send"
-              >
-                <ArrowUp className="size-4" />
-              </button>
-            </div>
+              {/* Bottom bar with selects and buttons */}
+              <div className="flex items-center gap-1 px-2 pb-2">
+                {/* Agent select */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAgentDropdown(!showAgentDropdown);
+                      setShowModelDropdown(false);
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 rounded hover:bg-muted/50 transition-colors text-xs text-muted-foreground"
+                  >
+                    {selectedAgent && (
+                      <AgentIcon agentId={selectedAgentId} className="size-3.5" />
+                    )}
+                    <span>{selectedAgent?.name || "Agent"}</span>
+                    <ChevronDown className="size-3 opacity-50" />
+                  </button>
 
-            <p className="text-[11px] text-muted-foreground/30 text-center">
-              Enter to launch
-            </p>
+                  {showAgentDropdown && (
+                    <div className="absolute bottom-full left-0 mb-1 py-1 bg-popover border border-border rounded-md shadow-lg z-50 min-w-[140px]">
+                      {availableAgents.filter(a => a.available).map((agent) => (
+                        <button
+                          key={agent.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAgentId(agent.id);
+                            setSelectedModelId(agent.default_model || "");
+                            setShowAgentDropdown(false);
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors",
+                            agent.id === selectedAgentId && "bg-accent-orange/10 text-accent-orange"
+                          )}
+                        >
+                          <AgentIcon agentId={agent.id} className="size-4" />
+                          {agent.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Model select */}
+                {selectedAgent && selectedAgent.models.length > 1 && (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowModelDropdown(!showModelDropdown);
+                        setShowAgentDropdown(false);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 rounded hover:bg-muted/50 transition-colors text-xs text-muted-foreground"
+                    >
+                      <span>{selectedModel?.name || "Model"}</span>
+                      <ChevronDown className="size-3 opacity-50" />
+                    </button>
+
+                    {showModelDropdown && (
+                      <div className="absolute bottom-full left-0 mb-1 py-1 bg-popover border border-border rounded-md shadow-lg z-50 min-w-[160px]">
+                        {selectedAgent.models.map((model) => (
+                          <button
+                            key={model.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedModelId(model.id);
+                              setShowModelDropdown(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted/50 transition-colors text-left",
+                              model.id === selectedModelId && "bg-accent-orange/10 text-accent-orange"
+                            )}
+                          >
+                            <span>{model.name}</span>
+                            {model.id === selectedAgent.default_model && (
+                              <span className="text-[10px] text-muted-foreground/50 ml-auto">default</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Default label (when using default model) */}
+                {selectedModel?.id === selectedAgent?.default_model && (
+                  <span className="text-xs text-muted-foreground/40 px-1">Default</span>
+                )}
+
+                {/* Spacer */}
+                <div className="flex-1" />
+
+                {/* Image attachment button */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLaunching}
+                  className={cn(
+                    "p-1.5 rounded hover:bg-muted/50 transition-colors",
+                    "text-muted-foreground/50 hover:text-muted-foreground",
+                    "disabled:opacity-40 disabled:cursor-not-allowed",
+                  )}
+                  title="Attach image"
+                >
+                  <ImagePlus className="size-4" />
+                </button>
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+
+                {/* Submit button */}
+                <button
+                  type="button"
+                  onClick={handleEmptySubmit}
+                  disabled={!canSubmit}
+                  className={cn(
+                    "p-1.5 rounded transition-all",
+                    "disabled:opacity-20 disabled:cursor-not-allowed",
+                    canSubmit
+                      ? "bg-foreground text-background hover:bg-foreground/90"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                  title="Send"
+                >
+                  <ArrowUp className="size-4" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
