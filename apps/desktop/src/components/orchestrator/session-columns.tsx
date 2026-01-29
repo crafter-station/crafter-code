@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
 import { SessionCard } from "./session-card";
 import { AgentIcon } from "./agent-icons";
+import { CrafterCodeAscii } from "./crafter-code-ascii";
 
 interface SessionColumnsProps {
   className?: string;
@@ -361,13 +362,8 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
         <div className="flex-1 flex items-center justify-center">
           <div className="w-full max-w-[560px] px-6">
             {/* Logo */}
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground mb-1">
-                Crafter Code
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Multi-agent development environment
-              </p>
+            <div className="flex justify-center mb-8">
+              <CrafterCodeAscii />
             </div>
 
             {/* Input container */}
