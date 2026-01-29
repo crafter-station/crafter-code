@@ -9,7 +9,8 @@ export type SessionStatus =
   | "failed"
   | "cancelled";
 
-export type SessionMode = "normal" | "plan";
+// Session modes from claude-code-acp
+export type SessionMode = "default" | "acceptEdits" | "plan" | "dontAsk" | "bypassPermissions";
 
 export interface AgentSession {
   id: string;
@@ -52,7 +53,7 @@ export const useAgentStore = create<AgentState>()(
           id: crypto.randomUUID(),
           prompt,
           status: "pending",
-          mode: "normal",
+          mode: "default",
           iteration: 0,
           maxIterations,
           tokensUsed: 0,

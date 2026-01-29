@@ -9,6 +9,8 @@ pub enum WorkerStatus {
     Completed,
     Failed,
     Cancelled,
+    /// Worker is idle, ready to accept new prompts (after cancel or completion)
+    Idle,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

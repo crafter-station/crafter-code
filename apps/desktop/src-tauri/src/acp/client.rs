@@ -60,6 +60,10 @@ pub struct CrafterClient {
     task_manager: Option<Arc<TaskManager>>,
     /// Inbox manager for swarm coordination
     inbox_manager: Option<Arc<InboxManager>>,
+    /// Total input characters (for token estimation)
+    total_input_chars: Arc<Mutex<u64>>,
+    /// Total output characters (for token estimation)
+    total_output_chars: Arc<Mutex<u64>>,
 }
 
 impl CrafterClient {
@@ -73,6 +77,8 @@ impl CrafterClient {
             accumulated_text: Arc::new(Mutex::new(String::new())),
             task_manager: None,
             inbox_manager: None,
+            total_input_chars: Arc::new(Mutex::new(0)),
+            total_output_chars: Arc::new(Mutex::new(0)),
         }
     }
 
@@ -307,6 +313,11 @@ impl Client for CrafterClient {
                 if let ContentBlock::Text(text_content) = chunk.content {
                     let text = text_content.text;
                     if !text.is_empty() {
+                        // Track output characters for token estimation
+                        {
+                            let mut output_chars = self.total_output_chars.lock();
+                            *output_chars += text.len() as u64;
+                        }
                         {
                             let mut acc = self.accumulated_text.lock();
                             acc.push_str(&text);
@@ -835,6 +846,10 @@ pub struct AcpClient {
     is_authenticated: bool,
     /// Agent capabilities (from InitializeResponse)
     agent_capabilities: Option<AgentCapabilities>,
+    /// Total input characters (for token estimation)
+    total_input_chars: Arc<Mutex<u64>>,
+    /// Total output characters (for token estimation)
+    total_output_chars: Arc<Mutex<u64>>,
 }
 
 impl AcpClient {
@@ -844,6 +859,8 @@ impl AcpClient {
         args: &[&str],
         cwd: &str,
         env_vars: &[String],
+        model: Option<String>,
+        model_env_var: Option<String>,
         app_handle: AppHandle,
         worker_id: String,
         session_id: String,
@@ -858,6 +875,21 @@ impl AcpClient {
             .stderr(std::process::Stdio::inherit())
             // Inherit ALL environment variables from parent process
             .envs(std::env::vars());
+
+        // Set model environment variable if provided
+        if let (Some(model_id), Some(env_var)) = (&model, &model_env_var) {
+            cmd.env(env_var, model_id);
+            println!("[ACP] Setting {} = {}", env_var, model_id);
+        }
+
+        // Set any additional env vars from registry
+        for env_var in env_vars {
+            // These are just the required env var names, not values
+            // Values come from user's environment
+            if let Ok(value) = std::env::var(env_var) {
+                cmd.env(env_var, value);
+            }
+        }
 
         let mut process = cmd
             .spawn()
@@ -888,6 +920,8 @@ impl AcpClient {
         // Extract Arcs before moving client into connection
         let accumulated_text = client.accumulated_text.clone();
         let session_cwd = client.session_cwd.clone();
+        let total_input_chars = client.total_input_chars.clone();
+        let total_output_chars = client.total_output_chars.clone();
 
         // Create the connection using the official crate with futures-compatible streams
         let (connection, io_task) = ClientSideConnection::new(
@@ -918,6 +952,8 @@ impl AcpClient {
             auth_methods: Vec::new(),
             is_authenticated: false,
             agent_capabilities: None,
+            total_input_chars,
+            total_output_chars,
         })
     }
 
@@ -1089,6 +1125,18 @@ impl AcpClient {
             .clone()
             .ok_or_else(|| AcpError::PromptFailed("No active ACP session".to_string()))?;
 
+        // Track input characters for token estimation
+        let input_chars: u64 = content.iter().map(|block| {
+            match block {
+                ContentBlock::Text(text) => text.text.len() as u64,
+                _ => 0, // Images/audio don't count as text chars
+            }
+        }).sum();
+        {
+            let mut total = self.total_input_chars.lock();
+            *total += input_chars;
+        }
+
         let prompt_request = PromptRequest::new(acp_session_id.clone(), content);
 
         // Run prompt with cancellation support
@@ -1103,8 +1151,19 @@ impl AcpClient {
             }
         };
 
-        // Emit completion event
+        // Emit completion event with estimated token usage
         let final_text = self.accumulated_text.lock().clone();
+
+        // Estimate tokens: ~4 chars = 1 token for Claude models
+        let input_chars = *self.total_input_chars.lock();
+        let output_chars = *self.total_output_chars.lock();
+        let estimated_input_tokens = (input_chars / 4).max(1);
+        let estimated_output_tokens = (output_chars / 4).max(1);
+
+        // Estimate cost (using Sonnet 4 pricing as default: $3/1M input, $15/1M output)
+        let estimated_cost = (estimated_input_tokens as f64 * 3.0 / 1_000_000.0)
+            + (estimated_output_tokens as f64 * 15.0 / 1_000_000.0);
+
         let event_name = format!("worker-stream-{}", self.worker_id);
         let _ = self.app_handle.emit(
             &event_name,
@@ -1114,14 +1173,16 @@ impl AcpClient {
                     "type": "complete",
                     "output": final_text,
                     "usage": {
-                        "input_tokens": 0,
-                        "output_tokens": 0
-                    }
+                        "input_tokens": estimated_input_tokens,
+                        "output_tokens": estimated_output_tokens,
+                        "estimated": true
+                    },
+                    "cost_usd": estimated_cost
                 }
             }),
         );
 
-        // Clear accumulated text for next prompt
+        // Clear accumulated text for next prompt (but keep cumulative token counts)
         {
             let mut acc = self.accumulated_text.lock();
             acc.clear();
@@ -1206,6 +1267,8 @@ pub async fn run_acp_agent(
         args,
         cwd,
         env_vars,
+        None, // model
+        None, // model_env_var
         app_handle,
         worker_id,
         session_id,

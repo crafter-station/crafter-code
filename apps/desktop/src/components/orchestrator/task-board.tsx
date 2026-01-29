@@ -9,6 +9,12 @@ import {
   Plus,
   Trash2,
   User,
+  Upload,
+  X,
+  FileJson,
+  AlertCircle,
+  Cpu,
+  Gauge,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -20,6 +26,7 @@ import {
   type Task,
   type TaskStatus,
 } from "@/lib/ipc/tasks";
+import type { Prd, AcceptanceCriterion, Complexity, ModelId } from "@/lib/types/prd";
 
 interface TaskBoardProps {
   sessionId: string;
@@ -45,6 +52,10 @@ export function TaskBoard({ sessionId, className }: TaskBoardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newTaskSubject, setNewTaskSubject] = useState("");
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [prdJson, setPrdJson] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   // Fetch tasks
   const fetchTasks = useCallback(async () => {
@@ -106,6 +117,72 @@ export function TaskBoard({ sessionId, className }: TaskBoardProps) {
     }
   };
 
+  // Import PRD
+  const handleImportPrd = async () => {
+    if (!prdJson.trim()) return;
+
+    setImportError(null);
+    setIsImporting(true);
+
+    try {
+      const prd = JSON.parse(prdJson) as Prd;
+
+      // Validate basic structure
+      if (!prd.stories || !Array.isArray(prd.stories)) {
+        throw new Error("Invalid PRD: missing stories array");
+      }
+
+      // Map story IDs to task IDs
+      const storyIdToTaskId: Record<string, string> = {};
+
+      // First pass: create all tasks (without dependencies)
+      for (const story of prd.stories) {
+        const task = await taskCreate(
+          sessionId,
+          story.title,
+          story.description,
+          `Working on: ${story.title}...`
+        );
+        storyIdToTaskId[story.id] = task.id;
+
+        // Store PRD metadata in task
+        await taskUpdate(sessionId, task.id, {
+          metadata: {
+            prd_story_id: story.id,
+            acceptance_criteria: story.acceptance_criteria,
+            complexity: story.complexity,
+            model: story.model,
+            hints: story.hints,
+            prd_title: prd.title,
+          },
+        });
+      }
+
+      // Second pass: set up dependencies
+      for (const story of prd.stories) {
+        if (story.dependencies.length > 0) {
+          const taskId = storyIdToTaskId[story.id];
+          const blockedBy = story.dependencies
+            .map((depId) => storyIdToTaskId[depId])
+            .filter(Boolean);
+
+          if (blockedBy.length > 0) {
+            await taskUpdate(sessionId, taskId, { addBlockedBy: blockedBy });
+          }
+        }
+      }
+
+      // Reset and close
+      setPrdJson("");
+      setIsImportOpen(false);
+      fetchTasks();
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : "Failed to parse PRD JSON");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   // Group tasks by status
   const pendingTasks = tasks.filter((t) => t.status === "pending");
   const inProgressTasks = tasks.filter((t) => t.status === "in_progress");
@@ -120,7 +197,7 @@ export function TaskBoard({ sessionId, className }: TaskBoardProps) {
   }
 
   return (
-    <div className={cn("flex flex-col h-full", className)}>
+    <div className={cn("flex flex-col h-full relative", className)}>
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border">
         <div className="flex items-center gap-2">
@@ -129,14 +206,90 @@ export function TaskBoard({ sessionId, className }: TaskBoardProps) {
             {tasks.length}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsCreating(true)}
-          className="p-1 rounded hover:bg-muted transition-colors"
-        >
-          <Plus className="size-3.5 text-muted-foreground" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setIsImportOpen(true)}
+            className="p-1 rounded hover:bg-muted transition-colors"
+            title="Import PRD"
+          >
+            <Upload className="size-3.5 text-muted-foreground" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsCreating(true)}
+            className="p-1 rounded hover:bg-muted transition-colors"
+            title="Add task"
+          >
+            <Plus className="size-3.5 text-muted-foreground" />
+          </button>
+        </div>
       </div>
+
+      {/* Import PRD Modal */}
+      {isImportOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="w-[90%] max-w-md rounded-lg border border-border bg-background shadow-lg">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+              <div className="flex items-center gap-2">
+                <FileJson className="size-4 text-accent-orange" />
+                <span className="text-[11px] font-medium">Import PRD</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsImportOpen(false);
+                  setPrdJson("");
+                  setImportError(null);
+                }}
+                className="p-1 rounded hover:bg-muted transition-colors"
+              >
+                <X className="size-3.5 text-muted-foreground" />
+              </button>
+            </div>
+
+            <div className="p-3 space-y-3">
+              <textarea
+                value={prdJson}
+                onChange={(e) => setPrdJson(e.target.value)}
+                placeholder='{"title": "My PRD", "stories": [...], "constraints": {...}}'
+                className="w-full h-48 p-2 rounded border border-border bg-muted/30 text-[11px] font-mono resize-none focus:outline-none focus:ring-1 focus:ring-accent-orange/50"
+              />
+
+              {importError && (
+                <div className="flex items-start gap-2 p-2 rounded bg-red-500/10 border border-red-500/20">
+                  <AlertCircle className="size-3.5 text-red-400 shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-red-400">{importError}</p>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <p className="text-[9px] text-muted-foreground">
+                  Stories will be created as tasks with acceptance criteria in metadata
+                </p>
+                <button
+                  type="button"
+                  onClick={handleImportPrd}
+                  disabled={!prdJson.trim() || isImporting}
+                  className="px-3 py-1.5 rounded text-[11px] font-medium bg-accent-orange/20 text-accent-orange hover:bg-accent-orange/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                >
+                  {isImporting ? (
+                    <>
+                      <Loader2 className="size-3 animate-spin" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="size-3" />
+                      Import
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Task list */}
       <div className="flex-1 overflow-y-auto">
@@ -296,6 +449,19 @@ function TaskSection({
   );
 }
 
+// Model and complexity display config
+const modelConfig: Record<ModelId, { color: string; label: string }> = {
+  opus: { color: "text-purple-400 bg-purple-500/10", label: "Opus" },
+  sonnet: { color: "text-blue-400 bg-blue-500/10", label: "Sonnet" },
+  haiku: { color: "text-emerald-400 bg-emerald-500/10", label: "Haiku" },
+};
+
+const complexityConfig: Record<Complexity, { color: string; label: string }> = {
+  high: { color: "text-red-400 bg-red-500/10", label: "High" },
+  medium: { color: "text-amber-400 bg-amber-500/10", label: "Medium" },
+  low: { color: "text-green-400 bg-green-500/10", label: "Low" },
+};
+
 // Individual task item
 function TaskItem({
   task,
@@ -309,6 +475,11 @@ function TaskItem({
   const config = statusConfig[task.status];
   const StatusIcon = config.icon;
   const isBlocked = task.blockedBy.length > 0;
+
+  // PRD metadata
+  const acceptanceCriteria = task.metadata?.acceptance_criteria as AcceptanceCriterion[] | undefined;
+  const complexity = task.metadata?.complexity as Complexity | undefined;
+  const model = task.metadata?.model as ModelId | undefined;
 
   return (
     <div
@@ -331,17 +502,43 @@ function TaskItem({
       </button>
 
       <div className="flex-1 min-w-0">
-        <p
-          className={cn(
-            "text-[11px] leading-tight",
-            task.status === "completed" && "line-through text-muted-foreground"
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <p
+            className={cn(
+              "text-[11px] leading-tight",
+              task.status === "completed" && "line-through text-muted-foreground"
+            )}
+          >
+            {task.subject}
+          </p>
+
+          {/* PRD badges */}
+          {model && (
+            <span
+              className={cn(
+                "px-1 py-0.5 rounded text-[8px] font-medium flex items-center gap-0.5",
+                modelConfig[model].color
+              )}
+            >
+              <Cpu className="size-2" />
+              {modelConfig[model].label}
+            </span>
           )}
-        >
-          {task.subject}
-        </p>
+          {complexity && (
+            <span
+              className={cn(
+                "px-1 py-0.5 rounded text-[8px] font-medium flex items-center gap-0.5",
+                complexityConfig[complexity].color
+              )}
+            >
+              <Gauge className="size-2" />
+              {complexityConfig[complexity].label}
+            </span>
+          )}
+        </div>
 
         {/* Meta info */}
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
           {task.owner && (
             <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
               <User className="size-2.5" />
@@ -356,6 +553,11 @@ function TaskItem({
           {task.blocks.length > 0 && (
             <span className="text-[9px] text-muted-foreground/60">
               blocks #{task.blocks.join(", #")}
+            </span>
+          )}
+          {acceptanceCriteria && acceptanceCriteria.length > 0 && (
+            <span className="text-[9px] text-muted-foreground/60">
+              {acceptanceCriteria.length} criteria
             </span>
           )}
         </div>

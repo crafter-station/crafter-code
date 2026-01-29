@@ -38,6 +38,9 @@ async-stream = "0.3"
 # YAML parsing for SKILL.md frontmatter
 serde_yaml = "0.9"
 
+# Regex for PRD pattern matching
+regex = "1"
+
 # ACP (Agent Client Protocol) SDK
 agent-client-protocol = "0.9"
 async-trait = "0.1"

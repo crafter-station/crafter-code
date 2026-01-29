@@ -9,7 +9,13 @@ import {
   useState,
 } from "react";
 
-import { ArrowUp, Paperclip, Square, X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@crafter-code/ui";
+import { ArrowUp, FileText, Paperclip, Square, X } from "lucide-react";
 
 import type { ImageAttachment } from "@/lib/ipc/orchestrator";
 import { cn } from "@/lib/utils";
@@ -34,6 +40,17 @@ interface ImagePreview {
   preview: string; // data URL for display
 }
 
+interface TextAttachment {
+  id: string;
+  content: string;
+  lineCount: number;
+}
+
+// Threshold for large text detection
+const LARGE_TEXT_THRESHOLD = 200; // characters
+const LARGE_TEXT_LINES_THRESHOLD = 5; // lines
+const MAX_TEXTAREA_ROWS = 4;
+
 export function SessionInput({
   sessionId,
   onSubmit,
@@ -46,9 +63,27 @@ export function SessionInput({
 }: SessionInputProps) {
   const [value, setValue] = useState("");
   const [images, setImages] = useState<ImagePreview[]>([]);
+  const [textAttachments, setTextAttachments] = useState<TextAttachment[]>([]);
+  const [viewingText, setViewingText] = useState<TextAttachment | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { pendingInput, clearPendingInput } = useOrchestratorStore();
+
+  // Auto-resize textarea
+  const adjustTextareaHeight = useCallback(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    // Reset height to get accurate scrollHeight
+    textarea.style.height = "auto";
+
+    // Calculate line height (approx 16px for text-[10px] with line-height)
+    const lineHeight = 14;
+    const maxHeight = lineHeight * MAX_TEXTAREA_ROWS + 8; // +8 for padding
+
+    const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+    textarea.style.height = `${newHeight}px`;
+  }, []);
 
   // Auto-focus when autoFocus prop changes to true
   useEffect(() => {
@@ -56,6 +91,11 @@ export function SessionInput({
       inputRef.current.focus();
     }
   }, [autoFocus, disabled]);
+
+  // Adjust height when value changes
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [value, adjustTextareaHeight]);
 
   // Consume pending input from store only if it's for THIS session
   useEffect(() => {
@@ -104,12 +144,33 @@ export function SessionInput({
     [fileToBase64],
   );
 
+  // Check if text is "large"
+  const isLargeText = useCallback((text: string): boolean => {
+    const lineCount = text.split("\n").length;
+    return (
+      text.length > LARGE_TEXT_THRESHOLD ||
+      lineCount > LARGE_TEXT_LINES_THRESHOLD
+    );
+  }, []);
+
+  // Add text attachment
+  const addTextAttachment = useCallback((text: string) => {
+    const lineCount = text.split("\n").length;
+    const attachment: TextAttachment = {
+      id: crypto.randomUUID(),
+      content: text,
+      lineCount,
+    };
+    setTextAttachments((prev) => [...prev, attachment]);
+  }, []);
+
   // Handle paste (Cmd+V)
   const handlePaste = useCallback(
     async (e: ClipboardEvent<HTMLTextAreaElement>) => {
       const items = e.clipboardData?.items;
       if (!items) return;
 
+      // Check for image first
       for (const item of items) {
         if (item.type.startsWith("image/")) {
           e.preventDefault();
@@ -120,8 +181,16 @@ export function SessionInput({
           return;
         }
       }
+
+      // Check for large text
+      const text = e.clipboardData?.getData("text/plain");
+      if (text && isLargeText(text)) {
+        e.preventDefault();
+        addTextAttachment(text);
+        return;
+      }
     },
-    [addImage],
+    [addImage, isLargeText, addTextAttachment],
   );
 
   // Handle file input change
@@ -147,8 +216,15 @@ export function SessionInput({
     setImages((prev) => prev.filter((img) => img.id !== id));
   }, []);
 
+  // Remove text attachment
+  const removeTextAttachment = useCallback((id: string) => {
+    setTextAttachments((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
   const handleSubmit = useCallback(() => {
-    if ((!value.trim() && images.length === 0) || disabled || isLoading) return;
+    const hasContent =
+      value.trim() || images.length > 0 || textAttachments.length > 0;
+    if (!hasContent || disabled || isLoading) return;
 
     const attachments: ImageAttachment[] | undefined =
       images.length > 0
@@ -158,10 +234,18 @@ export function SessionInput({
           }))
         : undefined;
 
-    onSubmit(value.trim(), attachments);
+    // Combine input value with text attachments
+    const textParts = [
+      value.trim(),
+      ...textAttachments.map((t) => t.content),
+    ].filter(Boolean);
+    const fullMessage = textParts.join("\n\n");
+
+    onSubmit(fullMessage, attachments);
     setValue("");
     setImages([]);
-  }, [value, images, disabled, isLoading, onSubmit]);
+    setTextAttachments([]);
+  }, [value, images, textAttachments, disabled, isLoading, onSubmit]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -174,114 +258,172 @@ export function SessionInput({
   );
 
   const canSubmit =
-    (value.trim() || images.length > 0) && !disabled && !isLoading;
+    (value.trim() || images.length > 0 || textAttachments.length > 0) &&
+    !disabled &&
+    !isLoading;
+
+  const hasAttachments = images.length > 0 || textAttachments.length > 0;
 
   return (
-    <div className={cn("space-y-1", className)}>
-      {/* Image previews */}
-      {images.length > 0 && (
-        <div className="flex gap-1 flex-wrap px-0.5">
-          {images.map((img) => (
-            <div
-              key={img.id}
-              className="relative group size-10 rounded border border-border overflow-hidden bg-muted/50"
-            >
-              {/* biome-ignore lint/performance/noImgElement: base64 preview, not optimizable */}
-              <img
-                src={img.preview}
-                alt="Attached"
-                className="size-full object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => removeImage(img.id)}
-                className="absolute -top-0.5 -right-0.5 size-3.5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+    <>
+      <div className={cn("space-y-1", className)}>
+        {/* Attachments row (images + text) */}
+        {hasAttachments && (
+          <div className="flex gap-1 flex-wrap px-0.5">
+            {/* Image previews */}
+            {images.map((img) => (
+              <div
+                key={img.id}
+                className="relative group size-10 rounded border border-border overflow-hidden bg-muted/50"
               >
-                <X className="size-2" />
+                {/* biome-ignore lint/a11y/useAltText: base64 preview */}
+                {/* biome-ignore lint/performance/noImgElement: base64 preview, not optimizable */}
+                <img
+                  src={img.preview}
+                  alt="Attached"
+                  className="size-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeImage(img.id)}
+                  className="absolute -top-0.5 -right-0.5 size-3.5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="size-2" />
+                </button>
+              </div>
+            ))}
+
+            {/* Text attachment previews */}
+            {textAttachments.map((textAttach) => (
+              <button
+                key={textAttach.id}
+                type="button"
+                onClick={() => setViewingText(textAttach)}
+                className="relative group size-10 rounded border border-border overflow-hidden bg-muted/50 hover:bg-muted transition-colors"
+              >
+                {/* Text preview icon + line count badge */}
+                <div className="size-full flex flex-col items-center justify-center">
+                  <FileText className="size-4 text-muted-foreground" />
+                  <span className="text-[8px] text-muted-foreground font-mono">
+                    +{textAttach.lineCount}L
+                  </span>
+                </div>
+                {/* Remove button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeTextAttachment(textAttach.id);
+                  }}
+                  className="absolute -top-0.5 -right-0.5 size-3.5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="size-2" />
+                </button>
               </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Input row */}
-      <div className="relative flex items-center gap-1">
-        {/* Attachment button */}
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || isLoading}
-          className={cn(
-            "p-1 rounded-sm transition-colors shrink-0",
-            "hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed",
-            "text-muted-foreground hover:text-foreground",
-          )}
-          title="Attach image (or paste with Cmd+V)"
-        >
-          <Paperclip className="size-3" />
-        </button>
-
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleFileChange}
-          className="hidden"
-        />
-
-        {/* Text input - always editable during loading */}
-        <textarea
-          ref={inputRef}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onPaste={handlePaste}
-          disabled={disabled}
-          placeholder={placeholder}
-          rows={1}
-          className={cn(
-            "flex-1 resize-none rounded-sm border border-border bg-background/50 px-1.5 py-1 pr-6",
-            "text-[10px] font-mono placeholder:text-muted-foreground/40",
-            "focus:outline-none focus:ring-1 focus:ring-accent-orange/30 focus:border-accent-orange/30",
-            "disabled:opacity-40 disabled:cursor-not-allowed",
-            "transition-colors",
-          )}
-        />
-
-        {/* Submit or Stop button */}
-        {isLoading ? (
-          <button
-            type="button"
-            onClick={onStop}
-            className={cn(
-              "absolute right-1 top-1/2 -translate-y-1/2",
-              "p-0.5 rounded-sm transition-colors",
-              "bg-destructive/80 text-white hover:bg-destructive",
-            )}
-            title="Stop"
-          >
-            <Square className="size-3 fill-current" />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            className={cn(
-              "absolute right-1 top-1/2 -translate-y-1/2",
-              "p-0.5 rounded-sm transition-colors",
-              "disabled:opacity-20 disabled:cursor-not-allowed",
-              canSubmit
-                ? "bg-accent-orange text-white hover:bg-accent-orange/90"
-                : "text-muted-foreground/50",
-            )}
-          >
-            <ArrowUp className="size-3" />
-          </button>
+            ))}
+          </div>
         )}
+
+        {/* Input row */}
+        <div className="relative flex items-end gap-1">
+          {/* Attachment button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={disabled || isLoading}
+            className={cn(
+              "p-1 rounded-sm transition-colors shrink-0 mb-0.5",
+              "hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed",
+              "text-muted-foreground hover:text-foreground",
+            )}
+            title="Attach image (or paste with Cmd+V)"
+          >
+            <Paperclip className="size-3" />
+          </button>
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
+
+          {/* Text input - always editable during loading, auto-grows */}
+          <textarea
+            ref={inputRef}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            disabled={disabled}
+            placeholder={placeholder}
+            rows={1}
+            className={cn(
+              "flex-1 resize-none rounded-sm border border-border bg-background/50 px-1.5 py-1 pr-6",
+              "text-[10px] font-mono placeholder:text-muted-foreground/40",
+              "focus:outline-none focus:ring-1 focus:ring-accent-orange/30 focus:border-accent-orange/30",
+              "disabled:opacity-40 disabled:cursor-not-allowed",
+              "transition-colors overflow-y-auto",
+            )}
+            style={{ minHeight: "22px", maxHeight: "64px" }}
+          />
+
+          {/* Submit or Stop button */}
+          {isLoading ? (
+            <button
+              type="button"
+              onClick={onStop}
+              className={cn(
+                "absolute right-1 bottom-1",
+                "p-0.5 rounded-sm transition-colors",
+                "bg-destructive/80 text-white hover:bg-destructive",
+              )}
+              title="Stop"
+            >
+              <Square className="size-3 fill-current" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className={cn(
+                "absolute right-1 bottom-1",
+                "p-0.5 rounded-sm transition-colors",
+                "disabled:opacity-20 disabled:cursor-not-allowed",
+                canSubmit
+                  ? "bg-accent-orange text-white hover:bg-accent-orange/90"
+                  : "text-muted-foreground/50",
+              )}
+            >
+              <ArrowUp className="size-3" />
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Text preview dialog */}
+      <Dialog
+        open={viewingText !== null}
+        onOpenChange={(open) => !open && setViewingText(null)}
+      >
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-sm">
+              <FileText className="size-4" />
+              Text Attachment ({viewingText?.lineCount} lines)
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[60vh] rounded border border-border bg-muted/30 p-3">
+            <pre className="text-[10px] font-mono whitespace-pre-wrap break-words text-foreground/80">
+              {viewingText?.content}
+            </pre>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -36,7 +36,11 @@ export type SessionStatus =
   | "failed"
   | "cancelled";
 
-export type SessionMode = "normal" | "plan";
+// Session modes from claude-code-acp
+export type SessionMode = "default" | "acceptEdits" | "plan" | "dontAsk" | "bypassPermissions";
+
+// Session types: single agent, fleet of agents, or Ralph (PRD-driven)
+export type SessionType = "single" | "fleet" | "ralph";
 
 export type WorkerStatus =
   | "pending"
@@ -119,6 +123,7 @@ export interface WorkerSession {
   outputTokens: number;
   costUsd: number;
   outputBuffer: string;
+  thinkingBuffer: string;
   messages: Message[];
   toolCalls: ToolCall[];
   availableCommands: AvailableCommand[];
@@ -134,8 +139,10 @@ export interface OrchestratorSession {
   id: string;
   prompt: string;
   status: SessionStatus;
-  /** Session mode: normal (execute) or plan (explore + plan first) */
+  /** Session mode: default, acceptEdits, plan, dontAsk, or bypassPermissions */
   mode: SessionMode;
+  /** Session type: single, fleet, or ralph (PRD-driven) */
+  sessionType: SessionType;
   model: Model;
   agentType: AgentType;
   workers: WorkerSession[];
@@ -150,6 +157,8 @@ export interface OrchestratorSession {
   cwd?: string;
   /** ACP session ID for resuming (from the agent) */
   acpSessionId?: string;
+  /** PRD session ID for Ralph mode */
+  prdSessionId?: string;
 }
 
 export interface FileConflict {

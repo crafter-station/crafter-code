@@ -12,6 +12,7 @@ import {
 import { homeDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
+  Bot,
   ChevronDown,
   ChevronRight,
   Folder,
@@ -21,17 +22,28 @@ import {
   Pin,
   Plus,
   Server,
+  Sparkles,
   Square,
   Terminal,
+  Upload,
   User,
+  Users,
   X,
 } from "lucide-react";
 
 import {
   type AgentConfig,
+  type AgentModel,
+  createAcpFleetSession,
   createAcpSession,
   listAvailableAgents,
 } from "@/lib/ipc/orchestrator";
+import {
+  createPrdSession,
+  validatePrd,
+  parsePrd,
+} from "@/lib/ipc/prd";
+import type { ValidationResult } from "@/lib/types/prd";
 import {
   listWorkspaceCommands,
   listWorkspaceSkills,
@@ -61,6 +73,16 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Mode state: "single" | "fleet"
+  const [isFleetMode, setIsFleetMode] = useState(false);
+  const [workerCount, setWorkerCount] = useState("3");
+
+  // PRD mode state (optional in Fleet mode)
+  const [usePrd, setUsePrd] = useState(false);
+  const [prdFile, setPrdFile] = useState<{ name: string; content: string } | null>(null);
+  const [prdValidation, setPrdValidation] = useState<ValidationResult | null>(null);
+  const [isValidatingPrd, setIsValidatingPrd] = useState(false);
+
   // Collapsible section states (all open by default)
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [terminalsOpen, setTerminalsOpen] = useState(true);
@@ -74,6 +96,7 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
   // Agent selection state (for new agent form)
   const [availableAgents, setAvailableAgents] = useState<AgentConfig[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState<string>("");
+  const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [loadingAgents, setLoadingAgents] = useState(true);
 
   // Project selection for NEW agent (local to form, not global)
@@ -97,6 +120,11 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
 
   // Get selected agent config
   const selectedAgent = availableAgents.find((a) => a.id === selectedAgentId);
+
+  // Get selected model (or default)
+  const selectedModel = selectedAgent?.models.find((m) => m.id === selectedModelId)
+    || selectedAgent?.models.find((m) => m.id === selectedAgent.default_model)
+    || selectedAgent?.models[0];
 
   // Workspace state (for project list)
   const {
@@ -154,6 +182,7 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         const defaultAgent = agents.find((a) => a.id === "claude") || agents[0];
         if (defaultAgent) {
           setSelectedAgentId(defaultAgent.id);
+          setSelectedModelId(defaultAgent.default_model || "");
         }
       } catch (err) {
         console.error("[Orchestrator] Failed to load agents:", err);
@@ -163,6 +192,15 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
     }
     loadAgents();
   }, []);
+
+  // Reset model when agent changes
+  const handleAgentChange = useCallback((agentId: string) => {
+    setSelectedAgentId(agentId);
+    const agent = availableAgents.find((a) => a.id === agentId);
+    if (agent) {
+      setSelectedModelId(agent.default_model || "");
+    }
+  }, [availableAgents]);
 
   // Load global skills when agent changes (or on mount with default)
   useEffect(() => {
@@ -256,7 +294,12 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
   }, [addRecentProject]);
 
   const handleLaunch = useCallback(async () => {
-    if (!prompt.trim() || isLoading || !selectedAgentId) return;
+    // For PRD mode, check PRD validation. For other modes, check prompt
+    if (isFleetMode && usePrd) {
+      if (!prdValidation?.valid || isLoading || !prdFile) return;
+    } else {
+      if (!prompt.trim() || isLoading || !selectedAgentId) return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -274,17 +317,76 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         }
       }
 
-      const session = await createAcpSession(prompt, selectedAgentId, cwd);
+      let session;
+      if (isFleetMode && usePrd && prdFile) {
+        // PRD mode: create PRD session with stories
+        const prd = parsePrd(prdFile.content);
+        const prdSession = await createPrdSession(prd);
+        // Create an orchestrator session to track in UI
+        session = {
+          id: prdSession.id,
+          prompt: `PRD: ${prd.title}`,
+          status: "running" as const,
+          mode: "default" as const,
+          sessionType: "ralph" as const,
+          model: "opus" as const,
+          agentType: selectedAgentId as "claude" | "gemini" | "codex",
+          workers: prdSession.workers.map((w) => ({
+            id: w.id,
+            sessionId: prdSession.id,
+            task: w.currentStoryId || "Idle",
+            status: w.status === "working" ? "running" as const : "pending" as const,
+            model: w.model,
+            agentType: selectedAgentId as "claude" | "gemini" | "codex",
+            inputTokens: 0,
+            outputTokens: 0,
+            costUsd: 0,
+            outputBuffer: "",
+            thinkingBuffer: "",
+            messages: [],
+            toolCalls: [],
+            availableCommands: [],
+            filesTouched: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          })),
+          messages: [],
+          totalInputTokens: 0,
+          totalOutputTokens: 0,
+          totalCost: 0,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          cwd,
+          prdSessionId: prdSession.id,
+        };
+      } else if (isFleetMode) {
+        // Fleet mode: spawn multiple workers
+        session = await createAcpFleetSession(
+          prompt,
+          selectedAgentId,
+          cwd,
+          Number.parseInt(workerCount, 10),
+        );
+      } else {
+        // Single agent mode - pass selected model if different from default
+        const modelId = selectedModelId || undefined;
+        session = await createAcpSession(prompt, selectedAgentId, cwd, modelId);
+      }
 
       setSession(session);
-      addSessionMessage(session.id, {
-        type: "TEXT",
-        role: "user",
-        content: prompt,
-        timestamp: Date.now(),
-      });
+      if (!(isFleetMode && usePrd)) {
+        addSessionMessage(session.id, {
+          type: "TEXT",
+          role: "user",
+          content: prompt,
+          timestamp: Date.now(),
+        });
+      }
       setActiveSession(session.id);
       setPrompt("");
+      setPrdFile(null);
+      setPrdValidation(null);
+      setUsePrd(false);
       setSelectedProjectPath(null); // Reset for next agent
       setIsNewAgentExpanded(false);
     } catch (err) {
@@ -301,9 +403,15 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
     }
   }, [
     prompt,
+    prdFile,
+    prdValidation,
     isLoading,
     selectedAgentId,
+    selectedModelId,
     selectedProjectPath,
+    isFleetMode,
+    usePrd,
+    workerCount,
     setSession,
     addSessionMessage,
     setActiveSession,
@@ -312,6 +420,9 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
   const handleCancel = useCallback(() => {
     setIsNewAgentExpanded(false);
     setPrompt("");
+    setPrdFile(null);
+    setPrdValidation(null);
+    setUsePrd(false);
     setError(null);
   }, []);
 
@@ -340,6 +451,39 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
           </button>
         ) : (
           <div className="space-y-2">
+            {/* Mode Toggle */}
+            <div className="flex gap-1 p-0.5 bg-muted rounded-md">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsFleetMode(false);
+                  setUsePrd(false);
+                }}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors",
+                  !isFleetMode
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Bot className="size-3" />
+                Single
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsFleetMode(true)}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors",
+                  isFleetMode
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Users className="size-3" />
+                Fleet
+              </button>
+            </div>
+
             {/* Agent Picker */}
             <div className="space-y-1">
               <label className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
@@ -357,7 +501,7 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
               ) : (
                 <Select
                   value={selectedAgentId}
-                  onValueChange={setSelectedAgentId}
+                  onValueChange={handleAgentChange}
                   disabled={isLoading}
                 >
                   <SelectTrigger className="h-7 text-xs w-full border-border bg-[#141414]">
@@ -407,6 +551,61 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
                 </Select>
               )}
             </div>
+
+            {/* Model Picker (only show if agent has multiple models) */}
+            {selectedAgent && selectedAgent.models.length > 1 && (
+              <div className="space-y-1">
+                <label className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
+                  Model
+                </label>
+                <Select
+                  value={selectedModelId || selectedAgent.default_model}
+                  onValueChange={setSelectedModelId}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="h-7 text-xs w-full border-border bg-[#141414]">
+                    {selectedModel ? (
+                      <span className="flex items-center gap-1.5">
+                        <span className="truncate">{selectedModel.name}</span>
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        Select model...
+                      </span>
+                    )}
+                  </SelectTrigger>
+                  <SelectContent
+                    className="bg-[#141414] border border-[#262626] shadow-xl min-w-[180px]"
+                    position="popper"
+                    sideOffset={4}
+                  >
+                    {selectedAgent.models.map((model) => (
+                      <SelectItem
+                        key={model.id}
+                        value={model.id}
+                        className={cn(
+                          "text-xs cursor-pointer pl-2 pr-3 [&_[data-slot=select-item-indicator]]:!hidden hover:bg-[#262626] data-[state=checked]:bg-accent-orange/20 data-[state=checked]:text-accent-orange",
+                        )}
+                      >
+                        <span className="flex flex-col gap-0.5">
+                          <span className="flex items-center gap-2">
+                            {model.name}
+                            {model.id === selectedAgent.default_model && (
+                              <span className="text-[8px] text-muted-foreground/50">
+                                default
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground/60">
+                            {model.description}
+                          </span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Project Picker */}
             <div className="space-y-1">
@@ -494,19 +693,176 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
               </div>
             </div>
 
-            <Textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Describe the task..."
-              disabled={isLoading}
-              className="min-h-[60px] resize-none text-xs bg-background"
-            />
+            {/* Fleet Configuration (Fleet mode only) */}
+            {isFleetMode && (
+              <div className="space-y-2">
+                {/* Workers + PRD toggle in one row */}
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={workerCount}
+                    onValueChange={setWorkerCount}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger className="h-7 text-xs w-24 border-border bg-[#141414]">
+                      <span className="flex items-center gap-1">
+                        <Users className="size-3 text-accent-orange" />
+                        {workerCount}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent
+                      className="bg-[#141414] border border-[#262626] shadow-xl"
+                      position="popper"
+                      sideOffset={4}
+                    >
+                      {["2", "3", "4", "5"].map((n) => (
+                        <SelectItem key={n} value={n} className="text-xs">
+                          {n} workers{n === "3" ? " (rec)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUsePrd(!usePrd);
+                      if (usePrd) {
+                        setPrdFile(null);
+                        setPrdValidation(null);
+                      }
+                    }}
+                    disabled={isLoading}
+                    className={cn(
+                      "flex-1 h-7 flex items-center justify-center gap-1.5 px-2 rounded-md text-[10px] font-medium transition-colors",
+                      usePrd
+                        ? "bg-accent-orange/20 text-accent-orange border border-accent-orange/30"
+                        : "bg-[#141414] text-muted-foreground border border-border hover:text-foreground hover:bg-[#1a1a1a]",
+                    )}
+                  >
+                    <Sparkles className="size-3" />
+                    {usePrd ? "PRD Mode" : "Free-form"}
+                  </button>
+                </div>
+
+                {/* PRD File Picker (when PRD mode enabled) */}
+                {usePrd && (
+                  <div className="space-y-1.5">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const input = document.createElement("input");
+                        input.type = "file";
+                        input.accept = ".json,.prd.json";
+                        input.onchange = async (e) => {
+                          const file = (e.target as HTMLInputElement).files?.[0];
+                          if (file) {
+                            const text = await file.text();
+                            setPrdFile({ name: file.name, content: text });
+                            setPrdValidation(null);
+                            // Auto-validate
+                            setIsValidatingPrd(true);
+                            try {
+                              const prd = parsePrd(text);
+                              const result = await validatePrd(prd);
+                              setPrdValidation(result);
+                            } catch (err) {
+                              setPrdValidation({
+                                valid: false,
+                                errors: [err instanceof Error ? err.message : "Invalid JSON"],
+                                warnings: [],
+                                estimatedCost: 0,
+                                modelAssignments: {},
+                                dependencyOrder: [],
+                              });
+                            } finally {
+                              setIsValidatingPrd(false);
+                            }
+                          }
+                        };
+                        input.click();
+                      }}
+                      disabled={isLoading}
+                      className={cn(
+                        "w-full h-8 flex items-center justify-center gap-2 px-3",
+                        "text-xs border border-dashed rounded-md transition-colors",
+                        prdFile
+                          ? "border-accent-orange/50 bg-accent-orange/5 text-foreground"
+                          : "border-border bg-[#141414] text-muted-foreground hover:border-accent-orange/30 hover:text-foreground",
+                      )}
+                    >
+                      {isValidatingPrd ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : prdFile ? (
+                        <>
+                          <Sparkles className="size-3.5 text-accent-orange" />
+                          <span className="truncate">{prdFile.name}</span>
+                          <X
+                            className="size-3 ml-auto opacity-50 hover:opacity-100"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPrdFile(null);
+                              setPrdValidation(null);
+                            }}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="size-3.5" />
+                          Drop or select .prd.json
+                        </>
+                      )}
+                    </button>
+
+                    {/* Validation Status - compact */}
+                    {prdValidation && (
+                      <div
+                        className={cn(
+                          "px-2 py-1.5 rounded text-[10px] flex items-center gap-2",
+                          prdValidation.valid
+                            ? "bg-green-500/10 text-green-500"
+                            : "bg-destructive/10 text-destructive",
+                        )}
+                      >
+                        {prdValidation.valid ? (
+                          <>
+                            <span className="font-medium">{prdValidation.dependencyOrder.length} stories</span>
+                            <span className="text-muted-foreground">~${prdValidation.estimatedCost.toFixed(2)}</span>
+                          </>
+                        ) : (
+                          <span className="truncate">{prdValidation.errors[0]}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Prompt Input (shown unless PRD mode) */}
+            {!(isFleetMode && usePrd) && (
+              <Textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder={
+                  isFleetMode
+                    ? "Describe the task for the fleet..."
+                    : "Describe the task..."
+                }
+                disabled={isLoading}
+                className="min-h-[60px] resize-none text-xs bg-background"
+              />
+            )}
+
             {error && <p className="text-[10px] text-destructive">{error}</p>}
             <div className="flex gap-1.5">
               <button
                 type="button"
                 onClick={handleLaunch}
-                disabled={!prompt.trim() || isLoading || !selectedAgentId}
+                disabled={
+                  isFleetMode && usePrd
+                    ? !prdValidation?.valid || isLoading
+                    : !prompt.trim() || isLoading || !selectedAgentId
+                }
                 className={cn(
                   "flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5",
                   "bg-accent-orange text-white rounded-md text-xs font-medium",
@@ -517,7 +873,16 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
                 {isLoading ? (
                   <>
                     <Loader2 className="size-3 animate-spin" />
-                    Connecting...
+                    {isFleetMode
+                      ? usePrd
+                        ? "Starting..."
+                        : "Launching Fleet..."
+                      : "Connecting..."}
+                  </>
+                ) : isFleetMode ? (
+                  <>
+                    {usePrd ? <Sparkles className="size-3" /> : <Users className="size-3" />}
+                    {usePrd ? "Start" : "Launch Fleet"}
                   </>
                 ) : (
                   "Launch"

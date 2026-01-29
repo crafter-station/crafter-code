@@ -1,14 +1,12 @@
-// New architecture components
-
-export { AgentCard } from "./agent-card";
-export { ConflictAlert } from "./conflict-alert";
-export { CostTracker } from "./cost-tracker";
-export { MessageBubble } from "./message-bubble";
-export { NewOrchestrationDialog } from "./new-orchestration-dialog";
-// Legacy components (to be removed after migration verification)
-export { OrchestratorDashboard } from "./orchestrator-dashboard";
+// Main layout (new)
 export { OrchestratorLayout } from "./orchestrator-layout";
-export { OrchestratorSidebar } from "./orchestrator-sidebar";
-export { SessionCard } from "./session-card";
-export { SessionColumns } from "./session-columns";
-export { SessionInput } from "./session-input";
+
+// Legacy components (moved to mvp/)
+export { AgentCard } from "./mvp/agent-card";
+export { ConflictAlert } from "./mvp/conflict-alert";
+export { CostTracker } from "./mvp/cost-tracker";
+export { MessageBubble } from "./mvp/message-bubble";
+export { OrchestratorSidebar } from "./mvp/orchestrator-sidebar";
+export { SessionCard } from "./mvp/session-card";
+export { SessionColumns } from "./mvp/session-columns";
+export { SessionInput } from "./mvp/session-input";

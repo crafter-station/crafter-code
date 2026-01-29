@@ -83,6 +83,7 @@ pub fn list_available_agents() -> Vec<AgentConfig> {
 pub async fn create_acp_session(
     prompt: String,
     agent_id: String,
+    model_id: Option<String>,
     cwd: String,
     app_handle: AppHandle,
     state: State<'_, AppState>,
@@ -90,11 +91,19 @@ pub async fn create_acp_session(
     eprintln!("[ACP Command] create_acp_session called with:");
     eprintln!("  prompt: {}", prompt);
     eprintln!("  agent_id: {}", agent_id);
+    eprintln!("  model_id: {:?}", model_id);
     eprintln!("  cwd: {}", cwd);
 
     // Get the agent config
     let agent = get_agent(&agent_id)
         .ok_or_else(|| format!("Agent '{}' not found or not available", agent_id))?;
+
+    // Resolve the model to use - either user selection or agent's default
+    let selected_model = model_id
+        .filter(|m| !m.is_empty())
+        .unwrap_or_else(|| agent.default_model.clone());
+
+    eprintln!("[ACP] Using model: {}", selected_model);
 
     // Create the orchestrator session
     let session = {
@@ -154,6 +163,7 @@ pub async fn create_acp_session(
     let worker_id_clone = worker_id.clone();
     let app_handle_clone = app_handle.clone();
     let initial_prompt = prompt.clone();
+    let selected_model_clone = selected_model.clone();
 
     // Spawn a PERSISTENT worker thread that handles all prompts for this session
     thread::spawn(move || {
@@ -170,6 +180,7 @@ pub async fn create_acp_session(
                 cwd,
                 session_id_clone,
                 worker_id_clone,
+                selected_model_clone,
                 app_handle_clone,
                 manager,
                 command_rx,
@@ -180,6 +191,160 @@ pub async fn create_acp_session(
             .await;
         });
     });
+
+    // Return the session
+    let session = {
+        let mgr = state.orchestrator_manager.lock();
+        mgr.get_session(&session_id).cloned()
+    };
+
+    match session {
+        Some(s) => Ok(AcpSessionResponse { session: s }),
+        None => Err("Session not found after creation".to_string()),
+    }
+}
+
+/// Create a new ACP fleet session with multiple workers
+/// First worker becomes leader, others become workers
+#[tauri::command]
+pub async fn create_acp_fleet_session(
+    prompt: String,
+    agent_id: String,
+    cwd: String,
+    worker_count: usize,
+    app_handle: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<AcpSessionResponse, String> {
+    eprintln!("[ACP Fleet] Creating fleet session with {} workers", worker_count);
+    eprintln!("  prompt: {}", prompt);
+    eprintln!("  agent_id: {}", agent_id);
+    eprintln!("  cwd: {}", cwd);
+
+    let worker_count = worker_count.clamp(2, 10); // Min 2, max 10 workers
+
+    // Get the agent config
+    let agent = get_agent(&agent_id)
+        .ok_or_else(|| format!("Agent '{}' not found or not available", agent_id))?;
+
+    // Create the orchestrator session
+    let session = {
+        let mut mgr = state.orchestrator_manager.lock();
+        mgr.create_session(prompt.clone(), Model::Opus)
+    };
+
+    let session_id = session.id.clone();
+
+    // Emit session created event
+    let _ = app_handle.emit(
+        "orchestrator-session-created",
+        serde_json::json!({
+            "session_id": session_id,
+            "status": "planning",
+            "agent": agent_id,
+            "fleet": true,
+            "worker_count": worker_count
+        }),
+    );
+
+    // Get or create shared task and inbox managers for this session
+    let task_manager = state
+        .get_task_manager(&session_id)
+        .map_err(|e| format!("Failed to get task manager: {}", e))?;
+    let inbox_manager = state
+        .get_inbox_manager(&session_id)
+        .map_err(|e| format!("Failed to get inbox manager: {}", e))?;
+
+    // Spawn N workers
+    for i in 0..worker_count {
+        let is_leader = i == 0;
+        let worker_role = if is_leader { "leader" } else { "worker" };
+
+        // Create worker with role-specific task description
+        let worker_task = if is_leader {
+            format!(
+                "You are the LEADER. Break down this task into subtasks using `swarm task create`, then coordinate the team.\n\nTask: {}",
+                prompt
+            )
+        } else {
+            format!(
+                "You are WORKER #{}. Wait for the leader to create tasks, then claim and complete them using swarm commands.\n\nContext: {}",
+                i,
+                prompt
+            )
+        };
+
+        let worker = WorkerSession::new(
+            Uuid::new_v4().to_string(),
+            session_id.clone(),
+            worker_task.clone(),
+            Model::Opus,
+        );
+
+        let worker_id = worker.id.clone();
+
+        // Add worker to session
+        {
+            let mut mgr = state.orchestrator_manager.lock();
+            mgr.add_worker_to_session(&session_id, worker.clone());
+            if i == 0 {
+                mgr.update_session_status(&session_id, SessionStatus::Running);
+            }
+        }
+
+        eprintln!("[ACP Fleet] Spawning {} (worker_id: {})", worker_role, worker_id);
+
+        // Create command channel for each worker
+        let (command_tx, command_rx) = mpsc::channel::<WorkerCommand>(32);
+
+        // Store worker handle (use composite key for fleet)
+        {
+            let mut handles = state.worker_handles.lock();
+            handles.insert(format!("{}:{}", session_id, worker_id), WorkerHandle { command_tx: command_tx.clone() });
+        }
+
+        // Clone for thread
+        let manager = state.orchestrator_manager.clone();
+        let session_id_clone = session_id.clone();
+        let worker_id_clone = worker_id.clone();
+        let app_handle_clone = app_handle.clone();
+        let agent_clone = agent.clone();
+        let cwd_clone = cwd.clone();
+        let task_manager_clone = task_manager.clone();
+        let inbox_manager_clone = inbox_manager.clone();
+        let selected_model = agent.default_model.clone();
+
+        // Spawn worker thread
+        thread::spawn(move || {
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("Failed to create tokio runtime");
+
+            let local_set = tokio::task::LocalSet::new();
+
+            local_set.block_on(&rt, async move {
+                run_persistent_worker(
+                    agent_clone,
+                    cwd_clone,
+                    session_id_clone,
+                    worker_id_clone,
+                    selected_model,
+                    app_handle_clone,
+                    manager,
+                    command_rx,
+                    worker_task,
+                    task_manager_clone,
+                    inbox_manager_clone,
+                )
+                .await;
+            });
+        });
+
+        // Small delay between spawning workers to avoid race conditions
+        if i < worker_count - 1 {
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+    }
 
     // Return the session
     let session = {
@@ -401,6 +566,7 @@ async fn run_persistent_worker(
     cwd: String,
     session_id: String,
     worker_id: String,
+    selected_model: String,
     app_handle: AppHandle,
     manager: Arc<Mutex<crate::orchestrator::OrchestratorManager>>,
     mut command_rx: mpsc::Receiver<WorkerCommand>,
@@ -454,15 +620,54 @@ async fn run_persistent_worker(
         }),
     );
 
-    // Build args from agent config
-    let args: Vec<&str> = agent.args.iter().map(|s| s.as_str()).collect();
+    // Write model to .claude/settings.json as a workaround for claude-code-acp not respecting env vars
+    if agent.id == "claude" && !selected_model.is_empty() {
+        let settings_dir = std::path::Path::new(&cwd).join(".claude");
+        let settings_path = settings_dir.join("settings.json");
 
-    // Spawn the ACP agent with coordination support
+        // Read existing settings or create new
+        let mut settings: serde_json::Value = if settings_path.exists() {
+            std::fs::read_to_string(&settings_path)
+                .ok()
+                .and_then(|s| serde_json::from_str(&s).ok())
+                .unwrap_or_else(|| serde_json::json!({}))
+        } else {
+            serde_json::json!({})
+        };
+
+        // Update the model field
+        if let Some(obj) = settings.as_object_mut() {
+            obj.insert("model".to_string(), serde_json::Value::String(selected_model.clone()));
+        }
+
+        // Ensure .claude directory exists and write settings
+        if let Err(e) = std::fs::create_dir_all(&settings_dir) {
+            println!("[ACP] Warning: Could not create .claude dir: {}", e);
+        } else if let Err(e) = std::fs::write(&settings_path, serde_json::to_string_pretty(&settings).unwrap_or_default()) {
+            println!("[ACP] Warning: Could not write settings.json: {}", e);
+        } else {
+            println!("[ACP] Wrote model '{}' to {}", selected_model, settings_path.display());
+        }
+    }
+
+    // Build args from agent config, including model CLI flag if available
+    let mut args: Vec<String> = agent.args.clone();
+    if let Some(ref cli_flag) = agent.model_cli_flag {
+        args.push(cli_flag.clone());
+        args.push(selected_model.clone());
+        println!("[ACP] Adding CLI args: {} {}", cli_flag, selected_model);
+    }
+    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    println!("[ACP] Spawning with args: {:?}", args_refs);
+
+    // Spawn the ACP agent with coordination support and model selection
     let client_result = AcpClient::spawn(
         &agent.command,
-        &args,
+        &args_refs,
         &cwd,
         &agent.env_vars,
+        Some(selected_model.clone()),
+        agent.model_env_var.clone(),
         app_handle.clone(),
         worker_id.clone(),
         session_id.clone(),
@@ -568,7 +773,7 @@ async fn run_persistent_worker(
             Err(AcpError::Cancelled) => {
                 is_cancelled = true;
                 let mut mgr = manager.lock();
-                mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Cancelled);
+                mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Idle);
                 mgr.remove_worker_cancel(&worker_id);
 
                 let _ = app_handle.emit(
@@ -576,7 +781,7 @@ async fn run_persistent_worker(
                     serde_json::json!({
                         "session_id": session_id,
                         "worker_id": worker_id,
-                        "status": "cancelled"
+                        "status": "idle"
                     }),
                 );
             }
@@ -587,10 +792,8 @@ async fn run_persistent_worker(
         }
     }
 
-    // If cancelled, exit the worker
-    if is_cancelled {
-        return;
-    }
+    // Don't exit on cancel - continue to command loop to accept new prompts
+    let _ = is_cancelled; // Suppress unused warning
 
     // Main loop: wait for follow-up commands
     eprintln!("[ACP] Worker entering command loop for session={}", session_id);
@@ -638,7 +841,7 @@ async fn run_persistent_worker(
                     Err(AcpError::Cancelled) => {
                         {
                             let mut mgr = manager.lock();
-                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Cancelled);
+                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Idle);
                             mgr.remove_worker_cancel(&worker_id);
                         }
 
@@ -647,12 +850,12 @@ async fn run_persistent_worker(
                             serde_json::json!({
                                 "session_id": session_id,
                                 "worker_id": worker_id,
-                                "status": "cancelled"
+                                "status": "idle"
                             }),
                         );
 
                         let _ = done_tx.send(Ok(()));
-                        break; // Exit on cancel
+                        // Don't break - keep worker alive to accept new prompts
                     }
                     Err(e) => {
                         let error_msg = e.to_string();
@@ -722,7 +925,7 @@ async fn run_persistent_worker(
                     Err(AcpError::Cancelled) => {
                         {
                             let mut mgr = manager.lock();
-                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Cancelled);
+                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Idle);
                             mgr.remove_worker_cancel(&worker_id);
                         }
 
@@ -731,12 +934,12 @@ async fn run_persistent_worker(
                             serde_json::json!({
                                 "session_id": session_id,
                                 "worker_id": worker_id,
-                                "status": "cancelled"
+                                "status": "idle"
                             }),
                         );
 
                         let _ = done_tx.send(Ok(()));
-                        break;
+                        // Don't break - keep worker alive to accept new prompts
                     }
                     Err(e) => {
                         let error_msg = e.to_string();
@@ -1119,15 +1322,22 @@ async fn run_resume_worker(
         }),
     );
 
-    // Build args from agent config
-    let args: Vec<&str> = agent.args.iter().map(|s| s.as_str()).collect();
+    // Build args from agent config, including model CLI flag if available
+    let mut args: Vec<String> = agent.args.clone();
+    if let Some(ref cli_flag) = agent.model_cli_flag {
+        args.push(cli_flag.clone());
+        args.push(agent.default_model.clone());
+    }
+    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
 
-    // Spawn the ACP agent with coordination support
+    // Spawn the ACP agent with coordination support (using default model for resumed sessions)
     let client_result = AcpClient::spawn(
         &agent.command,
-        &args,
+        &args_refs,
         &cwd,
         &agent.env_vars,
+        Some(agent.default_model.clone()),
+        agent.model_env_var.clone(),
         app_handle.clone(),
         worker_id.clone(),
         session_id.clone(),
@@ -1270,7 +1480,7 @@ async fn run_resume_worker(
                     Err(AcpError::Cancelled) => {
                         {
                             let mut mgr = manager.lock();
-                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Cancelled);
+                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Idle);
                             mgr.remove_worker_cancel(&worker_id);
                         }
 
@@ -1279,12 +1489,12 @@ async fn run_resume_worker(
                             serde_json::json!({
                                 "session_id": session_id,
                                 "worker_id": worker_id,
-                                "status": "cancelled"
+                                "status": "idle"
                             }),
                         );
 
                         let _ = done_tx.send(Ok(()));
-                        break;
+                        // Don't break - keep worker alive to accept new prompts
                     }
                     Err(e) => {
                         let error_msg = e.to_string();
@@ -1383,7 +1593,7 @@ async fn run_resume_worker(
                     Err(AcpError::Cancelled) => {
                         {
                             let mut mgr = manager.lock();
-                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Cancelled);
+                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Idle);
                             mgr.remove_worker_cancel(&worker_id);
                         }
                         let _ = app_handle.emit(
@@ -1391,11 +1601,11 @@ async fn run_resume_worker(
                             serde_json::json!({
                                 "session_id": session_id,
                                 "worker_id": worker_id,
-                                "status": "cancelled"
+                                "status": "idle"
                             }),
                         );
                         let _ = done_tx.send(Ok(()));
-                        break;
+                        // Don't break - keep worker alive to accept new prompts
                     }
                     Err(e) => {
                         let error_msg = e.to_string();
@@ -1564,15 +1774,22 @@ async fn run_reconnect_worker(
         }),
     );
 
-    // Build args from agent config
-    let args: Vec<&str> = agent.args.iter().map(|s| s.as_str()).collect();
+    // Build args from agent config, including model CLI flag if available
+    let mut args: Vec<String> = agent.args.clone();
+    if let Some(ref cli_flag) = agent.model_cli_flag {
+        args.push(cli_flag.clone());
+        args.push(agent.default_model.clone());
+    }
+    let args_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
 
-    // Spawn the ACP agent
+    // Spawn the ACP agent (using default model for reconnected sessions)
     let client_result = AcpClient::spawn(
         &agent.command,
-        &args,
+        &args_refs,
         &cwd,
         &agent.env_vars,
+        Some(agent.default_model.clone()),
+        agent.model_env_var.clone(),
         app_handle.clone(),
         worker_id.clone(),
         session_id.clone(),
@@ -1703,7 +1920,7 @@ async fn run_reconnect_worker(
                     Err(AcpError::Cancelled) => {
                         {
                             let mut mgr = manager.lock();
-                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Cancelled);
+                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Idle);
                             mgr.remove_worker_cancel(&worker_id);
                         }
 
@@ -1712,12 +1929,12 @@ async fn run_reconnect_worker(
                             serde_json::json!({
                                 "session_id": session_id,
                                 "worker_id": worker_id,
-                                "status": "cancelled"
+                                "status": "idle"
                             }),
                         );
 
                         let _ = done_tx.send(Ok(()));
-                        break;
+                        // Don't break - keep worker alive to accept new prompts
                     }
                     Err(e) => {
                         let error_msg = e.to_string();
@@ -1816,7 +2033,7 @@ async fn run_reconnect_worker(
                     Err(AcpError::Cancelled) => {
                         {
                             let mut mgr = manager.lock();
-                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Cancelled);
+                            mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Idle);
                             mgr.remove_worker_cancel(&worker_id);
                         }
                         let _ = app_handle.emit(
@@ -1824,11 +2041,11 @@ async fn run_reconnect_worker(
                             serde_json::json!({
                                 "session_id": session_id,
                                 "worker_id": worker_id,
-                                "status": "cancelled"
+                                "status": "idle"
                             }),
                         );
                         let _ = done_tx.send(Ok(()));
-                        break;
+                        // Don't break - keep worker alive to accept new prompts
                     }
                     Err(e) => {
                         let error_msg = e.to_string();

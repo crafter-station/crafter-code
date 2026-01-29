@@ -136,7 +136,13 @@ export function AgentCard({ worker, onCancel, onRetry }: AgentCardProps) {
           </div>
           <div className="flex items-center gap-1">
             <DollarSign className="size-3" />
-            <span>${worker.costUsd.toFixed(4)}</span>
+            <span>
+              $
+              {(
+                worker.costUsd ||
+                (worker.inputTokens * 3 + worker.outputTokens * 15) / 1_000_000
+              ).toFixed(4)}
+            </span>
           </div>
         </div>
         {worker.filesTouched.length > 0 && (

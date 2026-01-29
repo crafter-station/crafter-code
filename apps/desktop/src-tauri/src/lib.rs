@@ -3,6 +3,7 @@ mod agent;
 mod claude;
 mod inbox;
 mod orchestrator;
+mod prd;
 mod pty;
 mod tasks;
 
@@ -11,6 +12,7 @@ use agent::manager::AgentManager;
 use inbox::InboxManager;
 use orchestrator::OrchestratorManager;
 use parking_lot::Mutex;
+use prd::PrdManager;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tasks::TaskManager;
@@ -25,6 +27,8 @@ pub struct AppState {
     pub task_managers: Arc<Mutex<HashMap<String, Arc<TaskManager>>>>,
     /// Per-session inbox managers
     pub inbox_managers: Arc<Mutex<HashMap<String, Arc<InboxManager>>>>,
+    /// PRD session manager
+    pub prd_manager: Arc<PrdManager>,
 }
 
 impl AppState {
@@ -58,6 +62,7 @@ pub fn run() {
     let worker_handles = Arc::new(Mutex::new(HashMap::new()));
     let task_managers = Arc::new(Mutex::new(HashMap::new()));
     let inbox_managers = Arc::new(Mutex::new(HashMap::new()));
+    let prd_manager = Arc::new(PrdManager::new());
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -68,6 +73,7 @@ pub fn run() {
             worker_handles: worker_handles.clone(),
             task_managers: task_managers.clone(),
             inbox_managers: inbox_managers.clone(),
+            prd_manager: prd_manager.clone(),
         })
         .invoke_handler(tauri::generate_handler![
             // PTY commands
@@ -90,6 +96,7 @@ pub fn run() {
             // ACP commands
             acp::commands::list_available_agents,
             acp::commands::create_acp_session,
+            acp::commands::create_acp_fleet_session,
             acp::commands::send_acp_prompt,
             acp::commands::send_acp_prompt_with_images,
             acp::commands::respond_to_permission,
@@ -138,6 +145,18 @@ pub fn run() {
             acp::skills_commands::is_slash_command,
             acp::skills_commands::process_user_input,
             acp::skills_commands::cleanup_session_features,
+            // PRD commands
+            prd::commands::validate_prd,
+            prd::commands::create_prd_session,
+            prd::commands::get_prd_session,
+            prd::commands::list_prd_sessions,
+            prd::commands::pause_prd_session,
+            prd::commands::resume_prd_session,
+            prd::commands::cancel_prd_session,
+            prd::commands::retry_prd_story,
+            prd::commands::get_story_progress,
+            prd::commands::get_prd_workers,
+            prd::commands::get_prd_cost_breakdown,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

@@ -62,7 +62,12 @@ type WorkerEventType =
   | {
       type: "complete";
       output: string;
-      usage: { input_tokens: number; output_tokens: number };
+      usage: {
+        input_tokens: number;
+        output_tokens: number;
+        estimated?: boolean;
+      };
+      cost_usd?: number;
     }
   | { type: "error"; message: string }
   | {
@@ -80,11 +85,19 @@ interface WorkerStatusChangeEvent {
   status: string;
   cost?: number;
   error?: string;
+  reconnecting?: boolean;
 }
 
 interface RawFileConflict {
   file_path: string;
   worker_ids: string[];
+}
+
+// ACP Agent model types
+export interface AgentModel {
+  id: string;
+  name: string;
+  description: string;
 }
 
 // ACP Agent types
@@ -96,6 +109,11 @@ export interface AgentConfig {
   args: string[];
   available: boolean;
   env_vars: string[];
+  config_dir: string;
+  models: AgentModel[];
+  default_model: string;
+  model_env_var: string | null;
+  model_cli_flag: string | null;
 }
 
 interface WorkerToolCallEvent {
@@ -224,11 +242,29 @@ export async function createAcpSession(
   prompt: string,
   agentId: string,
   cwd: string,
+  modelId?: string,
 ): Promise<OrchestratorSession> {
   const response = await invoke<SessionResponse>("create_acp_session", {
     prompt,
     agentId,
+    modelId,
     cwd,
+  });
+  return transformSession(response.session, agentId as AgentType, cwd);
+}
+
+// Create a new ACP fleet session with multiple workers
+export async function createAcpFleetSession(
+  prompt: string,
+  agentId: string,
+  cwd: string,
+  workerCount: number,
+): Promise<OrchestratorSession> {
+  const response = await invoke<SessionResponse>("create_acp_fleet_session", {
+    prompt,
+    agentId,
+    cwd,
+    workerCount,
   });
   return transformSession(response.session, agentId as AgentType, cwd);
 }
@@ -372,7 +408,7 @@ export async function respondToPermission(
   });
 }
 
-// Set the session mode (e.g., "plan", "normal")
+// Set the session mode (e.g., "default", "acceptEdits", "plan", "dontAsk", "bypassPermissions")
 // Uses the official ACP session/set_mode protocol method
 export async function setAcpSessionMode(
   sessionId: string,
@@ -604,12 +640,14 @@ function transformSession(
   session: RawOrchestratorSession,
   agentType: AgentType = "claude",
   cwd?: string,
+  sessionType: "single" | "fleet" | "ralph" = "single",
 ): OrchestratorSession {
   return {
     id: session.id,
     prompt: session.prompt,
     status: session.status as OrchestratorSession["status"],
-    mode: "normal", // Default to normal, can be changed via setAcpSessionMode
+    mode: "default", // Default mode, can be changed via setAcpSessionMode
+    sessionType,
     model: transformModel(session.model),
     agentType,
     workers: session.workers?.map((w) => transformWorker(w, agentType)) ?? [],
@@ -639,6 +677,7 @@ function transformWorker(
     outputTokens: worker.output_tokens ?? 0,
     costUsd: worker.cost_usd ?? 0,
     outputBuffer: worker.output_buffer ?? "",
+    thinkingBuffer: "",
     messages: [],
     toolCalls: [],
     availableCommands: [],

@@ -11,6 +11,13 @@ use serde::{Deserialize, Serialize};
 use std::process::Command;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentModel {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentConfig {
     pub id: String,
     pub name: String,
@@ -23,6 +30,14 @@ pub struct AgentConfig {
     /// Config directory name for this agent (e.g., ".claude", ".gemini", ".copilot")
     /// Used for provider-specific skills and commands
     pub config_dir: String,
+    /// Available models for this agent
+    pub models: Vec<AgentModel>,
+    /// Default model ID
+    pub default_model: String,
+    /// Environment variable to set model (e.g., "ANTHROPIC_MODEL")
+    pub model_env_var: Option<String>,
+    /// CLI flag to pass model (e.g., "--model" for Claude)
+    pub model_cli_flag: Option<String>,
 }
 
 impl AgentConfig {
@@ -34,6 +49,10 @@ impl AgentConfig {
         args: Vec<&str>,
         env_vars: Vec<&str>,
         config_dir: &str,
+        models: Vec<AgentModel>,
+        default_model: &str,
+        model_env_var: Option<&str>,
+        model_cli_flag: Option<&str>,
     ) -> Self {
         let available = check_command_exists(command);
         // Use full path if found in common locations
@@ -51,6 +70,10 @@ impl AgentConfig {
             available,
             env_vars: env_vars.into_iter().map(String::from).collect(),
             config_dir: config_dir.to_string(),
+            models,
+            default_model: default_model.to_string(),
+            model_env_var: model_env_var.map(String::from),
+            model_cli_flag: model_cli_flag.map(String::from),
         }
     }
 
@@ -72,6 +95,10 @@ impl AgentConfig {
             available: false,
             env_vars: vec![],
             config_dir: config_dir.to_string(),
+            models: vec![],
+            default_model: String::new(),
+            model_env_var: None,
+            model_cli_flag: None,
         }
     }
 }
@@ -137,17 +164,62 @@ fn known_agents() -> Vec<AgentConfig> {
             vec![],
             vec!["ANTHROPIC_API_KEY"],
             ".claude",
+            vec![
+                AgentModel {
+                    id: "claude-sonnet-4-5-20250929".to_string(),
+                    name: "Sonnet 4.5".to_string(),
+                    description: "Latest Sonnet - best balance of speed and intelligence".to_string(),
+                },
+                AgentModel {
+                    id: "claude-opus-4-5-20251101".to_string(),
+                    name: "Opus 4.5".to_string(),
+                    description: "Most intelligent - frontier performance".to_string(),
+                },
+                AgentModel {
+                    id: "claude-haiku-4-5-20251001".to_string(),
+                    name: "Haiku 4.5".to_string(),
+                    description: "Near-frontier at lower cost and faster speeds".to_string(),
+                },
+            ],
+            "claude-sonnet-4-5-20250929",
+            Some("ANTHROPIC_MODEL"),
+            Some("--model"),  // CLI flag to pass model
         ),
         // Gemini CLI with experimental ACP mode
         // Install: bun install -g @google/gemini-cli
         AgentConfig::new(
             "gemini",
             "Gemini CLI",
-            "Google's Gemini 2.5 Pro",
+            "Google's Gemini via ACP",
             "gemini",
             vec!["--experimental-acp"],
             vec![],
             ".gemini",
+            vec![
+                AgentModel {
+                    id: "gemini-2.5-pro".to_string(),
+                    name: "2.5 Pro".to_string(),
+                    description: "Most capable - deep reasoning and analysis".to_string(),
+                },
+                AgentModel {
+                    id: "gemini-2.5-flash".to_string(),
+                    name: "2.5 Flash".to_string(),
+                    description: "Fast reasoning with thinking features".to_string(),
+                },
+                AgentModel {
+                    id: "gemini-2.5-flash-lite".to_string(),
+                    name: "2.5 Flash-Lite".to_string(),
+                    description: "Optimized for low latency, 1M context".to_string(),
+                },
+                AgentModel {
+                    id: "gemini-3-flash-preview".to_string(),
+                    name: "3 Flash Preview".to_string(),
+                    description: "Next-gen preview - frontier performance".to_string(),
+                },
+            ],
+            "gemini-2.5-pro",
+            Some("GEMINI_MODEL"),
+            Some("--model"),  // CLI flag to pass model
         ),
         // Codex ACP adapter by Zed Industries
         // Install: bun install -g @zed-industries/codex-acp
@@ -159,6 +231,31 @@ fn known_agents() -> Vec<AgentConfig> {
             vec![],
             vec!["OPENAI_API_KEY"],
             ".codex",
+            vec![
+                AgentModel {
+                    id: "gpt-5.2-codex".to_string(),
+                    name: "GPT-5.2 Codex".to_string(),
+                    description: "Most advanced agentic coding model".to_string(),
+                },
+                AgentModel {
+                    id: "codex-1".to_string(),
+                    name: "Codex 1 (o3)".to_string(),
+                    description: "Default Codex CLI model based on o3".to_string(),
+                },
+                AgentModel {
+                    id: "codex-mini-latest".to_string(),
+                    name: "Codex Mini".to_string(),
+                    description: "Fast o4-mini based, low-latency editing".to_string(),
+                },
+                AgentModel {
+                    id: "o3-pro".to_string(),
+                    name: "o3 Pro".to_string(),
+                    description: "More compute for complex reasoning".to_string(),
+                },
+            ],
+            "codex-1",
+            Some("OPENAI_MODEL"),
+            Some("--model"),  // CLI flag to pass model
         ),
         // OpenCode - open source coding agent
         // Install: go install github.com/anomaly/opencode@latest
@@ -171,6 +268,16 @@ fn known_agents() -> Vec<AgentConfig> {
             vec!["acp"],
             vec![],
             ".opencode",
+            vec![
+                AgentModel {
+                    id: "default".to_string(),
+                    name: "Default".to_string(),
+                    description: "OpenCode default model".to_string(),
+                },
+            ],
+            "default",
+            None,
+            None,  // No CLI flag for model
         ),
         // GitHub Copilot CLI with ACP support (hidden flag)
         // Install: brew install --cask copilot-cli

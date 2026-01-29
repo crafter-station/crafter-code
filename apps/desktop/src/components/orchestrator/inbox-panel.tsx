@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CheckCheck,
   Inbox,
@@ -8,6 +8,8 @@ import {
   MessageSquare,
   Send,
   Users,
+  Bot,
+  Crown,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -20,6 +22,26 @@ import {
   inboxCount,
   type Message,
 } from "@/lib/ipc/inbox";
+
+// Helper to get a friendly worker name
+function getWorkerLabel(workerId: string, index: number): string {
+  if (workerId === "user") return "You";
+  if (workerId === "system") return "System";
+  if (workerId.includes("leader")) return "Leader";
+  // For worker IDs, show "Worker 1", "Worker 2", etc.
+  return `Worker ${index + 1}`;
+}
+
+// Get worker icon
+function WorkerIcon({
+  workerId,
+  className,
+}: { workerId: string; className?: string }) {
+  if (workerId.includes("leader")) {
+    return <Crown className={cn("size-3", className)} />;
+  }
+  return <Bot className={cn("size-3", className)} />;
+}
 
 interface InboxPanelProps {
   sessionId: string;
@@ -207,19 +229,20 @@ export function InboxPanel({ sessionId, className }: InboxPanelProps) {
             <Users className="size-3" />
             All
           </button>
-          {workers.map((worker) => (
+          {workers.map((worker, idx) => (
             <button
               key={worker}
               type="button"
               onClick={() => setSelectedWorker(worker)}
               className={cn(
-                "px-2 py-0.5 rounded text-[10px] shrink-0 transition-colors truncate max-w-[80px]",
+                "flex items-center gap-1 px-2 py-0.5 rounded text-[10px] shrink-0 transition-colors",
                 selectedWorker === worker
                   ? "bg-accent-orange/20 text-accent-orange"
                   : "text-muted-foreground hover:bg-muted"
               )}
             >
-              {worker.slice(0, 10)}
+              <WorkerIcon workerId={worker} />
+              {getWorkerLabel(worker, idx)}
             </button>
           ))}
         </div>
@@ -236,38 +259,48 @@ export function InboxPanel({ sessionId, className }: InboxPanelProps) {
             </p>
           </div>
         ) : (
-          <div className="p-2 space-y-1">
+          <div className="p-2 space-y-1.5">
             {messages.map((msg) => {
               const style = getMessageStyle(msg);
               const isFromUser = msg.from === "user";
+              const fromIdx = workers.indexOf(msg.from);
+              const toIdx = workers.indexOf(msg.to);
+              const fromLabel = getWorkerLabel(msg.from, fromIdx);
+              const toLabel =
+                msg.to === "broadcast" ? "Everyone" : getWorkerLabel(msg.to, toIdx);
 
               return (
                 <div
                   key={msg.id}
                   className={cn(
-                    "flex flex-col p-1.5 rounded",
-                    style.bg,
+                    "flex flex-col p-2 rounded-md",
+                    style.bg || "bg-muted/30",
                     !msg.read && "border-l-2 border-accent-orange"
                   )}
                 >
                   {/* Header */}
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <span
-                      className={cn(
-                        "text-[9px] font-medium",
-                        isFromUser ? "text-blue-400" : "text-muted-foreground"
-                      )}
-                    >
-                      {msg.from}
-                    </span>
-                    <span className="text-[9px] text-muted-foreground/40">
-                      →
-                    </span>
-                    <span className="text-[9px] text-muted-foreground">
-                      {msg.to}
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="flex items-center gap-1">
+                      {!isFromUser && <WorkerIcon workerId={msg.from} className="text-muted-foreground" />}
+                      <span
+                        className={cn(
+                          "text-[10px] font-medium",
+                          isFromUser ? "text-blue-400" : msg.from.includes("leader") ? "text-amber-400" : "text-foreground/80"
+                        )}
+                      >
+                        {fromLabel}
+                      </span>
+                    </div>
+                    <span className="text-[9px] text-muted-foreground/50">→</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {toLabel}
                     </span>
                     <span className="text-[9px] text-muted-foreground/40 ml-auto">
-                      {new Date(msg.timestamp).toLocaleTimeString([], {
+                      {new Date(
+                        msg.timestamp < 10000000000
+                          ? msg.timestamp * 1000
+                          : msg.timestamp
+                      ).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
@@ -275,7 +308,7 @@ export function InboxPanel({ sessionId, className }: InboxPanelProps) {
                   </div>
 
                   {/* Content */}
-                  <p className={cn("text-[11px]", style.color)}>
+                  <p className={cn("text-[11px] leading-relaxed", style.color)}>
                     {formatMessage(msg)}
                   </p>
                 </div>
@@ -301,8 +334,8 @@ export function InboxPanel({ sessionId, className }: InboxPanelProps) {
             }}
             placeholder={
               selectedWorker
-                ? `Message ${selectedWorker.slice(0, 10)}...`
-                : "Broadcast to all..."
+                ? `Message ${getWorkerLabel(selectedWorker, workers.indexOf(selectedWorker))}...`
+                : "Broadcast to all workers..."
             }
             className="flex-1 bg-transparent text-[11px] outline-none placeholder:text-muted-foreground/50"
           />
