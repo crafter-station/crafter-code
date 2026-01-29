@@ -434,7 +434,7 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
                     </button>
 
                     {showAgentDropdown && (
-                      <div className="absolute bottom-full left-0 mb-1 py-1 bg-popover border border-border rounded-lg shadow-lg z-50 min-w-[160px]">
+                      <div className="absolute top-full left-0 mt-1 py-1 bg-popover border border-border rounded-lg shadow-lg z-50 min-w-[160px]">
                         {availableAgents.filter(a => a.available).map((agent) => (
                           <button
                             key={agent.id}
@@ -473,7 +473,7 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
                       </button>
 
                       {showModelDropdown && (
-                        <div className="absolute bottom-full left-0 mb-1 py-1 bg-popover border border-border rounded-lg shadow-lg z-50 min-w-[180px]">
+                        <div className="absolute top-full left-0 mt-1 py-1 bg-popover border border-border rounded-lg shadow-lg z-50 min-w-[180px]">
                           {selectedAgent.models.map((model) => (
                             <button
                               key={model.id}
