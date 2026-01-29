@@ -52,6 +52,7 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
           task: "(reconnected)",
           status: "running",
           model: "opus",
+          agentType: "claude",
           createdAt: Date.now(),
           updatedAt: Date.now(),
           inputTokens: 0,
@@ -61,6 +62,8 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
           thinkingBuffer: "",
           messages: [],
           toolCalls: [],
+          availableCommands: [],
+          filesTouched: [],
         });
       }
 
@@ -321,7 +324,7 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
         const unsub = onWorkerModeChange(workerId, (modeId) => {
           console.log("[Frontend] Mode changed to:", modeId);
           const actions = storeActionsRef.current;
-          actions.updateSession(sessionId, { mode: modeId as "normal" | "plan" });
+          actions.updateSession(sessionId, { mode: modeId as "default" | "plan" });
         });
 
         unsub.then((cleanup) => {

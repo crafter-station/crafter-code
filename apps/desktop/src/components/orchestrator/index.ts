@@ -1,12 +1,14 @@
-// Main layout (new)
+// Main layout
 export { OrchestratorLayout } from "./orchestrator-layout";
 
-// Legacy components (moved to mvp/)
-export { AgentCard } from "./mvp/agent-card";
-export { ConflictAlert } from "./mvp/conflict-alert";
-export { CostTracker } from "./mvp/cost-tracker";
-export { MessageBubble } from "./mvp/message-bubble";
-export { OrchestratorSidebar } from "./mvp/orchestrator-sidebar";
-export { SessionCard } from "./mvp/session-card";
-export { SessionColumns } from "./mvp/session-columns";
-export { SessionInput } from "./mvp/session-input";
+// Components
+export { AgentCard } from "./agent-card";
+export { ConflictAlert } from "./conflict-alert";
+export { CostTracker } from "./cost-tracker";
+export { MessageBubble } from "./message-bubble";
+export { OrchestratorSidebar } from "./orchestrator-sidebar";
+export { SessionCard } from "./session-card";
+export { SessionColumns } from "./session-columns";
+export { SessionInput } from "./session-input";
+export { CrafterCodeAscii } from "./crafter-code-ascii";
+export { InitialInput } from "./initial-input";
