@@ -310,18 +310,18 @@ export function SessionColumns({ className }: SessionColumnsProps) {
   if (sessions.length === 0) {
     return (
       <div className={cn("flex items-center justify-center h-full", className)}>
-        <div className="flex flex-col items-center gap-8 w-full max-w-xl px-4">
+        <div className="flex flex-col items-center gap-6 w-full max-w-lg px-4">
           <CrafterCodeAscii />
 
-          {/* Input container */}
-          <div className="w-full max-w-md space-y-2">
+          {/* Input container - single unified bar */}
+          <div className="w-full space-y-2">
             {/* Image previews */}
             {images.length > 0 && (
-              <div className="flex gap-2 flex-wrap px-1">
+              <div className="flex gap-1.5 flex-wrap">
                 {images.map((img) => (
                   <div
                     key={img.id}
-                    className="relative group size-14 rounded-lg border border-border overflow-hidden bg-muted/50"
+                    className="relative group size-10 rounded border border-border/50 overflow-hidden bg-muted/30"
                   >
                     {/* biome-ignore lint/a11y/useAltText: preview */}
                     {/* biome-ignore lint/performance/noImgElement: base64 */}
@@ -332,29 +332,28 @@ export function SessionColumns({ className }: SessionColumnsProps) {
                     <button
                       type="button"
                       onClick={() => removeImage(img.id)}
-                      className="absolute -top-1 -right-1 size-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <X className="size-3" />
+                      <X className="size-2.5" />
                     </button>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Input row */}
-            <div className="relative flex items-end gap-2">
-              {/* Attachment button */}
+            {/* Unified input bar */}
+            <div className="relative flex items-center rounded-md border border-border/50 bg-background/60 focus-within:border-accent-orange/40 focus-within:ring-1 focus-within:ring-accent-orange/20 transition-all">
+              {/* Attachment button - inside */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isLaunching}
                 className={cn(
-                  "p-2.5 rounded-lg transition-colors shrink-0",
-                  "border border-border bg-background/80",
-                  "hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed",
-                  "text-muted-foreground hover:text-foreground",
+                  "p-2 pl-3 transition-colors shrink-0",
+                  "text-muted-foreground/50 hover:text-muted-foreground",
+                  "disabled:opacity-40 disabled:cursor-not-allowed",
                 )}
-                title="Attach image (or paste with Cmd+V)"
+                title="Attach image"
               >
                 <Paperclip className="size-4" />
               </button>
@@ -370,48 +369,46 @@ export function SessionColumns({ className }: SessionColumnsProps) {
               />
 
               {/* Text input */}
-              <div className="relative flex-1">
-                <textarea
-                  ref={emptyInputRef}
-                  value={emptyPrompt}
-                  onChange={(e) => setEmptyPrompt(e.target.value)}
-                  onKeyDown={handleEmptyKeyDown}
-                  onPaste={handlePaste}
-                  disabled={isLaunching}
-                  placeholder="What do you want to build?"
-                  rows={1}
-                  className={cn(
-                    "w-full resize-none rounded-lg border border-border bg-background/80 px-4 py-3 pr-12",
-                    "text-sm placeholder:text-muted-foreground/40",
-                    "focus:outline-none focus:ring-2 focus:ring-accent-orange/30 focus:border-accent-orange/50",
-                    "disabled:opacity-50 disabled:cursor-not-allowed",
-                    "transition-all"
-                  )}
-                  style={{ minHeight: "48px", maxHeight: "120px" }}
-                />
-                <button
-                  type="button"
-                  onClick={handleEmptySubmit}
-                  disabled={!canSubmit}
-                  className={cn(
-                    "absolute right-2 bottom-2",
-                    "p-2 rounded-md transition-all",
-                    "disabled:opacity-30 disabled:cursor-not-allowed",
-                    canSubmit
-                      ? "bg-accent-orange text-white hover:bg-accent-orange/90"
-                      : "bg-muted text-muted-foreground",
-                  )}
-                  title="Send (Enter)"
-                >
-                  <ArrowUp className="size-4" />
-                </button>
-              </div>
-            </div>
-          </div>
+              <textarea
+                ref={emptyInputRef}
+                value={emptyPrompt}
+                onChange={(e) => setEmptyPrompt(e.target.value)}
+                onKeyDown={handleEmptyKeyDown}
+                onPaste={handlePaste}
+                disabled={isLaunching}
+                placeholder="What do you want to build?"
+                rows={1}
+                className={cn(
+                  "flex-1 resize-none bg-transparent py-2.5 pr-2",
+                  "text-sm placeholder:text-muted-foreground/30",
+                  "focus:outline-none",
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
+                )}
+                style={{ minHeight: "40px", maxHeight: "80px" }}
+              />
 
-          <p className="text-xs text-muted-foreground/40">
-            Press Enter to launch with Claude
-          </p>
+              {/* Submit button - inside */}
+              <button
+                type="button"
+                onClick={handleEmptySubmit}
+                disabled={!canSubmit}
+                className={cn(
+                  "p-2 pr-3 transition-all shrink-0",
+                  "disabled:opacity-20 disabled:cursor-not-allowed",
+                  canSubmit
+                    ? "text-accent-orange hover:text-accent-orange/80"
+                    : "text-muted-foreground/30",
+                )}
+                title="Send"
+              >
+                <ArrowUp className="size-4" />
+              </button>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground/30 text-center">
+              Enter to launch
+            </p>
+          </div>
         </div>
       </div>
     );
