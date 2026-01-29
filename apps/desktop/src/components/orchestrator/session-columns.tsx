@@ -368,34 +368,34 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
 
             {/* Input container */}
             <div className="space-y-3">
-              {/* Image previews */}
-              {images.length > 0 && (
-                <div className="flex gap-2 flex-wrap">
-                  {images.map((img) => (
-                    <div
-                      key={img.id}
-                      className="relative group size-12 rounded-md border border-border overflow-hidden bg-muted/30"
-                    >
-                      {/* biome-ignore lint/a11y/useAltText: preview */}
-                      {/* biome-ignore lint/performance/noImgElement: base64 */}
-                      <img
-                        src={img.preview}
-                        className="size-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(img.id)}
-                        className="absolute -top-1 -right-1 size-5 rounded-full bg-background border border-border text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:text-foreground"
-                      >
-                        <X className="size-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
               {/* Main input */}
               <div className="rounded-xl border border-border bg-card shadow-sm">
+                {/* Image previews - inside the card */}
+                {images.length > 0 && (
+                  <div className="flex gap-3 flex-wrap p-3 pb-0">
+                    {images.map((img) => (
+                      <div
+                        key={img.id}
+                        className="relative group size-24 rounded-lg border border-border overflow-hidden bg-muted/30"
+                      >
+                        {/* biome-ignore lint/a11y/useAltText: preview */}
+                        {/* biome-ignore lint/performance/noImgElement: base64 */}
+                        <img
+                          src={img.preview}
+                          className="size-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(img.id)}
+                          className="absolute top-1 right-1 size-6 rounded-full bg-background/80 border border-border text-muted-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:text-foreground hover:bg-background"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <textarea
                   ref={emptyInputRef}
                   value={emptyPrompt}
