@@ -1,12 +1,12 @@
 export function CrafterCodeAscii() {
   return (
-    <div className="flex flex-col items-center gap-1 select-none">
-      <h1 className="text-4xl font-bold tracking-tight text-accent-orange">
-        CRAFTER
-      </h1>
-      <h2 className="text-2xl font-medium tracking-[0.2em] text-accent-orange/60">
-        CODE
-      </h2>
-    </div>
+    <pre className="text-[8px] font-mono text-accent-orange whitespace-pre leading-tight select-none">
+{`                           .8888b   dP                                                dP
+                           88   "   88                                                88
+.d8888b. 88d888b. .d8888b. 88aaa  d8888P .d8888b. 88d888b.    .d8888b. .d8888b. .d888b88 .d8888b.
+88'  \`"" 88'  \`88 88'  \`88 88       88   88ooood8 88'  \`88    88'  \`"" 88'  \`88 88'  \`88 88ooood8
+88.  ... 88       88.  .88 88       88   88.  ... 88          88.  ... 88.  .88 88.  .88 88.  ...
+\`88888P' dP       \`88888P8 dP       dP   \`88888P' dP          \`88888P' \`88888P' \`88888P8 \`88888P'`}
+    </pre>
   );
 }
