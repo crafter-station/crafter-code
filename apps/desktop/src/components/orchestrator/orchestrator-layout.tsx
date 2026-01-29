@@ -18,7 +18,7 @@ interface OrchestratorLayoutProps {
 }
 
 export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
-  const [showCoordinationPanel, setShowCoordinationPanel] = useState(true);
+  const [showCoordinationPanel, setShowCoordinationPanel] = useState(false);
 
   const {
     sessions,
