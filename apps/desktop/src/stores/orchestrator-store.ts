@@ -107,6 +107,8 @@ export interface AvailableCommand {
   name: string;
   description: string;
   source?: "user" | "project" | "builtin";
+  /** Type: "command" uses /name, "skill" uses @name */
+  type?: "command" | "skill";
   input?: {
     hint?: string;
   };

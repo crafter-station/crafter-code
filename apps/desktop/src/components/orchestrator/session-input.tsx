@@ -98,7 +98,8 @@ export function SessionInput({
 
   // Handle command selection from autocomplete
   const handleSelectCommand = useCallback((cmd: AvailableCommand) => {
-    const newValue = `/${cmd.name}${cmd.input?.hint ? " " : ""}`;
+    const prefix = cmd.type === "skill" ? "@" : "/";
+    const newValue = `${prefix}${cmd.name}${cmd.input?.hint ? " " : ""}`;
     setValue(newValue);
     inputRef.current?.focus();
   }, []);

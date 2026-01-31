@@ -228,7 +228,8 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
 
   // Handle command selection from autocomplete
   const handleSelectCommand = useCallback((cmd: AvailableCommand) => {
-    const newValue = `/${cmd.name}${cmd.input?.hint ? " " : ""}`;
+    const prefix = cmd.type === "skill" ? "@" : "/";
+    const newValue = `${prefix}${cmd.name}${cmd.input?.hint ? " " : ""}`;
     setEmptyPrompt(newValue);
     emptyInputRef.current?.focus();
   }, []);

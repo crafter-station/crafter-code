@@ -287,6 +287,7 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         name: cmd.name,
         description: cmd.description,
         source: "builtin",
+        type: "command",
         input: cmd.inputHint ? { hint: cmd.inputHint } : undefined,
       });
     }
@@ -297,6 +298,7 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         name: cmd.name,
         description: cmd.description,
         source: "user",
+        type: "command",
         input: cmd.inputHint ? { hint: cmd.inputHint } : undefined,
       });
     }
@@ -307,6 +309,7 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         name: cmd.name,
         description: cmd.description,
         source: "project",
+        type: "command",
         input: cmd.inputHint ? { hint: cmd.inputHint } : undefined,
       });
     }
@@ -317,6 +320,7 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         name: skill.name,
         description: skill.description,
         source: "user",
+        type: "skill",
       });
     }
 
@@ -326,6 +330,7 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         name: skill.name,
         description: skill.description,
         source: "project",
+        type: "skill",
       });
     }
 

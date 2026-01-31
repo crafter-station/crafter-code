@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Command } from "lucide-react";
+import { Command, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AvailableCommand } from "@/stores/orchestrator-store";
+
+type TriggerMode = "command" | "skill" | null;
 
 interface CommandAutocompleteProps {
   commands: AvailableCommand[];
@@ -23,29 +25,35 @@ export function CommandAutocomplete({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Check if we should show the autocomplete
-  const showAutocomplete = useMemo(() => {
-    if (!inputValue.startsWith("/")) return false;
-    // Don't show if there's a space after the command (user is typing args)
-    const hasSpace = inputValue.includes(" ");
-    return !hasSpace;
+  // Check if we should show the autocomplete and what mode
+  const triggerMode: TriggerMode = useMemo(() => {
+    if (inputValue.startsWith("/") && !inputValue.includes(" ")) return "command";
+    if (inputValue.startsWith("@") && !inputValue.includes(" ")) return "skill";
+    return null;
   }, [inputValue]);
 
-  // Filter commands based on input
+  const showAutocomplete = triggerMode !== null;
+
+  // Filter items based on input and trigger mode
   const filteredCommands = useMemo(() => {
-    if (!showAutocomplete) return [];
+    if (!triggerMode) return [];
 
-    const query = inputValue.slice(1).toLowerCase(); // Remove the "/" prefix
-    if (!query) return commands.slice(0, 8); // Show first 8 when just "/" is typed
+    const query = inputValue.slice(1).toLowerCase(); // Remove the "/" or "@" prefix
 
-    return commands
+    // Filter by type based on trigger mode
+    const typeFilter = triggerMode === "command" ? "command" : "skill";
+    const relevantItems = commands.filter((cmd) => cmd.type === typeFilter);
+
+    if (!query) return relevantItems.slice(0, 8); // Show first 8 when just "/" or "@" is typed
+
+    return relevantItems
       .filter(
         (cmd) =>
           cmd.name.toLowerCase().includes(query) ||
           cmd.description.toLowerCase().includes(query)
       )
       .slice(0, 8);
-  }, [commands, inputValue, showAutocomplete]);
+  }, [commands, inputValue, triggerMode]);
 
   // Reset selected index when filtered commands change
   useEffect(() => {
@@ -121,7 +129,7 @@ export function CommandAutocomplete({
     >
       <div className="px-2 py-1.5 border-b border-border bg-muted/30">
         <span className="text-[10px] text-muted-foreground font-medium">
-          Commands
+          {triggerMode === "skill" ? "Skills" : "Commands"}
         </span>
       </div>
       <div className="py-1">
@@ -139,11 +147,15 @@ export function CommandAutocomplete({
                 : "text-foreground/80 hover:bg-muted"
             )}
           >
-            <Command className="size-3.5 mt-0.5 shrink-0 text-muted-foreground" />
+            {triggerMode === "skill" ? (
+              <Sparkles className="size-3.5 mt-0.5 shrink-0 text-muted-foreground" />
+            ) : (
+              <Command className="size-3.5 mt-0.5 shrink-0 text-muted-foreground" />
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-mono font-medium">
-                  /{cmd.name}
+                  {triggerMode === "skill" ? "@" : "/"}{cmd.name}
                 </span>
                 {cmd.source && (
                   <span
