@@ -184,10 +184,13 @@ interface OrchestratorState {
   activeSessionId: string | null;
   permissionRequests: PermissionRequest[];
   pendingInput: { sessionId: string; text: string } | null;
+  /** Workspace-wide commands and skills (loaded by sidebar, shared across inputs) */
+  workspaceCommands: AvailableCommand[];
 
   // Actions
   setPendingInput: (sessionId: string, text: string) => void;
   clearPendingInput: () => void;
+  setWorkspaceCommands: (commands: AvailableCommand[]) => void;
   setSession: (session: OrchestratorSession) => void;
   updateSession: (id: string, updates: Partial<OrchestratorSession>) => void;
   removeSession: (id: string) => void;
@@ -262,9 +265,11 @@ export const useOrchestratorStore = create<OrchestratorState>()(
       activeSessionId: null,
       permissionRequests: [],
       pendingInput: null,
+      workspaceCommands: [],
 
       setPendingInput: (sessionId, text) => set({ pendingInput: { sessionId, text } }),
       clearPendingInput: () => set({ pendingInput: null }),
+      setWorkspaceCommands: (commands) => set({ workspaceCommands: commands }),
 
       setSession: (session) => {
         set((state) => {

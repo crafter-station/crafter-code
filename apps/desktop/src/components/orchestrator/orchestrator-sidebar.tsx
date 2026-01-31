@@ -53,6 +53,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import {
+  type AvailableCommand,
   type OrchestratorSession,
   useOrchestratorStore,
 } from "@/stores/orchestrator-store";
@@ -152,6 +153,7 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
     getAllWorkers,
     getActiveSession,
     setPendingInput,
+    setWorkspaceCommands,
   } = useOrchestratorStore();
 
   const allWorkers = getAllWorkers();
@@ -274,6 +276,61 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
 
   // Total skills count
   const totalSkillsCount = globalSkills.length + projectSkills.length;
+
+  // Sync workspace commands to store for sharing with input components
+  useEffect(() => {
+    const commands: AvailableCommand[] = [];
+
+    // Add builtin commands
+    for (const cmd of builtinCommands) {
+      commands.push({
+        name: cmd.name,
+        description: cmd.description,
+        source: "builtin",
+        input: cmd.inputHint ? { hint: cmd.inputHint } : undefined,
+      });
+    }
+
+    // Add global/user commands
+    for (const cmd of globalCommands) {
+      commands.push({
+        name: cmd.name,
+        description: cmd.description,
+        source: "user",
+        input: cmd.inputHint ? { hint: cmd.inputHint } : undefined,
+      });
+    }
+
+    // Add project commands
+    for (const cmd of projectCommands) {
+      commands.push({
+        name: cmd.name,
+        description: cmd.description,
+        source: "project",
+        input: cmd.inputHint ? { hint: cmd.inputHint } : undefined,
+      });
+    }
+
+    // Add global skills
+    for (const skill of globalSkills) {
+      commands.push({
+        name: skill.name,
+        description: skill.description,
+        source: "user",
+      });
+    }
+
+    // Add project skills
+    for (const skill of projectSkills) {
+      commands.push({
+        name: skill.name,
+        description: skill.description,
+        source: "project",
+      });
+    }
+
+    setWorkspaceCommands(commands);
+  }, [builtinCommands, globalCommands, projectCommands, globalSkills, projectSkills, setWorkspaceCommands]);
 
   // Handle opening directory picker (for new agent form)
   const handleBrowseDirectory = useCallback(async () => {

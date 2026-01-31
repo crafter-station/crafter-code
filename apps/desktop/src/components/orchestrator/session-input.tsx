@@ -19,10 +19,6 @@ import {
 import { ArrowUp, FileText, Paperclip, Square, X } from "lucide-react";
 
 import type { ImageAttachment } from "@/lib/ipc/orchestrator";
-import {
-  listWorkspaceCommands,
-  listWorkspaceSkills,
-} from "@/lib/ipc/skills";
 import { cn } from "@/lib/utils";
 
 import type { AvailableCommand } from "@/stores/orchestrator-store";
@@ -74,86 +70,12 @@ export function SessionInput({
   const [viewingText, setViewingText] = useState<TextAttachment | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { pendingInput, clearPendingInput, getSession } = useOrchestratorStore();
-
-  // Load skills and commands from workspace (via IPC)
-  const [workspaceCommands, setWorkspaceCommands] = useState<AvailableCommand[]>([]);
+  const { pendingInput, clearPendingInput, getSession, workspaceCommands } = useOrchestratorStore();
 
   // Get session info for context
   const session = getSession(sessionId);
-  const agentId = session?.agentType || "claude";
-  const projectDir = session?.cwd;
 
-  // Load skills and commands when session context changes
-  useEffect(() => {
-    async function loadWorkspaceData() {
-      try {
-        // Load skills and commands in parallel
-        const [skillsResult, commandsResult] = await Promise.all([
-          listWorkspaceSkills(projectDir, agentId),
-          listWorkspaceCommands(projectDir, agentId),
-        ]);
-
-        const commands: AvailableCommand[] = [];
-
-        // Add builtin commands
-        for (const cmd of commandsResult.builtinCommands) {
-          commands.push({
-            name: cmd.name,
-            description: cmd.description,
-            source: "builtin",
-            input: cmd.inputHint ? { hint: cmd.inputHint } : undefined,
-          });
-        }
-
-        // Add global/user commands
-        for (const cmd of commandsResult.globalCommands) {
-          commands.push({
-            name: cmd.name,
-            description: cmd.description,
-            source: "user",
-            input: cmd.inputHint ? { hint: cmd.inputHint } : undefined,
-          });
-        }
-
-        // Add project commands
-        for (const cmd of commandsResult.projectCommands) {
-          commands.push({
-            name: cmd.name,
-            description: cmd.description,
-            source: "project",
-            input: cmd.inputHint ? { hint: cmd.inputHint } : undefined,
-          });
-        }
-
-        // Add global skills
-        for (const skill of skillsResult.globalSkills) {
-          commands.push({
-            name: skill.name,
-            description: skill.description,
-            source: "user",
-          });
-        }
-
-        // Add project skills
-        for (const skill of skillsResult.projectSkills) {
-          commands.push({
-            name: skill.name,
-            description: skill.description,
-            source: "project",
-          });
-        }
-
-        setWorkspaceCommands(commands);
-      } catch (err) {
-        console.error("[SessionInput] Failed to load workspace data:", err);
-      }
-    }
-
-    loadWorkspaceData();
-  }, [agentId, projectDir]);
-
-  // Combine workspace commands with ACP commands from session workers
+  // Combine workspace commands (from store, loaded by sidebar) with ACP commands from session workers
   const availableCommands = useMemo(() => {
     const commandMap = new Map<string, AvailableCommand>();
 
