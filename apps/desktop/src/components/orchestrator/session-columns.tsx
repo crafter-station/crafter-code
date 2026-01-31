@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -23,9 +24,11 @@ import {
 } from "@/lib/ipc/orchestrator";
 import { cn } from "@/lib/utils";
 
+import type { AvailableCommand } from "@/stores/orchestrator-store";
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
 import { SessionCard } from "./session-card";
 import { AgentIcon } from "./agent-icons";
+import { CommandAutocomplete } from "./command-autocomplete";
 import { CrafterCodeAscii } from "./crafter-code-ascii";
 
 interface SessionColumnsProps {
@@ -200,6 +203,28 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
   const selectedModel = selectedAgent?.models.find((m) => m.id === selectedModelId)
     || selectedAgent?.models.find((m) => m.id === selectedAgent.default_model)
     || selectedAgent?.models[0];
+
+  // Get available commands from any previous sessions
+  const availableCommands = useMemo(() => {
+    const commandMap = new Map<string, AvailableCommand>();
+    for (const session of sessions) {
+      for (const worker of session.workers) {
+        for (const cmd of worker.availableCommands || []) {
+          if (!commandMap.has(cmd.name)) {
+            commandMap.set(cmd.name, cmd);
+          }
+        }
+      }
+    }
+    return Array.from(commandMap.values());
+  }, [sessions]);
+
+  // Handle command selection from autocomplete
+  const handleSelectCommand = useCallback((cmd: AvailableCommand) => {
+    const newValue = `/${cmd.name}${cmd.input?.hint ? " " : ""}`;
+    setEmptyPrompt(newValue);
+    emptyInputRef.current?.focus();
+  }, []);
 
   // Convert file to base64
   const fileToBase64 = useCallback((file: File): Promise<string> => {
@@ -480,23 +505,32 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
                   </div>
                 )}
 
-                <textarea
-                  ref={emptyInputRef}
-                  value={emptyPrompt}
-                  onChange={(e) => setEmptyPrompt(e.target.value)}
-                  onKeyDown={handleEmptyKeyDown}
-                  onPaste={handlePaste}
-                  disabled={isLaunching}
-                  placeholder="What do you want to build?"
-                  rows={2}
-                  className={cn(
-                    "w-full resize-none bg-transparent px-4 pt-4 pb-2",
-                    "text-[15px] placeholder:text-muted-foreground/50",
-                    "focus:outline-none",
-                    "disabled:opacity-50 disabled:cursor-not-allowed",
-                  )}
-                  style={{ minHeight: "72px", maxHeight: "200px" }}
-                />
+                {/* Textarea with command autocomplete */}
+                <div className="relative">
+                  <CommandAutocomplete
+                    commands={availableCommands}
+                    inputValue={emptyPrompt}
+                    onSelectCommand={handleSelectCommand}
+                    inputRef={emptyInputRef}
+                  />
+                  <textarea
+                    ref={emptyInputRef}
+                    value={emptyPrompt}
+                    onChange={(e) => setEmptyPrompt(e.target.value)}
+                    onKeyDown={handleEmptyKeyDown}
+                    onPaste={handlePaste}
+                    disabled={isLaunching}
+                    placeholder="What do you want to build?"
+                    rows={2}
+                    className={cn(
+                      "w-full resize-none bg-transparent px-4 pt-4 pb-2",
+                      "text-[15px] placeholder:text-muted-foreground/50",
+                      "focus:outline-none",
+                      "disabled:opacity-50 disabled:cursor-not-allowed",
+                    )}
+                    style={{ minHeight: "72px", maxHeight: "200px" }}
+                  />
+                </div>
 
                 {/* Bottom toolbar */}
                 <div className="flex items-center gap-0.5 px-2 pb-2">

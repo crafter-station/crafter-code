@@ -5,6 +5,7 @@ import {
   type KeyboardEvent,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -20,7 +21,9 @@ import { ArrowUp, FileText, Paperclip, Square, X } from "lucide-react";
 import type { ImageAttachment } from "@/lib/ipc/orchestrator";
 import { cn } from "@/lib/utils";
 
+import type { AvailableCommand } from "@/stores/orchestrator-store";
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
+import { CommandAutocomplete } from "./command-autocomplete";
 
 interface SessionInputProps {
   sessionId: string;
@@ -67,7 +70,31 @@ export function SessionInput({
   const [viewingText, setViewingText] = useState<TextAttachment | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { pendingInput, clearPendingInput } = useOrchestratorStore();
+  const { pendingInput, clearPendingInput, getSession } = useOrchestratorStore();
+
+  // Get available commands from session workers
+  const availableCommands = useMemo(() => {
+    const session = getSession(sessionId);
+    if (!session) return [];
+
+    // Collect commands from all workers and dedupe by name
+    const commandMap = new Map<string, AvailableCommand>();
+    for (const worker of session.workers) {
+      for (const cmd of worker.availableCommands || []) {
+        if (!commandMap.has(cmd.name)) {
+          commandMap.set(cmd.name, cmd);
+        }
+      }
+    }
+    return Array.from(commandMap.values());
+  }, [sessionId, getSession]);
+
+  // Handle command selection from autocomplete
+  const handleSelectCommand = useCallback((cmd: AvailableCommand) => {
+    const newValue = `/${cmd.name}${cmd.input?.hint ? " " : ""}`;
+    setValue(newValue);
+    inputRef.current?.focus();
+  }, []);
 
   // Auto-resize textarea
   const adjustTextareaHeight = useCallback(() => {
@@ -326,6 +353,14 @@ export function SessionInput({
 
         {/* Input row */}
         <div className="relative flex items-end gap-1">
+          {/* Command autocomplete */}
+          <CommandAutocomplete
+            commands={availableCommands}
+            inputValue={value}
+            onSelectCommand={handleSelectCommand}
+            inputRef={inputRef}
+          />
+
           {/* Attachment button */}
           <button
             type="button"

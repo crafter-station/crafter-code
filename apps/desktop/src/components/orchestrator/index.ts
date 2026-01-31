@@ -3,6 +3,7 @@ export { OrchestratorLayout } from "./orchestrator-layout";
 
 // Components
 export { AgentCard } from "./agent-card";
+export { CommandAutocomplete } from "./command-autocomplete";
 export { ConflictAlert } from "./conflict-alert";
 export { CostTracker } from "./cost-tracker";
 export { MessageBubble } from "./message-bubble";
