@@ -19,6 +19,10 @@ import {
 import { ArrowUp, FileText, Paperclip, Square, X } from "lucide-react";
 
 import type { ImageAttachment } from "@/lib/ipc/orchestrator";
+import {
+  listWorkspaceCommands,
+  listWorkspaceSkills,
+} from "@/lib/ipc/skills";
 import { cn } from "@/lib/utils";
 
 import type { AvailableCommand } from "@/stores/orchestrator-store";
@@ -72,40 +76,103 @@ export function SessionInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { pendingInput, clearPendingInput, getSession } = useOrchestratorStore();
 
-  // Default commands (shown when no ACP commands available)
-  const defaultCommands: AvailableCommand[] = useMemo(() => [
-    { name: "help", description: "Get help with using the agent", source: "builtin" },
-    { name: "plan", description: "Create an execution plan before making changes", source: "builtin", input: { hint: "describe what to build" } },
-    { name: "review", description: "Review recent changes and suggest improvements", source: "builtin" },
-    { name: "test", description: "Run tests and show results", source: "builtin" },
-    { name: "commit", description: "Stage and commit changes with a message", source: "builtin", input: { hint: "commit message" } },
-    { name: "pr", description: "Create a pull request from current changes", source: "builtin", input: { hint: "PR title" } },
-    { name: "undo", description: "Undo the last change", source: "builtin" },
-    { name: "clear", description: "Clear conversation history", source: "builtin" },
-  ], []);
+  // Load skills and commands from workspace (via IPC)
+  const [workspaceCommands, setWorkspaceCommands] = useState<AvailableCommand[]>([]);
 
-  // Get available commands from session workers, fallback to defaults
+  // Get session info for context
+  const session = getSession(sessionId);
+  const agentId = session?.agentType || "claude";
+  const projectDir = session?.cwd;
+
+  // Load skills and commands when session context changes
+  useEffect(() => {
+    async function loadWorkspaceData() {
+      try {
+        // Load skills and commands in parallel
+        const [skillsResult, commandsResult] = await Promise.all([
+          listWorkspaceSkills(projectDir, agentId),
+          listWorkspaceCommands(projectDir, agentId),
+        ]);
+
+        const commands: AvailableCommand[] = [];
+
+        // Add builtin commands
+        for (const cmd of commandsResult.builtinCommands) {
+          commands.push({
+            name: cmd.name,
+            description: cmd.description,
+            source: "builtin",
+            input: cmd.inputHint ? { hint: cmd.inputHint } : undefined,
+          });
+        }
+
+        // Add global/user commands
+        for (const cmd of commandsResult.globalCommands) {
+          commands.push({
+            name: cmd.name,
+            description: cmd.description,
+            source: "user",
+            input: cmd.inputHint ? { hint: cmd.inputHint } : undefined,
+          });
+        }
+
+        // Add project commands
+        for (const cmd of commandsResult.projectCommands) {
+          commands.push({
+            name: cmd.name,
+            description: cmd.description,
+            source: "project",
+            input: cmd.inputHint ? { hint: cmd.inputHint } : undefined,
+          });
+        }
+
+        // Add global skills
+        for (const skill of skillsResult.globalSkills) {
+          commands.push({
+            name: skill.name,
+            description: skill.description,
+            source: "user",
+          });
+        }
+
+        // Add project skills
+        for (const skill of skillsResult.projectSkills) {
+          commands.push({
+            name: skill.name,
+            description: skill.description,
+            source: "project",
+          });
+        }
+
+        setWorkspaceCommands(commands);
+      } catch (err) {
+        console.error("[SessionInput] Failed to load workspace data:", err);
+      }
+    }
+
+    loadWorkspaceData();
+  }, [agentId, projectDir]);
+
+  // Combine workspace commands with ACP commands from session workers
   const availableCommands = useMemo(() => {
-    const session = getSession(sessionId);
-    if (!session) return defaultCommands;
-
-    // Collect commands from all workers and dedupe by name
     const commandMap = new Map<string, AvailableCommand>();
-    for (const worker of session.workers) {
-      for (const cmd of worker.availableCommands || []) {
-        if (!commandMap.has(cmd.name)) {
+
+    // First add workspace commands
+    for (const cmd of workspaceCommands) {
+      commandMap.set(cmd.name, cmd);
+    }
+
+    // Then add/override with commands from session workers (ACP AvailableCommandsUpdate)
+    if (session) {
+      for (const worker of session.workers) {
+        for (const cmd of worker.availableCommands || []) {
           commandMap.set(cmd.name, cmd);
         }
       }
     }
 
-    // If no commands from workers, use defaults
-    if (commandMap.size === 0) {
-      return defaultCommands;
-    }
-
     return Array.from(commandMap.values());
-  }, [sessionId, getSession, defaultCommands]);
+  }, [workspaceCommands, session]);
 
   // Handle command selection from autocomplete
   const handleSelectCommand = useCallback((cmd: AvailableCommand) => {
