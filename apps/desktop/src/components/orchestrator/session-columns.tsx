@@ -204,9 +204,23 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
     || selectedAgent?.models.find((m) => m.id === selectedAgent.default_model)
     || selectedAgent?.models[0];
 
-  // Get available commands from any previous sessions
+  // Default commands (shown when no ACP commands available)
+  const defaultCommands: AvailableCommand[] = useMemo(() => [
+    { name: "help", description: "Get help with using the agent", source: "builtin" },
+    { name: "init", description: "Initialize a new project in the current directory", source: "builtin" },
+    { name: "status", description: "Show current git status and project state", source: "builtin" },
+    { name: "plan", description: "Create an execution plan before making changes", source: "builtin", input: { hint: "describe what to build" } },
+    { name: "review", description: "Review recent changes and suggest improvements", source: "builtin" },
+    { name: "test", description: "Run tests and show results", source: "builtin" },
+    { name: "commit", description: "Stage and commit changes with a message", source: "builtin", input: { hint: "commit message" } },
+    { name: "pr", description: "Create a pull request from current changes", source: "builtin", input: { hint: "PR title" } },
+  ], []);
+
+  // Get available commands from any previous sessions, fallback to defaults
   const availableCommands = useMemo(() => {
     const commandMap = new Map<string, AvailableCommand>();
+
+    // First add commands from sessions
     for (const session of sessions) {
       for (const worker of session.workers) {
         for (const cmd of worker.availableCommands || []) {
@@ -216,8 +230,14 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
         }
       }
     }
+
+    // If no commands from sessions, use defaults
+    if (commandMap.size === 0) {
+      return defaultCommands;
+    }
+
     return Array.from(commandMap.values());
-  }, [sessions]);
+  }, [sessions, defaultCommands]);
 
   // Handle command selection from autocomplete
   const handleSelectCommand = useCallback((cmd: AvailableCommand) => {

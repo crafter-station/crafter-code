@@ -72,10 +72,22 @@ export function SessionInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { pendingInput, clearPendingInput, getSession } = useOrchestratorStore();
 
-  // Get available commands from session workers
+  // Default commands (shown when no ACP commands available)
+  const defaultCommands: AvailableCommand[] = useMemo(() => [
+    { name: "help", description: "Get help with using the agent", source: "builtin" },
+    { name: "plan", description: "Create an execution plan before making changes", source: "builtin", input: { hint: "describe what to build" } },
+    { name: "review", description: "Review recent changes and suggest improvements", source: "builtin" },
+    { name: "test", description: "Run tests and show results", source: "builtin" },
+    { name: "commit", description: "Stage and commit changes with a message", source: "builtin", input: { hint: "commit message" } },
+    { name: "pr", description: "Create a pull request from current changes", source: "builtin", input: { hint: "PR title" } },
+    { name: "undo", description: "Undo the last change", source: "builtin" },
+    { name: "clear", description: "Clear conversation history", source: "builtin" },
+  ], []);
+
+  // Get available commands from session workers, fallback to defaults
   const availableCommands = useMemo(() => {
     const session = getSession(sessionId);
-    if (!session) return [];
+    if (!session) return defaultCommands;
 
     // Collect commands from all workers and dedupe by name
     const commandMap = new Map<string, AvailableCommand>();
@@ -86,8 +98,14 @@ export function SessionInput({
         }
       }
     }
+
+    // If no commands from workers, use defaults
+    if (commandMap.size === 0) {
+      return defaultCommands;
+    }
+
     return Array.from(commandMap.values());
-  }, [sessionId, getSession]);
+  }, [sessionId, getSession, defaultCommands]);
 
   // Handle command selection from autocomplete
   const handleSelectCommand = useCallback((cmd: AvailableCommand) => {
