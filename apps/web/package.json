@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.37.1",
+    "@clerk/themes": "^2.4.51",
     "@crafter-code/ui": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "class-variance-authority": "^0.7.1",

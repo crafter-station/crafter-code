@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@clerk/themes/shadcn.css";
 
 @source "../../node_modules/@crafter-code/ui/src/**/*.tsx";
 @source "../../../packages/ui/src/**/*.tsx";
