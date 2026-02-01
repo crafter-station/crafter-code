@@ -201,10 +201,22 @@ pub fn load_skill_body(path: &Path) -> Result<String, SkillLoadError> {
     Ok(body)
 }
 
+/// All known provider config directories
+const ALL_PROVIDERS: &[&str] = &[".claude", ".gemini", ".codex", ".copilot", ".opencode"];
+
 /// Get default skill directories in priority order
 ///
 /// Returns directories to search for skills, with later entries having higher priority
 /// (file-based skills override earlier ones with the same name).
+///
+/// Skills are aggregated from ALL providers so they're available universally.
+/// Priority order (lowest to highest):
+/// 1. ~/.crafter-code/skills/ (global shared)
+/// 2. {project}/.crafter-code/skills/ (project shared)
+/// 3. ~/.{other-providers}/skills/ (all other providers' global skills)
+/// 4. {project}/.{other-providers}/skills/ (all other providers' project skills)
+/// 5. ~/.{current-provider}/skills/ (current provider global)
+/// 6. {project}/.{current-provider}/skills/ (current provider local - highest priority)
 ///
 /// # Arguments
 /// * `project_dir` - Optional project directory for project-local skills
@@ -212,20 +224,51 @@ pub fn load_skill_body(path: &Path) -> Result<String, SkillLoadError> {
 ///                  If None, defaults to ".claude" for backward compatibility
 ///
 /// # Returns
-/// Vector of skill directories to search (in order: user global, project local)
+/// Vector of skill directories to search (in priority order)
 pub fn get_skill_directories(project_dir: Option<&Path>, config_dir: Option<&str>) -> Vec<PathBuf> {
     let mut dirs = Vec::new();
-    let config = config_dir.unwrap_or(".claude");
+    let current_provider = config_dir.unwrap_or(".claude");
 
-    // 1. User global: ~/.{config_dir}/skills/
+    // 1. User global shared: ~/.crafter-code/skills/
     if let Some(home) = dirs::home_dir() {
-        let user_skills = home.join(config).join("skills");
+        let shared_skills = home.join(".crafter-code").join("skills");
+        dirs.push(shared_skills);
+    }
+
+    // 2. Project shared: {project}/.crafter-code/skills/
+    if let Some(project) = project_dir {
+        let project_shared = project.join(".crafter-code").join("skills");
+        dirs.push(project_shared);
+    }
+
+    // 3-4. All OTHER providers (lower priority than current)
+    for provider in ALL_PROVIDERS {
+        if *provider == current_provider {
+            continue; // Skip current provider, add it last
+        }
+
+        // Global skills from other provider
+        if let Some(home) = dirs::home_dir() {
+            let provider_global = home.join(provider).join("skills");
+            dirs.push(provider_global);
+        }
+
+        // Project skills from other provider
+        if let Some(project) = project_dir {
+            let provider_project = project.join(provider).join("skills");
+            dirs.push(provider_project);
+        }
+    }
+
+    // 5. Current provider global: ~/.{current_provider}/skills/
+    if let Some(home) = dirs::home_dir() {
+        let user_skills = home.join(current_provider).join("skills");
         dirs.push(user_skills);
     }
 
-    // 2. Project local: {project}/.{config_dir}/skills/
+    // 6. Current provider project: {project}/.{current_provider}/skills/ (highest priority)
     if let Some(project) = project_dir {
-        let project_skills = project.join(config).join("skills");
+        let project_skills = project.join(current_provider).join("skills");
         dirs.push(project_skills);
     }
 
@@ -324,9 +367,16 @@ pub fn discover_commands(dir: &Path) -> Vec<CommandMetadata> {
 
 /// Get default command directories
 ///
-/// Returns directories to search for commands:
-/// 1. ~/.{config_dir}/commands/ (global)
-/// 2. {project}/.{config_dir}/commands/ (project)
+/// Returns directories to search for commands in priority order.
+/// Commands are aggregated from ALL providers so they're available universally.
+///
+/// Priority order (lowest to highest):
+/// 1. ~/.crafter-code/commands/ (global shared)
+/// 2. {project}/.crafter-code/commands/ (project shared)
+/// 3. ~/.{other-providers}/commands/ (all other providers' global)
+/// 4. {project}/.{other-providers}/commands/ (all other providers' project)
+/// 5. ~/.{current-provider}/commands/ (current provider global)
+/// 6. {project}/.{current-provider}/commands/ (current provider local - highest priority)
 ///
 /// # Arguments
 /// * `project_dir` - Optional project directory for project-local commands
@@ -334,21 +384,169 @@ pub fn discover_commands(dir: &Path) -> Vec<CommandMetadata> {
 ///                  If None, defaults to ".claude" for backward compatibility
 pub fn get_command_directories(project_dir: Option<&Path>, config_dir: Option<&str>) -> Vec<PathBuf> {
     let mut dirs = Vec::new();
-    let config = config_dir.unwrap_or(".claude");
+    let current_provider = config_dir.unwrap_or(".claude");
 
-    // 1. User global: ~/.{config_dir}/commands/
+    // 1. User global shared: ~/.crafter-code/commands/
     if let Some(home) = dirs::home_dir() {
-        let global_commands = home.join(config).join("commands");
+        let shared_commands = home.join(".crafter-code").join("commands");
+        dirs.push(shared_commands);
+    }
+
+    // 2. Project shared: {project}/.crafter-code/commands/
+    if let Some(project) = project_dir {
+        let project_shared = project.join(".crafter-code").join("commands");
+        dirs.push(project_shared);
+    }
+
+    // 3-4. All OTHER providers (lower priority than current)
+    for provider in ALL_PROVIDERS {
+        if *provider == current_provider {
+            continue;
+        }
+
+        // Global commands from other provider
+        if let Some(home) = dirs::home_dir() {
+            let provider_global = home.join(provider).join("commands");
+            dirs.push(provider_global);
+        }
+
+        // Project commands from other provider
+        if let Some(project) = project_dir {
+            let provider_project = project.join(provider).join("commands");
+            dirs.push(provider_project);
+        }
+    }
+
+    // 5. Current provider global: ~/.{current_provider}/commands/
+    if let Some(home) = dirs::home_dir() {
+        let global_commands = home.join(current_provider).join("commands");
         dirs.push(global_commands);
     }
 
-    // 2. Project local: {project}/.{config_dir}/commands/
+    // 6. Current provider project: {project}/.{current_provider}/commands/ (highest priority)
     if let Some(project) = project_dir {
-        let project_commands = project.join(config).join("commands");
+        let project_commands = project.join(current_provider).join("commands");
         dirs.push(project_commands);
     }
 
     dirs
+}
+
+// ==================== CRAFTER-CODE SHARED CONFIG ====================
+
+/// Get paths to system prompt files in priority order
+///
+/// Returns paths to check for system prompts (CLAUDE.md, GEMINI.md, etc.)
+/// Later entries override earlier ones.
+///
+/// Priority order:
+/// 1. ~/.crafter-code/SYSTEM.md (global shared)
+/// 2. {project}/.crafter-code/SYSTEM.md (project shared)
+/// 3. ~/.{provider}/{PROVIDER}.md (provider global, e.g., ~/.claude/CLAUDE.md)
+/// 4. {project}/{PROVIDER}.md (project root, e.g., ./CLAUDE.md - highest priority)
+pub fn get_system_prompt_paths(project_dir: Option<&Path>, config_dir: Option<&str>) -> Vec<PathBuf> {
+    let mut paths = Vec::new();
+    let config = config_dir.unwrap_or(".claude");
+    let provider_file = match config {
+        ".claude" => "CLAUDE.md",
+        ".gemini" => "GEMINI.md",
+        ".codex" => "CODEX.md",
+        ".copilot" => "COPILOT.md",
+        _ => "SYSTEM.md",
+    };
+
+    // 1. Global shared: ~/.crafter-code/SYSTEM.md
+    if let Some(home) = dirs::home_dir() {
+        paths.push(home.join(".crafter-code").join("SYSTEM.md"));
+    }
+
+    // 2. Project shared: {project}/.crafter-code/SYSTEM.md
+    if let Some(project) = project_dir {
+        paths.push(project.join(".crafter-code").join("SYSTEM.md"));
+    }
+
+    // 3. Provider global: ~/.{provider}/{PROVIDER}.md
+    if let Some(home) = dirs::home_dir() {
+        paths.push(home.join(config).join(provider_file));
+    }
+
+    // 4. Project root: {project}/{PROVIDER}.md (highest priority)
+    if let Some(project) = project_dir {
+        paths.push(project.join(provider_file));
+    }
+
+    paths
+}
+
+/// Load and merge system prompts from all sources
+///
+/// Concatenates content from all existing system prompt files in priority order.
+/// Each file's content is separated by a newline.
+pub fn load_merged_system_prompt(project_dir: Option<&Path>, config_dir: Option<&str>) -> String {
+    let paths = get_system_prompt_paths(project_dir, config_dir);
+    let mut contents = Vec::new();
+
+    for path in paths {
+        if path.exists() {
+            if let Ok(content) = fs::read_to_string(&path) {
+                if !content.trim().is_empty() {
+                    contents.push(content);
+                }
+            }
+        }
+    }
+
+    contents.join("\n\n")
+}
+
+/// Initialize .crafter-code directory structure
+///
+/// Creates the directory structure if it doesn't exist:
+/// ```
+/// .crafter-code/
+/// ├── skills/
+/// ├── commands/
+/// ├── SYSTEM.md (optional template)
+/// └── providers/
+///     ├── claude/
+///     ├── gemini/
+///     └── codex/
+/// ```
+pub fn init_crafter_code_dir(base_dir: &Path) -> Result<PathBuf, std::io::Error> {
+    let crafter_dir = base_dir.join(".crafter-code");
+
+    // Create main directories
+    fs::create_dir_all(crafter_dir.join("skills"))?;
+    fs::create_dir_all(crafter_dir.join("commands"))?;
+
+    // Create provider override directories
+    for provider in &["claude", "gemini", "codex", "copilot"] {
+        fs::create_dir_all(crafter_dir.join("providers").join(provider))?;
+    }
+
+    // Create template SYSTEM.md if it doesn't exist
+    let system_md = crafter_dir.join("SYSTEM.md");
+    if !system_md.exists() {
+        let template = r#"# Crafter Code System Prompt
+
+This file contains shared instructions for all AI providers.
+Provider-specific overrides can be placed in:
+- `./CLAUDE.md` for Claude
+- `./GEMINI.md` for Gemini
+- etc.
+
+## Project Context
+
+<!-- Add your project-specific context here -->
+
+## Conventions
+
+<!-- Add coding conventions, style guides, etc. -->
+"#;
+        fs::write(&system_md, template)?;
+    }
+
+    Ok(crafter_dir)
 }
 
 #[cfg(test)]
@@ -464,18 +662,22 @@ Body here.
 
         // Test with default config_dir (.claude)
         let dirs = get_skill_directories(Some(&project), None);
-        assert!(dirs.len() >= 2);
+        // Should include: crafter-code + all providers (both global and project)
+        assert!(dirs.len() >= 6);
+        assert!(dirs.iter().any(|d| d.ends_with(".crafter-code/skills")));
         assert!(dirs.iter().any(|d| d.ends_with(".claude/skills")));
+        // Should also include other providers
+        assert!(dirs.iter().any(|d| d.ends_with(".gemini/skills")));
 
-        // Test with custom config_dir
+        // Test with gemini - should still see claude skills
         let dirs_gemini = get_skill_directories(Some(&project), Some(".gemini"));
-        assert!(dirs_gemini.len() >= 2);
+        assert!(dirs_gemini.iter().any(|d| d.ends_with(".crafter-code/skills")));
         assert!(dirs_gemini.iter().any(|d| d.ends_with(".gemini/skills")));
+        assert!(dirs_gemini.iter().any(|d| d.ends_with(".claude/skills"))); // Can see Claude skills!
 
-        // Test with copilot config_dir
-        let dirs_copilot = get_skill_directories(Some(&project), Some(".copilot"));
-        assert!(dirs_copilot.len() >= 2);
-        assert!(dirs_copilot.iter().any(|d| d.ends_with(".copilot/skills")));
+        // Verify current provider comes LAST (highest priority)
+        let last_dir = dirs_gemini.last().unwrap();
+        assert!(last_dir.ends_with(".gemini/skills"));
     }
 
     #[test]

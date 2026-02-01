@@ -223,6 +223,7 @@ export function SessionCard({
     ];
 
     // Get tool calls from workers with worker attribution
+    // Show ALL tool calls - no filtering, use fallback title if needed
     const toolCalls = session.workers
       .flatMap((worker, workerIdx) =>
         (worker.toolCalls || []).map((tc) => ({
@@ -230,13 +231,7 @@ export function SessionCard({
           workerId: worker.id,
           workerIndex: workerIdx,
         }))
-      )
-      .filter((tc) => {
-        // Always show pending/in_progress tool calls
-        if (tc.status === "pending" || tc.status === "in_progress") return true;
-        // For completed/failed, need at least a title
-        return tc.title && tc.title.trim().length > 0;
-      });
+      );
 
     // Get plans from workers with worker attribution
     const plans = session.workers
@@ -500,15 +495,27 @@ export function SessionCard({
 
                 if (item.kind === "message") {
                   const message = item.data;
-                  // Show streaming indicator only for last assistant TEXT message while running
                   const isLastMessage = index === timeline.length - 1;
                   const isAssistantText =
                     message.role === "assistant" && message.type === "TEXT";
+                  const isThinking = message.type === "THINKING";
+
+                  // Streaming for TEXT or THINKING while running
                   const showStreaming =
                     isRunning &&
                     isLastMessage &&
-                    isAssistantText &&
+                    (isAssistantText || isThinking) &&
                     !message.rendered;
+
+                  // Calculate thinking duration (time between this and next non-thinking message)
+                  let thinkingDurationMs: number | undefined;
+                  if (isThinking && !showStreaming) {
+                    const nextItem = timeline[index + 1];
+                    if (nextItem) {
+                      thinkingDurationMs = nextItem.data.timestamp - message.timestamp;
+                    }
+                  }
+
                   return (
                     <MessageBubble
                       key={message.id}
@@ -519,6 +526,7 @@ export function SessionCard({
                       toolName={message.toolName}
                       rendered={message.rendered}
                       isStreaming={showStreaming}
+                      thinkingDurationMs={thinkingDurationMs}
                     />
                   );
                 }

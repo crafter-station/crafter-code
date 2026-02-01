@@ -2,18 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { ChevronRight, Wifi, X } from "lucide-react";
+import { ChevronRight, Settings, Wifi, X } from "lucide-react";
 
 import { onWorkerStatusChange, onWorkerStream, onWorkerToolCall, onWorkerPermission, onWorkerCommands, onWorkerModeChange } from "@/lib/ipc/orchestrator";
 import { cn } from "@/lib/utils";
 
 import { useOrchestratorStore } from "@/stores/orchestrator-store";
+import { useSettingsStore } from "@/stores/settings-store";
+import { useGlobalShortcuts } from "@/hooks/use-global-shortcuts";
 import { AgentIcon } from "./agent-icons";
 import { CoordinationPanel } from "./coordination-panel";
 import { OrchestratorSidebar } from "./orchestrator-sidebar";
 import { SessionColumns } from "./session-columns";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { LoginButton } from "@/components/auth/login-button";
+import { SettingsDialog } from "@/components/settings/settings-dialog";
 
 interface OrchestratorLayoutProps {
   className?: string;
@@ -22,6 +25,9 @@ interface OrchestratorLayoutProps {
 export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
   const [showCoordinationPanel, setShowCoordinationPanel] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  const toggleSettings = useSettingsStore((s) => s.toggleSettings);
+
+  useGlobalShortcuts();
 
   const {
     sessions,
@@ -445,11 +451,19 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
         </div>
 
         {/* Right side info */}
-        <div
-          className="flex items-center gap-3 text-[11px] px-3 shrink-0"
-          data-tauri-drag-region
-        >
+        <div className="flex items-center gap-3 text-[11px] px-3 shrink-0">
           <LoginButton />
+          <button
+            type="button"
+            onClick={() => {
+              console.log("Settings clicked");
+              toggleSettings();
+            }}
+            className="p-1 rounded hover:bg-muted transition-colors"
+            title="Settings (⌘,)"
+          >
+            <Settings className="size-3.5 text-muted-foreground" />
+          </button>
           <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500">
             <Wifi className="size-3" />
             <span>Connected</span>
@@ -510,6 +524,7 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
         <span className="font-mono">v0.2.0</span>
       </footer>
     </div>
+    <SettingsDialog />
     </AuthProvider>
   );
 }

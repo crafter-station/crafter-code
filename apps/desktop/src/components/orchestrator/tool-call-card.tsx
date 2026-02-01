@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CheckCircle2,
   ChevronDown,
@@ -84,10 +84,42 @@ function extractCommand(title: string): string {
   return title;
 }
 
+const KIND_LABELS: Record<ToolCallKind, string> = {
+  read: "Read file",
+  edit: "Edit file",
+  delete: "Delete",
+  move: "Move file",
+  search: "Search",
+  execute: "Execute",
+  think: "Thinking",
+  fetch: "Fetch",
+  switch_mode: "Switch mode",
+  other: "Tool call",
+};
+
 export function ToolCallCard({ toolCall, className }: ToolCallCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [justCompleted, setJustCompleted] = useState(false);
+  const prevStatusRef = useRef(toolCall.status);
   const KindIcon = KIND_ICONS[toolCall.kind] || Terminal;
   const kindColor = KIND_COLORS[toolCall.kind] || KIND_COLORS.other;
+
+  // Detect completion transition for animation
+  useEffect(() => {
+    const wasRunning = prevStatusRef.current === "in_progress" || prevStatusRef.current === "pending";
+    const nowCompleted = toolCall.status === "completed";
+
+    if (wasRunning && nowCompleted) {
+      setJustCompleted(true);
+      const timer = setTimeout(() => setJustCompleted(false), 1500);
+      return () => clearTimeout(timer);
+    }
+
+    prevStatusRef.current = toolCall.status;
+  }, [toolCall.status]);
+
+  // Fallback title if none provided
+  const displayTitle = toolCall.title?.trim() || KIND_LABELS[toolCall.kind] || "Tool call";
 
   // For execute/terminal tools, try to extract heredoc content from title
   const heredocInfo = useMemo(() => {
@@ -119,7 +151,7 @@ export function ToolCallCard({ toolCall, className }: ToolCallCardProps) {
         <Loader2 className={cn("size-3 animate-spin", kindColor)} />
         <KindIcon className={cn("size-3", kindColor)} />
         <span className="text-foreground/80 truncate flex-1">
-          {toolCall.title || `Running ${toolCall.kind}...`}
+          {displayTitle}
         </span>
       </div>
     );
@@ -131,8 +163,9 @@ export function ToolCallCard({ toolCall, className }: ToolCallCardProps) {
     return (
       <div className={cn("flex items-center gap-1.5 text-[10px] py-0.5", className)}>
         <XCircle className="size-3 text-red-400 shrink-0" />
+        <KindIcon className="size-3 text-red-400/60 shrink-0" />
         <span className="text-red-400/80 truncate flex-1">
-          {errorContent?.message || errorContent?.text || toolCall.title || "Failed"}
+          {errorContent?.message || errorContent?.text || displayTitle}
         </span>
       </div>
     );
@@ -141,17 +174,25 @@ export function ToolCallCard({ toolCall, className }: ToolCallCardProps) {
   // For completed without content - ultra compact
   if (!hasContent) {
     return (
-      <div className={cn("flex items-center gap-1.5 text-[10px] text-muted-foreground/60 py-0.5", className)}>
-        <StatusIcon className={cn("size-2.5", statusColor)} />
-        <KindIcon className={cn("size-2.5", kindColor, "opacity-60")} />
-        <span className="truncate opacity-80">{toolCall.title || toolCall.kind}</span>
+      <div className={cn(
+        "flex items-center gap-1.5 text-[10px] text-muted-foreground/60 py-0.5 rounded transition-colors",
+        justCompleted && "bg-green-500/10 text-green-400/80",
+        className
+      )}>
+        <StatusIcon className={cn("size-2.5", justCompleted ? "text-green-400" : statusColor)} />
+        <KindIcon className={cn("size-2.5", kindColor, justCompleted ? "opacity-100" : "opacity-60")} />
+        <span className="truncate opacity-80">{displayTitle}</span>
       </div>
     );
   }
 
   // Completed with content - expandable card
   return (
-    <div className={cn("text-[10px] py-0.5", className)}>
+    <div className={cn(
+      "text-[10px] py-0.5 rounded transition-colors",
+      justCompleted && "bg-green-500/10",
+      className
+    )}>
       {/* Header - clickable to expand */}
       <button
         type="button"
@@ -163,13 +204,13 @@ export function ToolCallCard({ toolCall, className }: ToolCallCardProps) {
         ) : (
           <ChevronRight className="size-2.5 text-muted-foreground shrink-0" />
         )}
-        <StatusIcon className={cn("size-2.5 shrink-0", statusColor)} />
+        <StatusIcon className={cn("size-2.5 shrink-0", justCompleted ? "text-green-400" : statusColor)} />
         <KindIcon className={cn("size-2.5 shrink-0", kindColor)} />
-        <span className="text-foreground/80 truncate flex-1">
+        <span className={cn("truncate flex-1", justCompleted ? "text-green-400/90" : "text-foreground/80")}>
           {/* For heredoc commands, show a nicer title */}
           {heredocInfo
             ? `Create ${heredocInfo.filePath.split("/").pop()}`
-            : toolCall.title}
+            : displayTitle}
         </span>
         {!isExpanded && toolCall.content && toolCall.content.length > 0 && (
           <span className="text-muted-foreground/50 shrink-0">

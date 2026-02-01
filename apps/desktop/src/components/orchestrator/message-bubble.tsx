@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Streamdown } from "streamdown";
 import { createCodePlugin } from "@streamdown/code";
+import { Brain, ChevronDown, ChevronRight } from "lucide-react";
 
-// Create code plugin with github-dark theme hardcoded
 const code = createCodePlugin({ themes: ["vesper", "vesper"] });
 
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ interface MessageBubbleProps {
   toolName?: string;
   rendered?: boolean;
   isStreaming?: boolean;
+  thinkingDurationMs?: number;
   className?: string;
 }
 
@@ -34,8 +36,11 @@ export function MessageBubble({
   content,
   toolName,
   isStreaming = false,
+  thinkingDurationMs,
   className,
 }: MessageBubbleProps) {
+  const [isThinkingExpanded, setIsThinkingExpanded] = useState(false);
+
   // User message - full-width subtle background
   if (role === "user") {
     return (
@@ -50,25 +55,73 @@ export function MessageBubble({
     );
   }
 
-  // THINKING message - dimmed with Streamdown
+  // THINKING message - collapsible when not streaming
   if (type === "THINKING") {
-    return (
-      <div
-        className={cn(
-          "flex items-start gap-1.5 px-2 py-0.5 text-[10px]",
-          className,
-        )}
-      >
-        <span className="size-1 rounded-full bg-violet-400/40 mt-1.5 shrink-0" />
-        <div className="streamdown-thinking flex-1 min-w-0 overflow-hidden">
-          <Streamdown
-            plugins={{ code }}
-            isAnimating={isStreaming}
-            controls={false}
-          >
-            {content}
-          </Streamdown>
+    // While streaming, show full content
+    if (isStreaming) {
+      return (
+        <div
+          className={cn(
+            "flex items-start gap-1.5 px-2 py-0.5 text-[10px]",
+            className,
+          )}
+        >
+          <span className="size-1 rounded-full bg-violet-400/60 mt-1.5 shrink-0 animate-pulse" />
+          <div className="streamdown-thinking flex-1 min-w-0 overflow-hidden">
+            <Streamdown
+              plugins={{ code }}
+              isAnimating={isStreaming}
+              controls={false}
+            >
+              {content}
+            </Streamdown>
+          </div>
         </div>
+      );
+    }
+
+    // Completed thinking - collapsible
+    const durationSec = thinkingDurationMs ? Math.round(thinkingDurationMs / 1000) : null;
+    // Strip markdown formatting from preview (remove **, *, `, etc.)
+    const rawPreview = content.split('\n')[0]?.slice(0, 60) || "Reasoning";
+    const previewText = rawPreview
+      .replace(/\*\*([^*]+)\*\*/g, '$1')  // **bold** -> bold
+      .replace(/\*([^*]+)\*/g, '$1')       // *italic* -> italic
+      .replace(/`([^`]+)`/g, '$1')         // `code` -> code
+      .replace(/^#+\s*/, '');              // # heading -> heading
+
+    return (
+      <div className={cn("text-[10px] px-2 py-0.5", className)}>
+        <button
+          type="button"
+          onClick={() => setIsThinkingExpanded(!isThinkingExpanded)}
+          className="flex items-center gap-1.5 w-full text-left hover:bg-muted/30 rounded px-1 -mx-1 py-0.5 transition-colors text-muted-foreground/70"
+        >
+          {isThinkingExpanded ? (
+            <ChevronDown className="size-2.5 shrink-0" />
+          ) : (
+            <ChevronRight className="size-2.5 shrink-0" />
+          )}
+          <Brain className="size-2.5 text-violet-400/60 shrink-0" />
+          <span className="truncate flex-1">
+            {isThinkingExpanded ? "Thinking" : previewText}
+          </span>
+          {durationSec !== null && (
+            <span className="text-muted-foreground/50 shrink-0">
+              {durationSec}s
+            </span>
+          )}
+        </button>
+
+        {isThinkingExpanded && (
+          <div className="mt-1 ml-5 border-l border-violet-400/20 pl-2">
+            <div className="streamdown-thinking text-muted-foreground/60 italic">
+              <Streamdown plugins={{ code }} controls={false}>
+                {content}
+              </Streamdown>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

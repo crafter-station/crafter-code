@@ -54,9 +54,44 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
-/* Desktop app is always dark mode */
+/* Light mode */
 :root {
   --radius: 0.5rem;
+  --background: #fafafa;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f4f4f5;
+  --muted-foreground: #737373;
+  --accent: #f97316;
+  --accent-foreground: #fafafa;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #a1a1aa;
+  --chart-1: #f97316;
+  --chart-2: #2dd4bf;
+  --chart-3: #fbbf24;
+  --chart-4: #a855f7;
+  --chart-5: #ec4899;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #f97316;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #0a0a0a;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: #a1a1aa;
+}
+
+/* Dark mode */
+.dark {
   --background: #0a0a0a;
   --foreground: #fafafa;
   --card: #141414;
@@ -99,6 +134,26 @@
     /* Prevent text selection for app-like feel */
     user-select: none;
   }
+}
+
+/* Global scrollbar - minimal dark theme */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #333333 transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 3px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-orange);
 }
 
 /* Hide scrollbar utility */

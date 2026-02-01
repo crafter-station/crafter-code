@@ -157,6 +157,9 @@ pub fn run() {
             acp::skills_commands::reload_skills,
             acp::skills_commands::list_workspace_skills,
             acp::skills_commands::list_workspace_commands,
+            // Crafter-code shared config
+            acp::skills_commands::init_crafter_code,
+            acp::skills_commands::get_crafter_code_info,
             // Slash commands
             acp::skills_commands::list_slash_commands,
             acp::skills_commands::list_commands_by_category,

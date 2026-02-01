@@ -463,3 +463,86 @@ pub struct WorkspaceCommands {
     pub global_commands: Vec<WorkspaceCommandInfo>,
     pub project_commands: Vec<WorkspaceCommandInfo>,
 }
+
+// ==================== CRAFTER-CODE INIT ====================
+
+/// Initialize .crafter-code directory structure in a project
+///
+/// Creates the shared skills/commands directories that work across all providers.
+/// Returns the path to the created .crafter-code directory.
+#[tauri::command]
+pub fn init_crafter_code(project_dir: String) -> Result<String, String> {
+    use crate::acp::skill_loader::init_crafter_code_dir;
+    use std::path::Path;
+
+    let path = Path::new(&project_dir);
+    if !path.exists() {
+        return Err(format!("Directory does not exist: {}", project_dir));
+    }
+
+    match init_crafter_code_dir(path) {
+        Ok(crafter_dir) => Ok(crafter_dir.to_string_lossy().to_string()),
+        Err(e) => Err(format!("Failed to initialize .crafter-code: {}", e)),
+    }
+}
+
+/// Result of crafter-code config info
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CrafterCodeInfo {
+    pub exists: bool,
+    pub path: String,
+    pub has_skills: bool,
+    pub has_commands: bool,
+    pub has_system_md: bool,
+    pub skill_count: usize,
+    pub command_count: usize,
+}
+
+/// Get info about .crafter-code directory in a project
+#[tauri::command]
+pub fn get_crafter_code_info(project_dir: String) -> CrafterCodeInfo {
+    use crate::acp::skill_loader::{discover_commands, discover_skills};
+    use std::path::Path;
+
+    let base = Path::new(&project_dir);
+    let crafter_dir = base.join(".crafter-code");
+
+    if !crafter_dir.exists() {
+        return CrafterCodeInfo {
+            exists: false,
+            path: crafter_dir.to_string_lossy().to_string(),
+            has_skills: false,
+            has_commands: false,
+            has_system_md: false,
+            skill_count: 0,
+            command_count: 0,
+        };
+    }
+
+    let skills_dir = crafter_dir.join("skills");
+    let commands_dir = crafter_dir.join("commands");
+    let system_md = crafter_dir.join("SYSTEM.md");
+
+    let skills = if skills_dir.exists() {
+        discover_skills(&skills_dir)
+    } else {
+        vec![]
+    };
+
+    let commands = if commands_dir.exists() {
+        discover_commands(&commands_dir)
+    } else {
+        vec![]
+    };
+
+    CrafterCodeInfo {
+        exists: true,
+        path: crafter_dir.to_string_lossy().to_string(),
+        has_skills: skills_dir.exists(),
+        has_commands: commands_dir.exists(),
+        has_system_md: system_md.exists(),
+        skill_count: skills.len(),
+        command_count: commands.len(),
+    }
+}

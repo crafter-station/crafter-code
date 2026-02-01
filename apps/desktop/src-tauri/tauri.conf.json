@@ -34,6 +34,10 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "category": "DeveloperTool",
+    "shortDescription": "Agent-first IDE for the AI era",
+    "longDescription": "Crafter Code is a multi-agent IDE that orchestrates AI workers to help you build software faster. Features swarm coordination, provider-specific skills, and deep integration with your development workflow.",
+    "copyright": "Copyright 2025 Crafter Station",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -42,7 +46,13 @@
       "icons/icon.ico"
     ],
     "macOS": {
-      "minimumSystemVersion": "10.15"
+      "minimumSystemVersion": "10.15",
+      "dmg": {
+        "appPosition": { "x": 130, "y": 190 },
+        "applicationFolderPosition": { "x": 410, "y": 190 },
+        "windowSize": { "width": 540, "height": 380 },
+        "background": "dmg-background.png"
+      }
     }
   },
   "plugins": {
