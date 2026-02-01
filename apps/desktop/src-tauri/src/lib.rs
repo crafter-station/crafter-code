@@ -1,5 +1,6 @@
 mod acp;
 mod agent;
+mod auth;
 mod claude;
 mod inbox;
 mod orchestrator;
@@ -16,7 +17,7 @@ use prd::PrdManager;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tasks::TaskManager;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 pub struct AppState {
     pub agent_manager: Arc<Mutex<AgentManager>>,
@@ -64,9 +65,27 @@ pub fn run() {
     let inbox_managers = Arc::new(Mutex::new(HashMap::new()));
     let prd_manager = Arc::new(PrdManager::new());
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            if let Some(url) = argv.get(1) {
+                if url.starts_with("crafter-code://") {
+                    let _ = app.emit("deep-link-received", url.clone());
+                }
+            }
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_focus();
+            }
+        }));
+    }
+
+    builder
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_opener::init())
         .manage(AppState {
             agent_manager: agent_manager.clone(),
             orchestrator_manager: orchestrator_manager.clone(),
@@ -157,6 +176,10 @@ pub fn run() {
             prd::commands::get_story_progress,
             prd::commands::get_prd_workers,
             prd::commands::get_prd_cost_breakdown,
+            auth::auth_open_login,
+            auth::auth_store_token,
+            auth::auth_get_stored_token,
+            auth::auth_clear_token,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]
@@ -164,6 +187,30 @@ pub fn run() {
                 let window = app.get_webview_window("main").unwrap();
                 window.open_devtools();
             }
+
+            #[cfg(desktop)]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+
+                if let Ok(Some(urls)) = app.deep_link().get_current() {
+                    for url in urls {
+                        let _ = app.emit("deep-link-received", url.to_string());
+                    }
+                }
+
+                let app_handle = app.handle().clone();
+                app.deep_link().on_open_url(move |event| {
+                    for url in event.urls() {
+                        let _ = app_handle.emit("deep-link-received", url.to_string());
+                    }
+                });
+
+                #[cfg(any(windows, target_os = "linux"))]
+                {
+                    let _ = app.deep_link().register("crafter-code");
+                }
+            }
+
             Ok(())
         })
         .run(tauri::generate_context!())

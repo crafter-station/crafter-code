@@ -11,6 +11,8 @@
     "core:path:default",
     "shell:default",
     "shell:allow-open",
-    "dialog:default"
+    "dialog:default",
+    "deep-link:default",
+    "opener:default"
   ]
 }

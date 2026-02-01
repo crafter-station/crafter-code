@@ -12,6 +12,8 @@ import { AgentIcon } from "./agent-icons";
 import { CoordinationPanel } from "./coordination-panel";
 import { OrchestratorSidebar } from "./orchestrator-sidebar";
 import { SessionColumns } from "./session-columns";
+import { AuthProvider } from "@/components/auth/auth-provider";
+import { LoginButton } from "@/components/auth/login-button";
 
 interface OrchestratorLayoutProps {
   className?: string;
@@ -375,6 +377,7 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
   }, []);
 
   return (
+    <AuthProvider>
     <div
       className={cn(
         "h-screen w-screen flex flex-col overflow-hidden bg-background",
@@ -443,9 +446,10 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
 
         {/* Right side info */}
         <div
-          className="flex items-center gap-2 text-[11px] px-3 shrink-0"
+          className="flex items-center gap-3 text-[11px] px-3 shrink-0"
           data-tauri-drag-region
         >
+          <LoginButton />
           <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500">
             <Wifi className="size-3" />
             <span>Connected</span>
@@ -506,5 +510,6 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
         <span className="font-mono">v0.2.0</span>
       </footer>
     </div>
+    </AuthProvider>
   );
 }

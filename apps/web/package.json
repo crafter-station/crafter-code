@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.37.1",
     "@crafter-code/ui": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "class-variance-authority": "^0.7.1",
