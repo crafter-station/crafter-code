@@ -369,8 +369,71 @@ fn execute_inbox_command(
 }
 
 /// Check if a command string is a swarm command
+/// Handles both direct commands and shell-wrapped commands like `/bin/sh -c "swarm ..."`
+#[allow(dead_code)]
 pub fn is_swarm_command(command: &str) -> bool {
-    command.trim().starts_with("swarm ")
+    let trimmed = command.trim();
+
+    // Direct swarm command
+    if trimmed.starts_with("swarm ") {
+        return true;
+    }
+
+    // Shell-wrapped command: /bin/sh -c "swarm ..." or similar
+    if let Some(inner) = extract_shell_wrapped_command(trimmed) {
+        return inner.starts_with("swarm ");
+    }
+
+    false
+}
+
+/// Extract the inner command from shell wrappers like:
+/// - `/bin/sh -c "command"`
+/// - `sh -c 'command'`
+/// - `bash -c "command"`
+fn extract_shell_wrapped_command(command: &str) -> Option<&str> {
+    let patterns = [
+        "/bin/sh -c ",
+        "/bin/bash -c ",
+        "sh -c ",
+        "bash -c ",
+    ];
+
+    for pattern in patterns {
+        if command.starts_with(pattern) {
+            let rest = &command[pattern.len()..];
+            // Extract content from quotes
+            let trimmed = rest.trim();
+            if (trimmed.starts_with('"') && trimmed.ends_with('"'))
+                || (trimmed.starts_with('\'') && trimmed.ends_with('\''))
+            {
+                return Some(&trimmed[1..trimmed.len() - 1]);
+            }
+            // No quotes, return as-is
+            return Some(trimmed);
+        }
+    }
+
+    None
+}
+
+/// Extract the swarm command from a potentially shell-wrapped command
+pub fn extract_swarm_command(command: &str) -> Option<&str> {
+    let trimmed = command.trim();
+
+    // Direct swarm command
+    if trimmed.starts_with("swarm ") {
+        return Some(trimmed);
+    }
+
+    // Shell-wrapped command
+    if let Some(inner) = extract_shell_wrapped_command(trimmed) {
+        if inner.starts_with("swarm ") {
+            return Some(inner);
+        }
+    }
+
+    None
 }
 
 #[cfg(test)]
@@ -412,5 +475,44 @@ mod tests {
 
         let tokens = parse_shell_tokens("inbox write worker-1 'Single quotes'");
         assert_eq!(tokens, vec!["inbox", "write", "worker-1", "Single quotes"]);
+    }
+
+    #[test]
+    fn test_is_swarm_command_direct() {
+        assert!(is_swarm_command("swarm task list"));
+        assert!(is_swarm_command("swarm inbox read"));
+        assert!(is_swarm_command("  swarm task list  "));
+        assert!(!is_swarm_command("ls -la"));
+        assert!(!is_swarm_command("echo swarm"));
+        assert!(!is_swarm_command("swarmtask"));
+    }
+
+    #[test]
+    fn test_is_swarm_command_shell_wrapped() {
+        assert!(is_swarm_command("/bin/sh -c \"swarm task list\""));
+        assert!(is_swarm_command("/bin/sh -c 'swarm inbox read'"));
+        assert!(is_swarm_command("sh -c \"swarm task claim\""));
+        assert!(is_swarm_command("bash -c \"swarm task update 1 completed\""));
+        assert!(is_swarm_command("/bin/bash -c \"swarm inbox broadcast 'hello'\""));
+        assert!(!is_swarm_command("/bin/sh -c \"ls -la\""));
+        assert!(!is_swarm_command("/bin/sh -c \"echo swarm\""));
+    }
+
+    #[test]
+    fn test_extract_swarm_command() {
+        assert_eq!(
+            extract_swarm_command("swarm task list"),
+            Some("swarm task list")
+        );
+        assert_eq!(
+            extract_swarm_command("/bin/sh -c \"swarm task list\""),
+            Some("swarm task list")
+        );
+        assert_eq!(
+            extract_swarm_command("sh -c 'swarm inbox read'"),
+            Some("swarm inbox read")
+        );
+        assert_eq!(extract_swarm_command("ls -la"), None);
+        assert_eq!(extract_swarm_command("/bin/sh -c \"ls -la\""), None);
     }
 }

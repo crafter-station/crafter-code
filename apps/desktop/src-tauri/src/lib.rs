@@ -166,6 +166,7 @@ pub fn run() {
             acp::skills_commands::process_slash_command,
             acp::skills_commands::is_slash_command,
             acp::skills_commands::process_user_input,
+            acp::skills_commands::execute_direct_command,
             acp::skills_commands::cleanup_session_features,
             // PRD commands
             prd::commands::validate_prd,

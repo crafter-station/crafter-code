@@ -26,7 +26,7 @@ use tokio::process::Command;
 use tokio::sync::{mpsc, oneshot};
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 
-use crate::acp::swarm::{execute_swarm_command, is_swarm_command, parse_swarm_command};
+use crate::acp::swarm::{execute_swarm_command, extract_swarm_command, parse_swarm_command};
 use crate::inbox::InboxManager;
 use crate::tasks::TaskManager;
 
@@ -599,9 +599,9 @@ impl Client for CrafterClient {
             format!("{} {}", args.command, args.args.join(" "))
         };
 
-        // INTERCEPT: Check for swarm commands
-        if is_swarm_command(&full_command) {
-            return self.handle_swarm_terminal(&full_command);
+        // INTERCEPT: Check for swarm commands (including shell-wrapped)
+        if let Some(swarm_cmd) = extract_swarm_command(&full_command) {
+            return self.handle_swarm_terminal(swarm_cmd);
         }
 
         // Use shell to execute the command (handles commands like "ls -la" properly)

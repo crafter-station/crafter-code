@@ -26,9 +26,9 @@ pub fn build_coordination_prompt(
 You are worker `{worker_id}` in session `{session_id}`.
 {role_description}
 
-### Available Commands (via Bash tool)
+### Coordination Commands
 
-You can coordinate with other workers using these commands:
+Coordinate with other workers using swarm commands via Bash:
 
 **Task Management:**
 ```bash

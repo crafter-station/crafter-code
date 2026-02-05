@@ -4,11 +4,13 @@ use crate::acp::registry::get_agent_config;
 use crate::acp::skill_loader::get_skill_directories;
 use crate::acp::skills::{Skill, SkillManager};
 use crate::acp::slash_commands::{CommandCategory, CommandRegistry, SlashCommand};
+use crate::AppState;
 use parking_lot::Mutex;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
+use tauri::State;
 
 /// Get the config directory for an agent ID
 /// Falls back to ".claude" if agent not found
@@ -251,6 +253,12 @@ pub struct ProcessedInput {
     pub prompt: String,
     /// Whether this was a slash command
     pub was_command: bool,
+    /// Whether this command should be executed directly (not sent to agent)
+    pub is_direct: bool,
+    /// The direct action to execute (if is_direct is true)
+    pub direct_action: Option<String>,
+    /// Arguments for direct action
+    pub direct_args: Option<String>,
     /// Suggested skills based on the prompt
     pub skill_suggestions: Vec<SkillInfo>,
     /// Active skill prompts to prepend
@@ -265,7 +273,21 @@ pub fn process_user_input(session_id: String, input: String) -> ProcessedInput {
     let skill_mgr = skill_manager.lock();
     let cmd_reg = command_registry.lock();
 
-    // Check if it's a slash command
+    // Check if it's a direct execution command
+    if let Some((cmd, args)) = cmd_reg.is_direct_command(&input) {
+        let action_name = cmd.direct_action.as_ref().map(|a| format!("{:?}", a).to_lowercase());
+        return ProcessedInput {
+            prompt: String::new(),
+            was_command: true,
+            is_direct: true,
+            direct_action: action_name,
+            direct_args: if args.is_empty() { None } else { Some(args) },
+            skill_suggestions: vec![],
+            skill_context: String::new(),
+        };
+    }
+
+    // Check if it's a prompt-expanding slash command
     let (prompt, was_command) = if let Some(expanded) = cmd_reg.process_command(&input) {
         (expanded, true)
     } else {
@@ -285,9 +307,133 @@ pub fn process_user_input(session_id: String, input: String) -> ProcessedInput {
     ProcessedInput {
         prompt,
         was_command,
+        is_direct: false,
+        direct_action: None,
+        direct_args: None,
         skill_suggestions,
         skill_context,
     }
+}
+
+/// Result of executing a direct slash command
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectCommandResult {
+    pub success: bool,
+    pub output: String,
+    pub data: Option<serde_json::Value>,
+}
+
+/// Execute a direct slash command against TaskManager/InboxManager
+#[tauri::command]
+pub fn execute_direct_command(
+    session_id: String,
+    worker_id: String,
+    action: String,
+    args: Option<String>,
+    state: State<'_, AppState>,
+) -> Result<DirectCommandResult, String> {
+    let task_manager = state.get_task_manager(&session_id)?;
+    let inbox_manager = state.get_inbox_manager(&session_id)?;
+
+    let result = match action.as_str() {
+        "tasklist" => {
+            let tasks = task_manager.list();
+            DirectCommandResult {
+                success: true,
+                output: format!("Found {} tasks", tasks.len()),
+                data: Some(serde_json::json!(tasks)),
+            }
+        }
+        "taskget" => {
+            let id = args.as_deref().unwrap_or("");
+            if id.is_empty() {
+                return Err("Task ID required".to_string());
+            }
+            match task_manager.get(id) {
+                Some(task) => DirectCommandResult {
+                    success: true,
+                    output: format!("Task {}: {}", task.id, task.subject),
+                    data: Some(serde_json::json!(task)),
+                },
+                None => DirectCommandResult {
+                    success: false,
+                    output: format!("Task '{}' not found", id),
+                    data: None,
+                },
+            }
+        }
+        "taskclaim" => {
+            match task_manager.claim_available(&worker_id) {
+                Some(task) => DirectCommandResult {
+                    success: true,
+                    output: format!("Claimed task {}: {}", task.id, task.subject),
+                    data: Some(serde_json::json!(task)),
+                },
+                None => DirectCommandResult {
+                    success: false,
+                    output: "No available tasks to claim".to_string(),
+                    data: None,
+                },
+            }
+        }
+        "taskcreate" => {
+            let subject = args.as_deref().unwrap_or("New Task");
+            let task = task_manager.create(subject.to_string(), String::new(), None);
+            DirectCommandResult {
+                success: true,
+                output: format!("Created task {}: {}", task.id, task.subject),
+                data: Some(serde_json::json!(task)),
+            }
+        }
+        "taskupdate" => {
+            return Err("Task update requires task_id and status - use swarm commands for complex updates".to_string());
+        }
+        "inboxread" => {
+            let messages = inbox_manager.read(&worker_id);
+            DirectCommandResult {
+                success: true,
+                output: format!("Found {} messages", messages.len()),
+                data: Some(serde_json::json!(messages)),
+            }
+        }
+        "inboxbroadcast" => {
+            let content = args.as_deref().unwrap_or("");
+            if content.is_empty() {
+                return Err("Message content required".to_string());
+            }
+            let messages = inbox_manager.broadcast(
+                &worker_id,
+                crate::inbox::message::MessageType::Text { content: content.to_string() },
+            );
+            DirectCommandResult {
+                success: true,
+                output: format!("Broadcast sent to {} workers", messages.len()),
+                data: Some(serde_json::json!(messages)),
+            }
+        }
+        "inboxworkers" => {
+            let workers = inbox_manager.get_workers();
+            DirectCommandResult {
+                success: true,
+                output: format!("Found {} workers", workers.len()),
+                data: Some(serde_json::json!(workers)),
+            }
+        }
+        "inboxcount" => {
+            let count = inbox_manager.count(&worker_id, true);
+            DirectCommandResult {
+                success: true,
+                output: format!("{} unread messages", count),
+                data: Some(serde_json::json!({ "count": count })),
+            }
+        }
+        _ => {
+            return Err(format!("Unknown direct action: {}", action));
+        }
+    };
+
+    Ok(result)
 }
 
 /// Cleanup session data

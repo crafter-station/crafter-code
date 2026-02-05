@@ -4,8 +4,38 @@
 //! These are processed by the client before being sent to the agent.
 //!
 //! Similar to Claude Code's commands like `/commit`, `/test`, `/plan`.
+//!
+//! Commands can have two execution modes:
+//! - **PromptExpand**: Expands to a prompt that gets sent to the agent
+//! - **DirectExecute**: Executes directly against backend (TaskManager, InboxManager, etc.)
 
 use serde::{Deserialize, Serialize};
+
+/// Execution mode for slash commands
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum ExecutionMode {
+    /// Expand to a prompt and send to agent (default)
+    #[default]
+    PromptExpand,
+    /// Execute directly against backend, return result to chat
+    DirectExecute,
+}
+
+/// Type of direct execution
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum DirectAction {
+    TaskList,
+    TaskGet,
+    TaskClaim,
+    TaskCreate,
+    TaskUpdate,
+    InboxRead,
+    InboxBroadcast,
+    InboxWorkers,
+    InboxCount,
+}
 
 /// A slash command definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,9 +49,14 @@ pub struct SlashCommand {
     pub input_hint: Option<String>,
     /// Category for grouping in UI
     pub category: CommandCategory,
-    /// The prompt template to inject when command is invoked
+    /// The prompt template to inject when command is invoked (for PromptExpand mode)
     /// Use `{input}` placeholder for user input
     pub prompt_template: String,
+    /// Execution mode: PromptExpand (default) or DirectExecute
+    #[serde(default)]
+    pub execution_mode: ExecutionMode,
+    /// Direct action to execute (only used when execution_mode is DirectExecute)
+    pub direct_action: Option<DirectAction>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -47,12 +82,37 @@ impl SlashCommand {
             input_hint: None,
             category,
             prompt_template: prompt_template.into(),
+            execution_mode: ExecutionMode::PromptExpand,
+            direct_action: None,
+        }
+    }
+
+    /// Create a direct execution command
+    pub fn direct(
+        name: impl Into<String>,
+        description: impl Into<String>,
+        category: CommandCategory,
+        action: DirectAction,
+    ) -> Self {
+        Self {
+            name: name.into(),
+            description: description.into(),
+            input_hint: None,
+            category,
+            prompt_template: String::new(),
+            execution_mode: ExecutionMode::DirectExecute,
+            direct_action: Some(action),
         }
     }
 
     pub fn with_input(mut self, hint: impl Into<String>) -> Self {
         self.input_hint = Some(hint.into());
         self
+    }
+
+    /// Check if this command executes directly (vs expanding to prompt)
+    pub fn is_direct(&self) -> bool {
+        self.execution_mode == ExecutionMode::DirectExecute
     }
 
     /// Expand the prompt template with user input
@@ -64,44 +124,44 @@ impl SlashCommand {
 /// Get all built-in slash commands
 pub fn get_builtin_commands() -> Vec<SlashCommand> {
     vec![
-        // ==================== SWARM COMMANDS ====================
-        SlashCommand::new(
+        // ==================== SWARM COMMANDS (Direct Execution) ====================
+        // These execute directly against TaskManager/InboxManager for instant feedback
+        SlashCommand::direct(
             "tasks",
             "Show all tasks in the current session",
             CommandCategory::Swarm,
-            "Use `swarm task list` to show me all current tasks. Display them in a clear format.",
+            DirectAction::TaskList,
         ),
-        SlashCommand::new(
+        SlashCommand::direct(
             "claim",
             "Claim the next available task",
             CommandCategory::Swarm,
-            "Use `swarm task claim` to claim the next available task. Then tell me what task you claimed and what needs to be done.",
+            DirectAction::TaskClaim,
         ),
-        SlashCommand::new(
+        SlashCommand::direct(
             "inbox",
             "Check inbox for messages from other workers",
             CommandCategory::Swarm,
-            "Use `swarm inbox read` to check for messages from other workers. Summarize any important messages.",
+            DirectAction::InboxRead,
         ),
-        SlashCommand::new(
+        SlashCommand::direct(
             "workers",
             "List all workers in the session",
             CommandCategory::Swarm,
-            "Use `swarm inbox workers` to list all workers in this session. Tell me who is available.",
+            DirectAction::InboxWorkers,
         ),
-        SlashCommand::new(
+        SlashCommand::direct(
             "broadcast",
             "Send a message to all workers",
             CommandCategory::Swarm,
-            "Use `swarm inbox broadcast \"{input}\"` to send this message to all workers.",
+            DirectAction::InboxBroadcast,
         )
         .with_input("message to broadcast"),
-        SlashCommand::new(
+        SlashCommand::direct(
             "create-task",
             "Create a new task",
             CommandCategory::Swarm,
-            r#"Create a new task using: swarm task create "{input}"
-After creating, show me the task details."#,
+            DirectAction::TaskCreate,
         )
         .with_input("task subject"),
 
@@ -266,10 +326,25 @@ impl CommandRegistry {
     }
 
     /// Process a slash command input, returning the expanded prompt
+    /// Returns None if the command is a direct execution command
     pub fn process_command(&self, input: &str) -> Option<String> {
         let (name, args) = parse_slash_command(input)?;
         let command = self.find_command(&name)?;
+        if command.is_direct() {
+            return None;
+        }
         Some(command.expand(&args))
+    }
+
+    /// Check if a command requires direct execution
+    pub fn is_direct_command(&self, input: &str) -> Option<(&SlashCommand, String)> {
+        let (name, args) = parse_slash_command(input)?;
+        let command = self.find_command(&name)?;
+        if command.is_direct() {
+            Some((command, args))
+        } else {
+            None
+        }
     }
 
     /// Add a custom command
