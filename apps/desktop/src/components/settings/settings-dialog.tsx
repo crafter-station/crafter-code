@@ -27,8 +27,6 @@ export function SettingsDialog() {
   const { settingsOpen, setSettingsOpen, theme, setTheme } = useSettingsStore();
   const { setTheme: setNextTheme } = useTheme();
 
-  console.log("SettingsDialog render, open:", settingsOpen);
-
   const handleThemeChange = (value: string) => {
     const newTheme = value as Theme;
     setTheme(newTheme);
@@ -97,16 +95,9 @@ export function SettingsDialog() {
 
           <Separator />
 
-          <div className="space-y-3">
-            <div>
-              <h3 className="text-xs font-medium">General</h3>
-              <p className="text-[10px] text-muted-foreground">
-                Application settings
-              </p>
-            </div>
-
-            <p className="text-[10px] text-muted-foreground italic">
-              More settings coming soon...
+          <div className="text-center py-2">
+            <p className="text-[10px] text-muted-foreground">
+              crafter/code v0.2.0
             </p>
           </div>
         </div>
