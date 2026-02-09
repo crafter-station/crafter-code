@@ -85,7 +85,6 @@ export function InboxPanel({ sessionId, className }: InboxPanelProps) {
         setMessages(allMessages);
       }
     } catch (e) {
-      console.error("Failed to fetch inbox:", e);
     } finally {
       setIsLoading(false);
     }
@@ -114,7 +113,6 @@ export function InboxPanel({ sessionId, className }: InboxPanelProps) {
       setNewMessage("");
       fetchData();
     } catch (e) {
-      console.error("Failed to send message:", e);
     } finally {
       setIsSending(false);
     }
@@ -128,7 +126,6 @@ export function InboxPanel({ sessionId, className }: InboxPanelProps) {
       }
       fetchData();
     } catch (e) {
-      console.error("Failed to mark as read:", e);
     }
   };
 

@@ -8,7 +8,6 @@ export function useDeepLink() {
   useEffect(() => {
     const unlisten = listen<string>("deep-link-received", async (event) => {
       const url = event.payload;
-      console.log("Deep link received:", url);
 
       try {
         const parsed = new URL(url);

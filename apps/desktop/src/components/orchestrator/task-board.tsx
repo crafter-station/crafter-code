@@ -63,7 +63,6 @@ export function TaskBoard({ sessionId, className }: TaskBoardProps) {
       const result = await taskList(sessionId);
       setTasks(result);
     } catch (e) {
-      console.error("Failed to fetch tasks:", e);
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +85,6 @@ export function TaskBoard({ sessionId, className }: TaskBoardProps) {
       setIsCreating(false);
       fetchTasks();
     } catch (e) {
-      console.error("Failed to create task:", e);
     }
   };
 
@@ -103,7 +101,6 @@ export function TaskBoard({ sessionId, className }: TaskBoardProps) {
       await taskUpdate(sessionId, task.id, { status: nextStatus[task.status] });
       fetchTasks();
     } catch (e) {
-      console.error("Failed to update task:", e);
     }
   };
 
@@ -113,7 +110,6 @@ export function TaskBoard({ sessionId, className }: TaskBoardProps) {
       await taskDelete(sessionId, taskId);
       fetchTasks();
     } catch (e) {
-      console.error("Failed to delete task:", e);
     }
   };
 

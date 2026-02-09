@@ -30,7 +30,6 @@ export function useTerminalEvents() {
 
     // Listen for terminal created
     onTerminalCreated((event) => {
-      console.log("[Terminal] Created:", event);
 
       // Detect if this looks like a server command
       const isServer = detectServerCommand(event.command, event.args);
@@ -46,7 +45,6 @@ export function useTerminalEvents() {
       });
 
       if (isServer) {
-        console.log("[Terminal] Detected server command");
       }
     }).then((unlisten) => unlisteners.push(unlisten));
 
@@ -65,7 +63,6 @@ export function useTerminalEvents() {
 
     // Listen for terminal exited
     onTerminalExited((event) => {
-      console.log("[Terminal] Exited:", event);
       updateTerminal(event.terminal_id, {
         running: false,
         exitCode: event.exit_code,
@@ -74,7 +71,6 @@ export function useTerminalEvents() {
 
     // Listen for terminal killed
     onTerminalKilled((event) => {
-      console.log("[Terminal] Killed:", event);
       updateTerminal(event.terminal_id, {
         running: false,
       });
@@ -82,7 +78,6 @@ export function useTerminalEvents() {
 
     // Listen for terminal released
     onTerminalReleased((event) => {
-      console.log("[Terminal] Released:", event);
       // Remove from tracking when released
       removeTerminal(event.terminal_id);
     }).then((unlisten) => unlisteners.push(unlisten));

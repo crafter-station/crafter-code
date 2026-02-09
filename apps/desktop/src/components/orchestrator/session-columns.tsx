@@ -97,25 +97,21 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
         await sendPrompt();
       } catch (error) {
         const errorStr = String(error);
-        console.error("Follow-up failed:", errorStr);
 
         const isDeadSession =
           errorStr.includes("No active worker for session") ||
           errorStr.includes("not found");
 
         if (isDeadSession) {
-          console.log("[Frontend] Session/worker dead, attempting to reconnect...");
 
           const agentId = originalSession.agentType || "claude";
           const cwd = originalSession.cwd || process.env.HOME || "/";
 
           try {
             await reconnectWorker(sessionId, agentId, cwd);
-            console.log("[Frontend] Worker reconnected, retrying prompt...");
             await sendPrompt();
             return;
           } catch (reconnectError) {
-            console.error("Reconnect failed:", reconnectError);
             addSessionMessage(sessionId, {
               type: "ERROR",
               role: "assistant",
@@ -194,7 +190,6 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
           setSelectedModelId(defaultAgent.default_model || "");
         }
       } catch (err) {
-        console.error("[SessionColumns] Failed to load agents:", err);
       }
     }
     loadAgents();
@@ -406,7 +401,6 @@ export function SessionColumns({ className, showSidebar, onToggleSidebar }: Sess
       setImages([]);
       setTextAttachments([]);
     } catch (err) {
-      console.error("[SessionColumns] Failed to create session:", err);
     } finally {
       setIsLaunching(false);
     }

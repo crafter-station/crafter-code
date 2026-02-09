@@ -54,7 +54,6 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
     const unsubscribe = onWorkerStatusChange((event) => {
       // If reconnecting, add a new worker to the session first
       if (event.reconnecting) {
-        console.log("[Frontend] Reconnecting worker detected, adding to session:", event.worker_id);
         addWorkerToSession(event.session_id, {
           id: event.worker_id,
           sessionId: event.session_id,
@@ -131,16 +130,13 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
     // Subscribe to new workers
     for (const [workerId, sessionId] of currentWorkers) {
       if (!subscribedWorkers.has(workerId)) {
-        console.log("[Frontend] Subscribing to worker:", workerId);
         const unsub = onWorkerStream(workerId, (event) => {
-          console.log("[Frontend] Received event for worker:", workerId, event);
           const actions = storeActionsRef.current;
 
           if (event.type === "thinking") {
             // Accumulate thinking chunks into a single message
             actions.appendWorkerThinking(sessionId, workerId, event.text);
           } else if (event.type === "delta") {
-            console.log("[Frontend] Delta text:", event.text);
             actions.appendWorkerOutput(sessionId, workerId, event.text);
 
             // Parse tool usage from stream
@@ -186,7 +182,6 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
               timestamp: Date.now(),
             });
           } else if (event.type === "plan") {
-            console.log("[Frontend] Received plan:", event.entries);
             actions.updateWorkerPlan(sessionId, workerId, { entries: event.entries });
           }
         });
@@ -218,9 +213,7 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
     const toolCallSubscribed = toolCallSubscribedRef.current;
     for (const [workerId, sessionId] of currentWorkers) {
       if (!toolCallSubscribed.has(workerId)) {
-        console.log("[Frontend] Subscribing to tool calls for worker:", workerId);
         const unsub = onWorkerToolCall(workerId, (toolCall) => {
-          console.log("[Frontend] Received tool call:", toolCall);
           const actions = storeActionsRef.current;
           actions.updateWorkerToolCall(sessionId, workerId, toolCall);
         });
@@ -248,9 +241,7 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
     const permissionSubscribed = permissionSubscribedRef.current;
     for (const [workerId, sessionId] of currentWorkers) {
       if (!permissionSubscribed.has(workerId)) {
-        console.log("[Frontend] Subscribing to permissions for worker:", workerId);
         const unsub = onWorkerPermission(workerId, (event) => {
-          console.log("[Frontend] Received permission request:", event);
           const actions = storeActionsRef.current;
           actions.addPermissionRequest({
             workerId,
@@ -289,9 +280,7 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
     const commandsSubscribed = commandsSubscribedRef.current;
     for (const [workerId, sessionId] of currentWorkers) {
       if (!commandsSubscribed.has(workerId)) {
-        console.log("[Frontend] Subscribing to commands for worker:", workerId);
         const unsub = onWorkerCommands(workerId, (commands) => {
-          console.log("[Frontend] Received commands:", commands.length);
           const actions = storeActionsRef.current;
           // Parse source from description (e.g., "(user)", "(project)")
           const parsed = commands.map((cmd) => {
@@ -329,9 +318,7 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
     const modeSubscribed = modeSubscribedRef.current;
     for (const [workerId, sessionId] of currentWorkers) {
       if (!modeSubscribed.has(workerId)) {
-        console.log("[Frontend] Subscribing to mode changes for worker:", workerId);
         const unsub = onWorkerModeChange(workerId, (modeId) => {
-          console.log("[Frontend] Mode changed to:", modeId);
           const actions = storeActionsRef.current;
           actions.updateSession(sessionId, { mode: modeId as "default" | "plan" });
         });
@@ -456,7 +443,6 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
           <button
             type="button"
             onClick={() => {
-              console.log("Settings clicked");
               toggleSettings();
             }}
             className="p-1 rounded hover:bg-muted transition-colors"

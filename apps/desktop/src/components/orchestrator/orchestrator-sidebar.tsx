@@ -187,7 +187,6 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
           setSelectedModelId(defaultAgent.default_model || "");
         }
       } catch (err) {
-        console.error("[Orchestrator] Failed to load agents:", err);
       } finally {
         setLoadingAgents(false);
       }
@@ -212,7 +211,6 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         const result = await listWorkspaceSkills(undefined, activeAgentId);
         setGlobalSkills(result.globalSkills);
       } catch (err) {
-        console.error("[Orchestrator] Failed to load global skills:", err);
       } finally {
         setLoadingSkills(false);
       }
@@ -234,7 +232,6 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         );
         setProjectSkills(result.projectSkills);
       } catch (err) {
-        console.error("[Orchestrator] Failed to load project skills:", err);
       }
     }
     loadProjectSkills();
@@ -248,7 +245,6 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         setBuiltinCommands(result.builtinCommands);
         setGlobalCommands(result.globalCommands);
       } catch (err) {
-        console.error("[Orchestrator] Failed to load builtin commands:", err);
       }
     }
     loadBuiltinCommands();
@@ -268,7 +264,6 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         );
         setProjectCommands(result.projectCommands);
       } catch (err) {
-        console.error("[Orchestrator] Failed to load project commands:", err);
       }
     }
     loadProjectCommands();
@@ -351,7 +346,6 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         setSelectedProjectPath(selected);
       }
     } catch (err) {
-      console.error("[Workspace] Failed to open directory:", err);
     }
   }, [addRecentProject]);
 
@@ -452,7 +446,6 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
       setSelectedProjectPath(null); // Reset for next agent
       setIsNewAgentExpanded(false);
     } catch (err) {
-      console.error("[Orchestrator] Failed to create session:", err);
       const errorMessage =
         err instanceof Error
           ? err.message

@@ -6,10 +6,8 @@ export function useGlobalShortcuts() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      console.log("Key pressed:", e.key, "Meta:", e.metaKey);
       if ((e.metaKey || e.ctrlKey) && e.key === ",") {
         e.preventDefault();
-        console.log("Settings shortcut triggered");
         toggleSettings();
       }
     };

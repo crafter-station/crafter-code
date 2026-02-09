@@ -114,7 +114,6 @@ export function SessionCard({
       try {
         await cancelWorker(session.id, runningWorker.id);
       } catch (error) {
-        console.error("Failed to cancel worker:", error);
       }
     }
   }, [session.id, session.workers]);
@@ -285,7 +284,6 @@ export function SessionCard({
       await respondToPermission(workerId, optionId);
       removePermissionRequest(workerId, toolCallId);
     } catch (e) {
-      console.error("Failed to respond to permission:", e);
     }
   };
 
@@ -372,23 +370,19 @@ export function SessionCard({
               await trySetMode();
             } catch (error) {
               const errorStr = String(error);
-              console.error("Failed to set mode:", errorStr);
 
               const isDeadSession =
                 errorStr.includes("No active worker for session") ||
                 errorStr.includes("not found");
 
               if (isDeadSession) {
-                console.log("[Frontend] Session dead, reconnecting before mode change...");
                 const agentId = session.agentType || "claude";
                 const cwd = session.cwd || "/";
 
                 try {
                   await reconnectWorker(session.id, agentId, cwd);
-                  console.log("[Frontend] Worker reconnected, retrying mode change...");
                   await trySetMode();
                 } catch (reconnectError) {
-                  console.error("Reconnect failed:", reconnectError);
                 }
               }
             }
