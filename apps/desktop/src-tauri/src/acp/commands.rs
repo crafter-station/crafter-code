@@ -98,22 +98,21 @@ pub async fn create_acp_session(
     let agent = get_agent(&agent_id)
         .ok_or_else(|| format!("Agent '{}' not found or not available", agent_id))?;
 
-    // Resolve the model to use - either user selection or agent's default
     let selected_model = model_id
         .filter(|m| !m.is_empty())
         .unwrap_or_else(|| agent.default_model.clone());
 
-    eprintln!("[ACP] Using model: {}", selected_model);
+    let resolved_model = Model::from_string(&selected_model).unwrap_or_default();
 
-    // Create the orchestrator session
+    eprintln!("[ACP] Using model: {} (resolved: {:?})", selected_model, resolved_model);
+
     let session = {
         let mut mgr = state.orchestrator_manager.lock();
-        mgr.create_session(prompt.clone(), Model::Opus)
+        mgr.create_session(prompt.clone(), resolved_model)
     };
 
     let session_id = session.id.clone();
 
-    // Emit session created event
     let _ = app_handle.emit(
         "orchestrator-session-created",
         serde_json::json!({
@@ -123,12 +122,11 @@ pub async fn create_acp_session(
         }),
     );
 
-    // Create a single worker for the agent
     let worker = WorkerSession::new(
         Uuid::new_v4().to_string(),
         session_id.clone(),
         prompt.clone(),
-        Model::Opus,
+        resolved_model,
     );
 
     let worker_id = worker.id.clone();
@@ -226,15 +224,15 @@ pub async fn create_acp_fleet_session(
     let agent = get_agent(&agent_id)
         .ok_or_else(|| format!("Agent '{}' not found or not available", agent_id))?;
 
-    // Create the orchestrator session
+    let resolved_model = Model::from_string(&agent.default_model).unwrap_or_default();
+
     let session = {
         let mut mgr = state.orchestrator_manager.lock();
-        mgr.create_session(prompt.clone(), Model::Opus)
+        mgr.create_session(prompt.clone(), resolved_model)
     };
 
     let session_id = session.id.clone();
 
-    // Emit session created event
     let _ = app_handle.emit(
         "orchestrator-session-created",
         serde_json::json!({
@@ -246,7 +244,6 @@ pub async fn create_acp_fleet_session(
         }),
     );
 
-    // Get or create shared task and inbox managers for this session
     let task_manager = state
         .get_task_manager(&session_id)
         .map_err(|e| format!("Failed to get task manager: {}", e))?;
@@ -254,12 +251,10 @@ pub async fn create_acp_fleet_session(
         .get_inbox_manager(&session_id)
         .map_err(|e| format!("Failed to get inbox manager: {}", e))?;
 
-    // Spawn N workers
     for i in 0..worker_count {
         let is_leader = i == 0;
         let worker_role = if is_leader { "leader" } else { "worker" };
 
-        // Create worker with role-specific task description
         let worker_task = if is_leader {
             format!(
                 "You are the LEADER. Break down this task into subtasks using `swarm task create`, then coordinate the team.\n\nTask: {}",
@@ -277,7 +272,7 @@ pub async fn create_acp_fleet_session(
             Uuid::new_v4().to_string(),
             session_id.clone(),
             worker_task.clone(),
-            Model::Opus,
+            resolved_model,
         );
 
         let worker_id = worker.id.clone();
@@ -1190,15 +1185,15 @@ pub async fn resume_acp_session(
     // Check if agent supports load_session
     // (We'll verify this during initialization, but provide early feedback if possible)
 
-    // Create a new orchestrator session
+    let resolved_model = Model::from_string(&agent.default_model).unwrap_or_default();
+
     let session = {
         let mut mgr = state.orchestrator_manager.lock();
-        mgr.create_session(persisted.initial_prompt.clone(), Model::Opus)
+        mgr.create_session(persisted.initial_prompt.clone(), resolved_model)
     };
 
     let session_id = session.id.clone();
 
-    // Emit session created event
     let _ = app_handle.emit(
         "orchestrator-session-created",
         serde_json::json!({
@@ -1209,12 +1204,11 @@ pub async fn resume_acp_session(
         }),
     );
 
-    // Create a single worker for the agent
     let worker = WorkerSession::new(
         Uuid::new_v4().to_string(),
         session_id.clone(),
         persisted.initial_prompt.clone(),
-        Model::Opus,
+        resolved_model,
     );
 
     let worker_id = worker.id.clone();
@@ -1653,17 +1647,17 @@ pub async fn reconnect_worker(
     let agent = get_agent(&agent_id)
         .ok_or_else(|| format!("Agent '{}' not found or not available", agent_id))?;
 
-    // Get or create the session and worker
+    let resolved_model = Model::from_string(&agent.default_model).unwrap_or_default();
+
     let worker_id = {
         let mut mgr = state.orchestrator_manager.lock();
 
-        // Create session if it doesn't exist (app was restarted)
         if mgr.get_session(&session_id).is_none() {
             eprintln!("[ACP] Session not in memory, recreating for reconnect");
             let session = OrchestratorSession::new(
                 session_id.clone(),
                 "(reconnected session)".to_string(),
-                Model::Opus,
+                resolved_model,
             );
             mgr.add_session(session);
         }
@@ -1671,7 +1665,6 @@ pub async fn reconnect_worker(
         let session = mgr.get_session_mut(&session_id)
             .ok_or_else(|| format!("Session '{}' not found", session_id))?;
 
-        // Use existing worker if available, otherwise create one
         if let Some(worker) = session.workers.first() {
             worker.id.clone()
         } else {
@@ -1679,7 +1672,7 @@ pub async fn reconnect_worker(
                 Uuid::new_v4().to_string(),
                 session_id.clone(),
                 session.prompt.clone(),
-                Model::Opus,
+                resolved_model,
             );
             let id = worker.id.clone();
             mgr.add_worker_to_session(&session_id, worker);

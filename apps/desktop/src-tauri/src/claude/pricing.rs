@@ -5,9 +5,9 @@ use serde::{Deserialize, Serialize};
 pub enum Model {
     #[serde(rename = "claude-opus-4-5-20251101")]
     Opus,
-    #[serde(rename = "claude-sonnet-4-20250514")]
+    #[serde(rename = "claude-sonnet-4-5-20250929")]
     Sonnet,
-    #[serde(rename = "claude-3-5-haiku-20241022")]
+    #[serde(rename = "claude-haiku-4-5-20251001")]
     Haiku,
 }
 
@@ -15,24 +15,24 @@ impl Model {
     pub fn model_id(&self) -> &'static str {
         match self {
             Model::Opus => "claude-opus-4-5-20251101",
-            Model::Sonnet => "claude-sonnet-4-20250514",
-            Model::Haiku => "claude-3-5-haiku-20241022",
+            Model::Sonnet => "claude-sonnet-4-5-20250929",
+            Model::Haiku => "claude-haiku-4-5-20251001",
         }
     }
 
     pub fn display_name(&self) -> &'static str {
         match self {
-            Model::Opus => "Claude Opus 4.5",
-            Model::Sonnet => "Claude Sonnet 4",
-            Model::Haiku => "Claude 3.5 Haiku",
+            Model::Opus => "Opus 4.5",
+            Model::Sonnet => "Sonnet 4.5",
+            Model::Haiku => "Haiku 4.5",
         }
     }
 
     pub fn from_string(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "opus" | "claude-opus-4-5-20251101" => Some(Model::Opus),
-            "sonnet" | "claude-sonnet-4-20250514" => Some(Model::Sonnet),
-            "haiku" | "claude-3-5-haiku-20241022" => Some(Model::Haiku),
+            "sonnet" | "claude-sonnet-4-5-20250929" => Some(Model::Sonnet),
+            "haiku" | "claude-haiku-4-5-20251001" => Some(Model::Haiku),
             _ => None,
         }
     }
