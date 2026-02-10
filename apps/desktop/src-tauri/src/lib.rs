@@ -7,6 +7,7 @@ mod orchestrator;
 mod prd;
 mod pty;
 mod tasks;
+mod trace;
 
 use acp::commands::WorkerHandle;
 use agent::manager::AgentManager;
@@ -184,6 +185,11 @@ pub fn run() {
             auth::auth_store_token,
             auth::auth_get_stored_token,
             auth::auth_clear_token,
+            // Trace commands
+            trace::commands::get_file_traces,
+            trace::commands::get_session_traces,
+            trace::commands::get_worker_traces,
+            trace::commands::get_trace_summary,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

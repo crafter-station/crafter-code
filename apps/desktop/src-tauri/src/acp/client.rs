@@ -29,6 +29,7 @@ use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 use crate::acp::swarm::{execute_swarm_command, extract_swarm_command, parse_swarm_command};
 use crate::inbox::InboxManager;
 use crate::tasks::TaskManager;
+use crate::trace::capture::TraceCapture;
 
 /// Global registry for permission response channels
 /// Maps worker_id -> oneshot sender for the response
@@ -64,10 +65,14 @@ pub struct CrafterClient {
     total_input_chars: Arc<Mutex<u64>>,
     /// Total output characters (for token estimation)
     total_output_chars: Arc<Mutex<u64>>,
+    /// Agent Trace capture (records AI code attribution)
+    trace_capture: Option<Arc<TraceCapture>>,
+    /// Model identifier for trace attribution
+    model_id: String,
 }
 
 impl CrafterClient {
-    pub fn new(app_handle: AppHandle, worker_id: String, session_id: String) -> Self {
+    pub fn new(app_handle: AppHandle, worker_id: String, session_id: String, model_id: String) -> Self {
         Self {
             app_handle,
             worker_id,
@@ -79,6 +84,8 @@ impl CrafterClient {
             inbox_manager: None,
             total_input_chars: Arc::new(Mutex::new(0)),
             total_output_chars: Arc::new(Mutex::new(0)),
+            trace_capture: None,
+            model_id,
         }
     }
 
@@ -100,6 +107,11 @@ impl CrafterClient {
     ) -> Self {
         self.task_manager = Some(task_manager);
         self.inbox_manager = Some(inbox_manager);
+        self
+    }
+
+    pub fn with_trace_capture(mut self, trace_capture: Arc<TraceCapture>) -> Self {
+        self.trace_capture = Some(trace_capture);
         self
     }
 
@@ -356,6 +368,16 @@ impl Client for CrafterClient {
                                 }
                             }
                             agent_client_protocol::ToolCallContent::Diff(diff) => {
+                                if let Some(tc) = self.trace_capture.clone() {
+                                    let path = diff.path.to_string_lossy().to_string();
+                                    let new_text = diff.new_text.clone();
+                                    let worker_id = self.worker_id.clone();
+                                    let session_id = self.session_id.clone();
+                                    let model_id = self.model_id.clone();
+                                    tokio::task::spawn_blocking(move || {
+                                        tc.record_file_diff(&path, &new_text, &worker_id, &session_id, &model_id);
+                                    });
+                                }
                                 serde_json::json!({
                                     "type": "diff",
                                     "path": diff.path,
@@ -422,6 +444,16 @@ impl Client for CrafterClient {
                                         }
                                     }
                                     agent_client_protocol::ToolCallContent::Diff(diff) => {
+                                        if let Some(tc) = self.trace_capture.clone() {
+                                            let path = diff.path.to_string_lossy().to_string();
+                                            let new_text = diff.new_text.clone();
+                                            let worker_id = self.worker_id.clone();
+                                            let session_id = self.session_id.clone();
+                                            let model_id = self.model_id.clone();
+                                            tokio::task::spawn_blocking(move || {
+                                                tc.record_file_diff(&path, &new_text, &worker_id, &session_id, &model_id);
+                                            });
+                                        }
                                         serde_json::json!({
                                             "type": "diff",
                                             "path": diff.path,
@@ -436,7 +468,6 @@ impl Client for CrafterClient {
                                         })
                                     }
                                     _ => {
-                                        // Handle any future variants
                                         serde_json::json!({
                                             "type": "unknown",
                                             "text": format!("{:?}", c)
@@ -579,6 +610,17 @@ impl Client for CrafterClient {
         std::fs::write(&args.path, &args.content).map_err(|e| {
             agent_client_protocol::Error::new(-32000, format!("Failed to write file: {}", e))
         })?;
+
+        if let Some(tc) = self.trace_capture.clone() {
+            let path = args.path.to_string_lossy().to_string();
+            let content = args.content.clone();
+            let worker_id = self.worker_id.clone();
+            let session_id = self.session_id.clone();
+            let model_id = self.model_id.clone();
+            tokio::task::spawn_blocking(move || {
+                tc.record_file_write(&path, &content, &worker_id, &session_id, &model_id);
+            });
+        }
 
         Ok(WriteTextFileResponse::new())
     }
@@ -909,13 +951,16 @@ impl AcpClient {
         let stdin_compat = stdin.compat_write();
         let stdout_compat = stdout.compat();
 
-        // Create our client implementation with coordination support
-        let mut client = CrafterClient::new(app_handle.clone(), worker_id.clone(), session_id.clone());
+        let model_str = model.clone().unwrap_or_default();
 
-        // Enable swarm coordination if managers are provided
+        let mut client = CrafterClient::new(app_handle.clone(), worker_id.clone(), session_id.clone(), model_str);
+
         if let (Some(tm), Some(im)) = (task_manager, inbox_manager) {
             client = client.with_coordination(tm, im);
         }
+
+        let trace_capture = Arc::new(TraceCapture::new(std::path::PathBuf::from(cwd)));
+        client = client.with_trace_capture(trace_capture);
 
         // Extract Arcs before moving client into connection
         let accumulated_text = client.accumulated_text.clone();
