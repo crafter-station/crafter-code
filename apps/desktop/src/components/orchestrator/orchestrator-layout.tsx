@@ -12,8 +12,11 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { useGlobalShortcuts } from "@/hooks/use-global-shortcuts";
 import { AgentIcon } from "./agent-icons";
 import { CoordinationPanel } from "./coordination-panel";
+import { DashboardView } from "./dashboard-view";
+import { GlobalSearch } from "./global-search";
 import { OrchestratorSidebar } from "./orchestrator-sidebar";
 import { SessionColumns } from "./session-columns";
+import { ViewToggle } from "./view-toggle";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { LoginButton } from "@/components/auth/login-button";
 import { SettingsDialog } from "@/components/settings/settings-dialog";
@@ -29,25 +32,29 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
 
   useGlobalShortcuts();
 
-  const {
-    sessions,
-    activeSessionId,
-    setActiveSession,
-    removeSession,
-    updateSession,
-    updateWorker,
-    addWorkerToSession,
-    appendWorkerOutput,
-    addWorkerMessage,
-    appendWorkerThinking,
-    updateWorkerToolCall,
-    updateWorkerPlan,
-    updateWorkerCommands,
-    addPermissionRequest,
-    getActiveSession,
-  } = useOrchestratorStore();
+  useEffect(() => {
+    import("@/stores/orchestrator-store").then(({ initOrchestratorFromDisk }) => {
+      initOrchestratorFromDisk();
+    });
+  }, []);
 
-  const activeSession = getActiveSession();
+  const sessions = useOrchestratorStore((s) => s.sessions);
+  const activeSessionId = useOrchestratorStore((s) => s.activeSessionId);
+  const activeView = useOrchestratorStore((s) => s.activeView);
+  const setActiveSession = useOrchestratorStore((s) => s.setActiveSession);
+  const removeSession = useOrchestratorStore((s) => s.removeSession);
+  const updateSession = useOrchestratorStore((s) => s.updateSession);
+  const updateWorker = useOrchestratorStore((s) => s.updateWorker);
+  const addWorkerToSession = useOrchestratorStore((s) => s.addWorkerToSession);
+  const appendWorkerOutput = useOrchestratorStore((s) => s.appendWorkerOutput);
+  const addWorkerMessage = useOrchestratorStore((s) => s.addWorkerMessage);
+  const appendWorkerThinking = useOrchestratorStore((s) => s.appendWorkerThinking);
+  const updateWorkerToolCall = useOrchestratorStore((s) => s.updateWorkerToolCall);
+  const updateWorkerPlan = useOrchestratorStore((s) => s.updateWorkerPlan);
+  const updateWorkerCommands = useOrchestratorStore((s) => s.updateWorkerCommands);
+  const addPermissionRequest = useOrchestratorStore((s) => s.addPermissionRequest);
+
+  const activeSession = sessions.find((s) => s.id === activeSessionId);
 
   // Listen for worker status changes globally
   useEffect(() => {
@@ -407,12 +414,14 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
         {/* Tabs area - scrollable */}
         <div className="flex-1 flex items-center gap-0.5 px-1 overflow-x-auto scrollbar-none min-w-0">
           {sessions.map((session) => (
-            <button
+            <div
               key={session.id}
-              type="button"
+              role="button"
+              tabIndex={0}
               onClick={() => setActiveSession(session.id)}
+              onKeyDown={(e) => { if (e.key === "Enter") setActiveSession(session.id); }}
               className={cn(
-                "group flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] shrink-0 max-w-[160px] transition-colors",
+                "group flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] shrink-0 max-w-[160px] transition-colors cursor-pointer",
                 session.id === activeSessionId
                   ? "bg-background border border-border text-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -433,12 +442,13 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
               >
                 <X className="size-2.5" />
               </button>
-            </button>
+            </div>
           ))}
         </div>
 
         {/* Right side info */}
         <div className="flex items-center gap-3 text-[11px] px-3 shrink-0">
+          <ViewToggle />
           <LoginButton />
           <button
             type="button"
@@ -462,12 +472,16 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
         {/* Sidebar */}
         {showSidebar && <OrchestratorSidebar />}
 
-        {/* Session Columns */}
+        {/* Main Content Area */}
         <main className="flex-1 min-w-0 overflow-hidden bg-background">
-          <SessionColumns
-            showSidebar={showSidebar}
-            onToggleSidebar={() => setShowSidebar(!showSidebar)}
-          />
+          {activeView === "dashboard" ? (
+            <DashboardView />
+          ) : (
+            <SessionColumns
+              showSidebar={showSidebar}
+              onToggleSidebar={() => setShowSidebar(!showSidebar)}
+            />
+          )}
         </main>
 
         {/* Coordination Panel (Tasks + Inbox) */}
@@ -511,6 +525,7 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
       </footer>
     </div>
     <SettingsDialog />
+    <GlobalSearch />
     </AuthProvider>
   );
 }
