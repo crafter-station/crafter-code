@@ -2100,3 +2100,21 @@ pub fn save_session_to_persistence(
 
     store.save_session(&session)
 }
+
+/// Save orchestrator state (all sessions) to disk
+#[tauri::command]
+pub fn save_orchestrator_state(
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let store = SessionStore::new()?;
+    let mgr = state.orchestrator_manager.lock();
+    let sessions: Vec<OrchestratorSession> = mgr.list_sessions().into_iter().cloned().collect();
+    store.save_orchestrator_state(&sessions)
+}
+
+/// Load orchestrator state from disk
+#[tauri::command]
+pub fn load_orchestrator_state() -> Result<Vec<OrchestratorSession>, String> {
+    let store = SessionStore::new()?;
+    store.load_orchestrator_state()
+}

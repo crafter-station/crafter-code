@@ -146,6 +146,22 @@ pub fn cancel_worker(
 }
 
 #[tauri::command]
+pub fn pause_worker(
+    session_id: String,
+    worker_id: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let mut mgr = state.orchestrator_manager.lock();
+
+    if !mgr.cancel_worker(&worker_id) {
+        return Err(format!("Worker {} not found or not running", worker_id));
+    }
+
+    mgr.update_worker_status(&session_id, &worker_id, WorkerStatus::Paused);
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn retry_worker(
     session_id: String,
     worker_id: String,

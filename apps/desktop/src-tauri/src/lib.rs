@@ -110,6 +110,7 @@ pub fn run() {
             orchestrator::commands::get_orchestrator_session,
             orchestrator::commands::list_orchestrator_sessions,
             orchestrator::commands::cancel_worker,
+            orchestrator::commands::pause_worker,
             orchestrator::commands::retry_worker,
             orchestrator::commands::get_session_conflicts,
             orchestrator::commands::get_session_cost,
@@ -128,6 +129,8 @@ pub fn run() {
             acp::commands::delete_persisted_session,
             acp::commands::resume_acp_session,
             acp::commands::save_session_to_persistence,
+            acp::commands::save_orchestrator_state,
+            acp::commands::load_orchestrator_state,
             acp::commands::reconnect_worker,
             // Task commands
             tasks::commands::task_create,

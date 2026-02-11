@@ -156,6 +156,67 @@ impl Default for SessionStore {
     }
 }
 
+// ============================================================================
+// Orchestrator State Persistence
+// ============================================================================
+
+use crate::orchestrator::session::OrchestratorSession;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PersistedOrchestratorState {
+    pub sessions: Vec<OrchestratorSession>,
+    pub saved_at: i64,
+}
+
+impl SessionStore {
+    fn orchestrator_state_path(&self) -> PathBuf {
+        self.base_path
+            .parent()
+            .unwrap_or(&self.base_path)
+            .join("orchestrator-state.json")
+    }
+
+    pub fn save_orchestrator_state(
+        &self,
+        sessions: &[OrchestratorSession],
+    ) -> Result<(), String> {
+        let state = PersistedOrchestratorState {
+            sessions: sessions.to_vec(),
+            saved_at: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64,
+        };
+        let path = self.orchestrator_state_path();
+        let json = serde_json::to_string_pretty(&state)
+            .map_err(|e| format!("Failed to serialize orchestrator state: {}", e))?;
+        fs::write(&path, json)
+            .map_err(|e| format!("Failed to write orchestrator state: {}", e))?;
+        eprintln!(
+            "[SessionStore] Saved orchestrator state ({} sessions) to {:?}",
+            sessions.len(),
+            path
+        );
+        Ok(())
+    }
+
+    pub fn load_orchestrator_state(&self) -> Result<Vec<OrchestratorSession>, String> {
+        let path = self.orchestrator_state_path();
+        if !path.exists() {
+            return Ok(Vec::new());
+        }
+        let json = fs::read_to_string(&path)
+            .map_err(|e| format!("Failed to read orchestrator state: {}", e))?;
+        let state: PersistedOrchestratorState = serde_json::from_str(&json)
+            .map_err(|e| format!("Failed to parse orchestrator state: {}", e))?;
+        eprintln!(
+            "[SessionStore] Loaded orchestrator state ({} sessions)",
+            state.sessions.len()
+        );
+        Ok(state.sessions)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

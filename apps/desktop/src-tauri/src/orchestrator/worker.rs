@@ -9,6 +9,7 @@ pub enum WorkerStatus {
     Completed,
     Failed,
     Cancelled,
+    Paused,
     /// Worker is idle, ready to accept new prompts (after cancel or completion)
     Idle,
 }
@@ -28,6 +29,10 @@ pub struct WorkerSession {
     pub error_message: Option<String>,
     pub created_at: i64,
     pub updated_at: i64,
+    pub started_at: Option<i64>,
+    pub ended_at: Option<i64>,
+    pub paused_at: Option<i64>,
+    pub task_id: Option<String>,
 }
 
 impl WorkerSession {
@@ -47,28 +52,49 @@ impl WorkerSession {
             error_message: None,
             created_at: now,
             updated_at: now,
+            started_at: None,
+            ended_at: None,
+            paused_at: None,
+            task_id: None,
         }
     }
 
     pub fn mark_running(&mut self) {
         self.status = WorkerStatus::Running;
-        self.updated_at = chrono_timestamp();
+        let now = chrono_timestamp();
+        if self.started_at.is_none() {
+            self.started_at = Some(now);
+        }
+        self.updated_at = now;
     }
 
     pub fn mark_completed(&mut self) {
         self.status = WorkerStatus::Completed;
-        self.updated_at = chrono_timestamp();
+        let now = chrono_timestamp();
+        self.ended_at = Some(now);
+        self.updated_at = now;
     }
 
     pub fn mark_failed(&mut self, error: String) {
         self.status = WorkerStatus::Failed;
         self.error_message = Some(error);
-        self.updated_at = chrono_timestamp();
+        let now = chrono_timestamp();
+        self.ended_at = Some(now);
+        self.updated_at = now;
     }
 
     pub fn mark_cancelled(&mut self) {
         self.status = WorkerStatus::Cancelled;
-        self.updated_at = chrono_timestamp();
+        let now = chrono_timestamp();
+        self.ended_at = Some(now);
+        self.updated_at = now;
+    }
+
+    pub fn mark_paused(&mut self) {
+        self.status = WorkerStatus::Paused;
+        let now = chrono_timestamp();
+        self.paused_at = Some(now);
+        self.updated_at = now;
     }
 
     pub fn append_output(&mut self, text: &str) {
