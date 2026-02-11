@@ -16,6 +16,8 @@ import {
   DollarSign,
   FileText,
   Loader2,
+  Pause,
+  Play,
   RefreshCw,
   Square,
 } from "lucide-react";
@@ -28,9 +30,11 @@ interface AgentCardProps {
   worker: WorkerSession;
   onCancel?: () => void;
   onRetry?: () => void;
+  onPause?: () => void;
+  onResume?: () => void;
 }
 
-export function AgentCard({ worker, onCancel, onRetry }: AgentCardProps) {
+export function AgentCard({ worker, onCancel, onRetry, onPause, onResume }: AgentCardProps) {
   const [outputPreview, setOutputPreview] = useState("");
 
   useEffect(() => {
@@ -39,6 +43,8 @@ export function AgentCard({ worker, onCancel, onRetry }: AgentCardProps) {
   }, [worker.outputBuffer]);
 
   const canCancel = worker.status === "running" || worker.status === "pending";
+  const canPause = worker.status === "running";
+  const canResume = worker.status === "paused";
   const canRetry = worker.status === "failed" || worker.status === "cancelled";
 
   return (
@@ -46,6 +52,7 @@ export function AgentCard({ worker, onCancel, onRetry }: AgentCardProps) {
       className={cn(
         "flex flex-col rounded-lg border bg-card p-4 h-full min-h-[200px]",
         worker.status === "running" && "border-accent-orange/50",
+        worker.status === "paused" && "border-yellow-500/50",
         worker.status === "completed" && "border-green-500/50",
         worker.status === "failed" && "border-destructive/50",
       )}
@@ -59,6 +66,40 @@ export function AgentCard({ worker, onCancel, onRetry }: AgentCardProps) {
           </span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {canPause && onPause && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={onPause}
+                    className="text-muted-foreground hover:text-yellow-500"
+                  >
+                    <Pause className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Pause worker</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {canResume && onResume && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={onResume}
+                    className="text-muted-foreground hover:text-green-500"
+                  >
+                    <Play className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Resume worker</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {canCancel && (
             <TooltipProvider>
               <Tooltip>
@@ -187,6 +228,8 @@ function StatusIcon({ status }: { status: WorkerStatus }) {
       return <CheckCircle2 className="size-4 text-green-500" />;
     case "failed":
       return <AlertCircle className="size-4 text-destructive" />;
+    case "paused":
+      return <Pause className="size-4 text-yellow-500" />;
     case "cancelled":
       return <Square className="size-4 text-muted-foreground" />;
     default:

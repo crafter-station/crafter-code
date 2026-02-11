@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@crafter-code/ui";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, Wrench, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -10,12 +10,14 @@ import type { FileConflict } from "@/stores/orchestrator-store";
 interface ConflictAlertProps {
   conflicts: FileConflict[];
   onDismiss?: () => void;
+  onResolve?: (conflict: FileConflict) => void;
   className?: string;
 }
 
 export function ConflictAlert({
   conflicts,
   onDismiss,
+  onResolve,
   className,
 }: ConflictAlertProps) {
   if (conflicts.length === 0) return null;
@@ -42,12 +44,25 @@ export function ConflictAlert({
               {conflicts.map((conflict) => (
                 <li
                   key={conflict.filePath}
-                  className="text-sm bg-muted/50 rounded p-2"
+                  className="text-sm bg-muted/50 rounded p-2 flex items-center justify-between"
                 >
-                  <code className="font-mono text-xs">{conflict.filePath}</code>
-                  <span className="text-muted-foreground ml-2">
-                    ({conflict.workerIds.length} workers)
-                  </span>
+                  <div>
+                    <code className="font-mono text-xs">{conflict.filePath}</code>
+                    <span className="text-muted-foreground ml-2">
+                      ({conflict.workerIds.length} workers)
+                    </span>
+                  </div>
+                  {onResolve && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onResolve(conflict)}
+                      className="gap-1 text-xs"
+                    >
+                      <Wrench className="size-3" />
+                      Resolve
+                    </Button>
+                  )}
                 </li>
               ))}
             </ul>
