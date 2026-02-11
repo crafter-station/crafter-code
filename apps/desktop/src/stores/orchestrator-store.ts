@@ -47,7 +47,8 @@ export type WorkerStatus =
   | "running"
   | "completed"
   | "failed"
-  | "cancelled";
+  | "cancelled"
+  | "paused";
 
 export type Model = "opus" | "sonnet" | "haiku";
 
@@ -135,6 +136,9 @@ export interface WorkerSession {
   errorMessage?: string;
   createdAt: number;
   updatedAt: number;
+  startedAt?: number;
+  endedAt?: number;
+  taskId?: string;
 }
 
 export interface OrchestratorSession {
@@ -181,13 +185,20 @@ export interface PermissionRequest {
   timestamp: number;
 }
 
+export type ActiveView = "sessions" | "dashboard";
+
 interface OrchestratorState {
   sessions: OrchestratorSession[];
   activeSessionId: string | null;
+  activeView: ActiveView;
   permissionRequests: PermissionRequest[];
   pendingInput: { sessionId: string; text: string } | null;
   /** Workspace-wide commands and skills (loaded by sidebar, shared across inputs) */
   workspaceCommands: AvailableCommand[];
+
+  // View actions
+  setActiveView: (view: ActiveView) => void;
+  toggleView: () => void;
 
   // Actions
   setPendingInput: (sessionId: string, text: string) => void;
@@ -265,9 +276,15 @@ export const useOrchestratorStore = create<OrchestratorState>()(
     (set, get) => ({
       sessions: [],
       activeSessionId: null,
+      activeView: "sessions" as ActiveView,
       permissionRequests: [],
       pendingInput: null,
       workspaceCommands: [],
+
+      setActiveView: (view) => set({ activeView: view }),
+      toggleView: () => set((state) => ({
+        activeView: state.activeView === "sessions" ? "dashboard" : "sessions",
+      })),
 
       setPendingInput: (sessionId, text) => set({ pendingInput: { sessionId, text } }),
       clearPendingInput: () => set({ pendingInput: null }),
@@ -632,6 +649,74 @@ export const useOrchestratorStore = create<OrchestratorState>()(
       partialize: (state) => ({
         sessions: state.sessions,
       }),
+      merge: (persisted, current) => {
+        const persistedState = persisted as Partial<OrchestratorState> | undefined;
+        if (!persistedState?.sessions) return current;
+        const safeSessions = persistedState.sessions.map((s) => ({
+          ...s,
+          workers: (s.workers || []).map((w) => ({
+            ...w,
+            messages: w.messages || [],
+            toolCalls: w.toolCalls || [],
+            availableCommands: w.availableCommands || [],
+            filesTouched: w.filesTouched || [],
+            outputBuffer: w.outputBuffer || "",
+            thinkingBuffer: w.thinkingBuffer || "",
+            inputTokens: w.inputTokens || 0,
+            outputTokens: w.outputTokens || 0,
+            costUsd: w.costUsd || 0,
+          })),
+          messages: s.messages || [],
+          totalInputTokens: s.totalInputTokens || 0,
+          totalOutputTokens: s.totalOutputTokens || 0,
+          totalCost: s.totalCost || 0,
+        }));
+        return { ...current, sessions: safeSessions };
+      },
     },
   ),
 );
+
+// Debounced disk persistence (saves to ~/.crafter-code/orchestrator-state.json)
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function debouncedSaveToDisk() {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async () => {
+    try {
+      const { saveOrchestratorState } = await import("@/lib/ipc/orchestrator");
+      await saveOrchestratorState();
+    } catch (e) {
+      console.error("[OrchestratorStore] Failed to save to disk:", e);
+    }
+  }, 2000);
+}
+
+let prevSessionsRef = useOrchestratorStore.getState().sessions;
+
+useOrchestratorStore.subscribe((state) => {
+  if (state.sessions !== prevSessionsRef) {
+    prevSessionsRef = state.sessions;
+    debouncedSaveToDisk();
+  }
+});
+
+export async function initOrchestratorFromDisk() {
+  try {
+    const { loadOrchestratorState } = await import("@/lib/ipc/orchestrator");
+    const sessions = await loadOrchestratorState();
+    if (sessions.length > 0) {
+      const store = useOrchestratorStore.getState();
+      if (store.sessions.length === 0) {
+        for (const session of sessions) {
+          store.setSession(session);
+        }
+        console.log(
+          `[OrchestratorStore] Restored ${sessions.length} sessions from disk`,
+        );
+      }
+    }
+  } catch (e) {
+    console.error("[OrchestratorStore] Failed to load from disk:", e);
+  }
+}

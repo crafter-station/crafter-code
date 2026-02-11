@@ -27,6 +27,9 @@ interface RawWorkerSession {
   error_message?: string;
   created_at: number;
   updated_at: number;
+  started_at?: number;
+  ended_at?: number;
+  task_id?: string;
 }
 
 interface RawOrchestratorSession {
@@ -196,6 +199,14 @@ export async function cancelWorker(
   workerId: string,
 ): Promise<void> {
   return invoke<void>("cancel_worker", { sessionId, workerId });
+}
+
+// Pause a running worker (cancel + preserve state for resume)
+export async function pauseWorker(
+  sessionId: string,
+  workerId: string,
+): Promise<void> {
+  return invoke<void>("pause_worker", { sessionId, workerId });
 }
 
 // Retry a failed worker
@@ -542,6 +553,25 @@ export async function saveSessionToPersistence(
   });
 }
 
+// ============================================================================
+// Orchestrator State Persistence
+// ============================================================================
+
+// Save all orchestrator sessions to disk
+export async function saveOrchestratorState(): Promise<void> {
+  return invoke<void>("save_orchestrator_state");
+}
+
+// Load orchestrator sessions from disk
+export async function loadOrchestratorState(): Promise<
+  OrchestratorSession[]
+> {
+  const sessions = await invoke<RawOrchestratorSession[]>(
+    "load_orchestrator_state",
+  );
+  return sessions.map((s) => transformSession(s));
+}
+
 // Reconnect a dead worker (when send_acp_prompt fails with "No active worker")
 export async function reconnectWorker(
   sessionId: string,
@@ -655,8 +685,8 @@ function transformSession(
     totalInputTokens: session.total_input_tokens ?? 0,
     totalOutputTokens: session.total_output_tokens ?? 0,
     totalCost: session.total_cost ?? 0,
-    createdAt: session.created_at ?? Date.now(),
-    updatedAt: session.updated_at ?? Date.now(),
+    createdAt: toMs(session.created_at),
+    updatedAt: toMs(session.updated_at),
     plan: session.plan,
     cwd,
   };
@@ -683,9 +713,18 @@ function transformWorker(
     availableCommands: [],
     filesTouched: worker.files_touched ?? [],
     errorMessage: worker.error_message,
-    createdAt: worker.created_at ?? Date.now(),
-    updatedAt: worker.updated_at ?? Date.now(),
+    createdAt: toMs(worker.created_at) ?? Date.now(),
+    updatedAt: toMs(worker.updated_at) ?? Date.now(),
+    startedAt: worker.started_at ? worker.started_at * 1000 : undefined,
+    endedAt: worker.ended_at ? worker.ended_at * 1000 : undefined,
+    taskId: worker.task_id ?? undefined,
   };
+}
+
+function toMs(ts: number | undefined | null): number {
+  if (ts == null) return Date.now();
+  if (ts < 1e12) return ts * 1000;
+  return ts;
 }
 
 function transformModel(model: string): "opus" | "sonnet" | "haiku" {
