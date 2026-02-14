@@ -20,6 +20,7 @@ import { ViewToggle } from "./view-toggle";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { LoginButton } from "@/components/auth/login-button";
 import { SettingsDialog } from "@/components/settings/settings-dialog";
+import { MainWorkspace } from "@/components/workspace/main-workspace";
 
 interface OrchestratorLayoutProps {
   className?: string;
@@ -473,15 +474,21 @@ export function OrchestratorLayout({ className }: OrchestratorLayoutProps) {
         {showSidebar && <OrchestratorSidebar />}
 
         {/* Main Content Area */}
-        <main className="flex-1 min-w-0 overflow-hidden bg-background">
-          {activeView === "dashboard" ? (
-            <DashboardView />
-          ) : (
+        <main className="flex-1 min-w-0 overflow-hidden bg-background relative">
+          {activeView === "dashboard" && <DashboardView />}
+          {activeView === "sessions" && (
             <SessionColumns
               showSidebar={showSidebar}
               onToggleSidebar={() => setShowSidebar(!showSidebar)}
             />
           )}
+          <div className={activeView === "workspace" ? "h-full" : "hidden"}>
+            <MainWorkspace
+              showSidebar={showSidebar}
+              onToggleSidebar={() => setShowSidebar(!showSidebar)}
+              visible={activeView === "workspace"}
+            />
+          </div>
         </main>
 
         {/* Coordination Panel (Tasks + Inbox) */}

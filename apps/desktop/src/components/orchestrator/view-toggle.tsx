@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Columns3 } from "lucide-react";
+import { LayoutDashboard, Columns3, PanelLeftClose } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useOrchestratorStore, type ActiveView } from "@/stores/orchestrator-store";
@@ -17,6 +17,13 @@ export function ViewToggle() {
         icon={<Columns3 className="size-3.5" />}
         label="Sessions"
         shortcut="D"
+      />
+      <ToggleButton
+        active={activeView === "workspace"}
+        onClick={() => setActiveView("workspace")}
+        icon={<PanelLeftClose className="size-3.5" />}
+        label="Workspace"
+        shortcut="W"
       />
       <ToggleButton
         active={activeView === "dashboard"}

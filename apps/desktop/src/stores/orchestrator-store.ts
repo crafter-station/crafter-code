@@ -139,6 +139,7 @@ export interface WorkerSession {
   startedAt?: number;
   endedAt?: number;
   taskId?: string;
+  worktreeId?: string;
 }
 
 export interface OrchestratorSession {
@@ -165,6 +166,8 @@ export interface OrchestratorSession {
   acpSessionId?: string;
   /** PRD session ID for Ralph mode */
   prdSessionId?: string;
+  /** Worktree ID this session is bound to */
+  worktreeId?: string;
 }
 
 export interface FileConflict {
@@ -185,7 +188,7 @@ export interface PermissionRequest {
   timestamp: number;
 }
 
-export type ActiveView = "sessions" | "dashboard";
+export type ActiveView = "sessions" | "dashboard" | "workspace";
 
 interface OrchestratorState {
   sessions: OrchestratorSession[];
@@ -282,9 +285,15 @@ export const useOrchestratorStore = create<OrchestratorState>()(
       workspaceCommands: [],
 
       setActiveView: (view) => set({ activeView: view }),
-      toggleView: () => set((state) => ({
-        activeView: state.activeView === "sessions" ? "dashboard" : "sessions",
-      })),
+      toggleView: () =>
+        set((state) => ({
+          activeView:
+            state.activeView === "sessions"
+              ? "workspace"
+              : state.activeView === "workspace"
+                ? "dashboard"
+                : "sessions",
+        })),
 
       setPendingInput: (sessionId, text) => set({ pendingInput: { sessionId, text } }),
       clearPendingInput: () => set({ pendingInput: null }),

@@ -1,6 +1,7 @@
 mod acp;
 mod agent;
 mod auth;
+mod browser;
 mod claude;
 mod inbox;
 mod orchestrator;
@@ -8,6 +9,7 @@ mod prd;
 mod pty;
 mod tasks;
 mod trace;
+mod worktree;
 
 use acp::commands::WorkerHandle;
 use agent::manager::AgentManager;
@@ -101,6 +103,14 @@ pub fn run() {
             pty::commands::write_terminal,
             pty::commands::resize_terminal,
             pty::commands::kill_terminal,
+            // Browser commands
+            browser::commands::create_browser_view,
+            browser::commands::navigate_browser,
+            browser::commands::close_browser_view,
+            browser::commands::resize_browser_view,
+            browser::commands::set_browser_visible,
+            browser::commands::list_browser_views,
+            browser::commands::close_all_browser_views,
             // Agent commands
             agent::commands::read_directory,
             agent::commands::read_file_content,
@@ -193,6 +203,14 @@ pub fn run() {
             trace::commands::get_session_traces,
             trace::commands::get_worker_traces,
             trace::commands::get_trace_summary,
+            // Worktree commands
+            worktree::commands::list_repositories,
+            worktree::commands::add_repository,
+            worktree::commands::remove_repository,
+            worktree::commands::list_worktrees,
+            worktree::commands::create_worktree,
+            worktree::commands::delete_worktree,
+            worktree::commands::get_worktree_status,
         ])
         .setup(|app| {
             #[cfg(debug_assertions)]

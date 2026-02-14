@@ -16,7 +16,10 @@ import {
   ChevronDown,
   ChevronRight,
   Folder,
+  FolderGit2,
   FolderOpen,
+  GitBranch,
+  GitFork,
   Loader2,
   MessageSquare,
   Pin,
@@ -25,6 +28,7 @@ import {
   Sparkles,
   Square,
   Terminal,
+  Trash2,
   Upload,
   User,
   Users,
@@ -62,6 +66,18 @@ import {
   type ProjectInfo,
   useWorkspaceStore,
 } from "@/stores/workspace-store";
+import {
+  listRepositories,
+  addRepository,
+  removeRepository,
+  createWorktree,
+  deleteWorktree,
+  getWorktreeStatus,
+  type Repository,
+  type Worktree,
+  type WorktreeStatus,
+} from "@/lib/ipc/worktree";
+import { useWorktreeStore } from "@/stores/worktree-store";
 import { AgentIcon } from "./agent-icons";
 
 interface OrchestratorSidebarProps {
@@ -85,6 +101,7 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
   const [isValidatingPrd, setIsValidatingPrd] = useState(false);
 
   // Collapsible section states (all open by default)
+  const [repositoriesOpen, setRepositoriesOpen] = useState(true);
   const [sessionsOpen, setSessionsOpen] = useState(true);
   const [terminalsOpen, setTerminalsOpen] = useState(true);
   const [skillsOpen, setSkillsOpen] = useState(true);
@@ -160,6 +177,20 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
   const runningWorkers = allWorkers.filter((w) => w.status === "running");
   const activeSession = getActiveSession();
 
+  const {
+    repositories,
+    setRepositories,
+    addRepository: addRepoToStore,
+    removeRepository: removeRepoFromStore,
+    updateRepository: updateRepoInStore,
+    selectedWorktreeId,
+    selectWorktree,
+    repositoriesExpanded,
+    toggleRepositoryExpanded,
+    worktreeStatuses,
+    setWorktreeStatus,
+  } = useWorktreeStore();
+
   // Get the project path and agent type for the active session (for contextual skills/commands)
   const activeSessionCwd = activeSession?.cwd;
   const activeAgentId = activeSession?.agentType;
@@ -173,6 +204,47 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
     },
     [activeSessionId, setPendingInput],
   );
+
+  const handleAddRepository = useCallback(async () => {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: "Select Repository",
+      });
+      if (selected && typeof selected === "string") {
+        const repo = await addRepository(selected);
+        addRepoToStore(repo);
+      }
+    } catch (err) {
+    }
+  }, [addRepoToStore]);
+
+  const handleRemoveRepository = useCallback(async (repoId: string) => {
+    try {
+      await removeRepository(repoId);
+      removeRepoFromStore(repoId);
+    } catch (err) {
+    }
+  }, [removeRepoFromStore]);
+
+  const handleCreateWorktree = useCallback(async (repoId: string) => {
+    try {
+      const worktree = await createWorktree(repoId);
+      const repos = await listRepositories();
+      setRepositories(repos);
+    } catch (err) {
+    }
+  }, [setRepositories]);
+
+  const handleDeleteWorktree = useCallback(async (repoId: string, worktreeId: string) => {
+    try {
+      await deleteWorktree(repoId, worktreeId);
+      const repos = await listRepositories();
+      setRepositories(repos);
+    } catch (err) {
+    }
+  }, [setRepositories]);
 
   // Load available agents on mount
   useEffect(() => {
@@ -193,6 +265,17 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
     }
     loadAgents();
   }, []);
+
+  useEffect(() => {
+    async function loadRepos() {
+      try {
+        const repos = await listRepositories();
+        setRepositories(repos);
+      } catch (err) {
+      }
+    }
+    loadRepos();
+  }, [setRepositories]);
 
   // Reset model when agent changes
   const handleAgentChange = useCallback((agentId: string) => {
@@ -361,9 +444,19 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
     setError(null);
 
     try {
-      // Use selected project path, or home directory as fallback
+      // Use selected worktree dir, or selected project path, or home as fallback
       let cwd: string;
-      if (selectedProjectPath) {
+      const selectedWorktree = (() => {
+        if (!selectedWorktreeId) return undefined;
+        for (const repo of repositories) {
+          const wt = repo.worktrees.find((w) => w.id === selectedWorktreeId);
+          if (wt) return wt;
+        }
+        return undefined;
+      })();
+      if (selectedWorktree) {
+        cwd = selectedWorktree.workingDirectory;
+      } else if (selectedProjectPath) {
         cwd = selectedProjectPath;
       } else {
         try {
@@ -429,6 +522,9 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
         session = await createAcpSession(prompt, selectedAgentId, cwd, modelId);
       }
 
+      if (selectedWorktree) {
+        session.worktreeId = selectedWorktree.id;
+      }
       setSession(session);
       if (!(isFleetMode && usePrd)) {
         addSessionMessage(session.id, {
@@ -470,6 +566,8 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
     setSession,
     addSessionMessage,
     setActiveSession,
+    selectedWorktreeId,
+    repositories,
   ]);
 
   const handleCancel = useCallback(() => {
@@ -962,6 +1060,55 @@ export function OrchestratorSidebar({ className }: OrchestratorSidebarProps) {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
+        {/* Repositories */}
+        <CollapsibleSection
+          title="REPOSITORIES"
+          count={repositories.length}
+          isOpen={repositoriesOpen}
+          onToggle={() => setRepositoriesOpen(!repositoriesOpen)}
+          icon={<FolderGit2 className="size-3" />}
+        >
+          {repositories.length === 0 ? (
+            <div className="px-1.5 py-1.5">
+              <p className="px-2 py-1.5 text-[10px] text-muted-foreground/60 mb-2">
+                No repositories
+              </p>
+              <button
+                type="button"
+                onClick={handleAddRepository}
+                className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-[10px] text-muted-foreground hover:text-foreground hover:bg-sidebar-accent rounded-sm transition-colors"
+              >
+                <Plus className="size-3" />
+                Add Repository
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-0.5 px-1.5">
+              {repositories.map((repo) => (
+                <RepositoryItem
+                  key={repo.id}
+                  repository={repo}
+                  isExpanded={!!repositoriesExpanded[repo.id]}
+                  onToggle={() => toggleRepositoryExpanded(repo.id)}
+                  onCreateWorktree={() => handleCreateWorktree(repo.id)}
+                  onRemove={() => handleRemoveRepository(repo.id)}
+                  selectedWorktreeId={selectedWorktreeId}
+                  onSelectWorktree={selectWorktree}
+                  onDeleteWorktree={(worktreeId) => handleDeleteWorktree(repo.id, worktreeId)}
+                />
+              ))}
+              <button
+                type="button"
+                onClick={handleAddRepository}
+                className="w-full flex items-center justify-center gap-1.5 px-2 py-1 text-[9px] text-muted-foreground hover:text-foreground hover:bg-sidebar-accent rounded-sm transition-colors"
+              >
+                <Plus className="size-3" />
+                Add Repository
+              </button>
+            </div>
+          )}
+        </CollapsibleSection>
+
         {/* Active Sessions */}
         <CollapsibleSection
           title="ACTIVE SESSIONS"
@@ -1537,6 +1684,164 @@ function WorkspaceCommandItem({
         <p className="px-3 pb-1 text-[9px] text-muted-foreground/70 leading-relaxed">
           {command.description}
         </p>
+      )}
+    </div>
+  );
+}
+
+interface RepositoryItemProps {
+  repository: Repository;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onCreateWorktree: () => void;
+  onRemove: () => void;
+  selectedWorktreeId: string | null;
+  onSelectWorktree: (id: string) => void;
+  onDeleteWorktree: (worktreeId: string) => void;
+}
+
+function RepositoryItem({
+  repository,
+  isExpanded,
+  onToggle,
+  onCreateWorktree,
+  onRemove,
+  selectedWorktreeId,
+  onSelectWorktree,
+  onDeleteWorktree,
+}: RepositoryItemProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div className="space-y-0.5">
+      <div
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={cn(
+          "flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm transition-colors",
+          "hover:bg-sidebar-accent group",
+        )}
+      >
+        <button
+          type="button"
+          onClick={onToggle}
+          className="shrink-0"
+        >
+          {isExpanded ? (
+            <ChevronDown className="size-3 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="size-3 text-muted-foreground" />
+          )}
+        </button>
+        <FolderGit2 className="size-3 text-muted-foreground shrink-0" />
+        <span className="text-[10px] truncate flex-1 min-w-0">
+          {repository.name}
+        </span>
+        <span className="text-[8px] text-muted-foreground/40 shrink-0">
+          {repository.worktrees.length}
+        </span>
+        {isHovered && (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCreateWorktree();
+              }}
+              className="flex items-center justify-center size-4 rounded-sm bg-accent-orange/20 hover:bg-accent-orange/40 text-accent-orange transition-colors shrink-0"
+              title="New worktree"
+            >
+              <Plus className="size-2.5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+              className="flex items-center justify-center size-4 rounded-sm bg-red-500/20 hover:bg-red-500/40 text-red-500 transition-colors shrink-0"
+              title="Remove repository"
+            >
+              <Trash2 className="size-2.5" />
+            </button>
+          </>
+        )}
+      </div>
+
+      {isExpanded && (
+        <div className="ml-3 pl-2 border-l border-border/50 space-y-0.5">
+          {repository.worktrees.map((worktree) => (
+            <WorktreeItem
+              key={worktree.id}
+              worktree={worktree}
+              isSelected={worktree.id === selectedWorktreeId}
+              onSelect={() => onSelectWorktree(worktree.id)}
+              onDelete={worktree.isMain ? undefined : () => onDeleteWorktree(worktree.id)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface WorktreeItemProps {
+  worktree: Worktree;
+  isSelected: boolean;
+  onSelect: () => void;
+  onDelete?: () => void;
+  status?: WorktreeStatus;
+}
+
+function WorktreeItem({ worktree, isSelected, onSelect, onDelete, status }: WorktreeItemProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const isDirty = status && (
+    status.modifiedFiles > 0 ||
+    status.stagedFiles > 0 ||
+    status.untrackedFiles > 0
+  );
+
+  return (
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={cn(
+        "flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm transition-colors cursor-pointer",
+        isSelected
+          ? "bg-accent-orange/15 border border-accent-orange/30"
+          : "hover:bg-sidebar-accent",
+      )}
+      onClick={onSelect}
+    >
+      {worktree.isMain ? (
+        <GitBranch className="size-3 text-muted-foreground shrink-0" />
+      ) : (
+        <GitFork className="size-3 text-muted-foreground shrink-0" />
+      )}
+      <span className="text-[9px] truncate flex-1 min-w-0">
+        {worktree.name}
+      </span>
+      <span className="text-[8px] px-1 py-0.5 rounded bg-border/50 text-muted-foreground/60 shrink-0 font-mono">
+        {worktree.branch}
+      </span>
+      {isDirty ? (
+        <span className="size-1.5 rounded-full bg-accent-orange shrink-0" title="Has changes" />
+      ) : (
+        <span className="size-1.5 rounded-full bg-green-500 shrink-0" title="Clean" />
+      )}
+      {isHovered && onDelete && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="flex items-center justify-center size-4 rounded-sm bg-red-500/20 hover:bg-red-500/40 text-red-500 transition-colors shrink-0"
+          title="Delete worktree"
+        >
+          <Trash2 className="size-2.5" />
+        </button>
       )}
     </div>
   );
